@@ -1,0 +1,595 @@
+openapi: 3.0.3
+info:
+  title: Java Collections Visualizer
+  version: 1.0.0
+  description: Transport contract v1. Java owns state; traces are immutable. SCENARIO is a response-only
+    operation; use the scenarios endpoint.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+paths:
+  /health:
+    get:
+      operationId: health
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /scenarios:
+    get:
+      operationId: listScenarios
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Scenario'
+  /sessions:
+    post:
+      operationId: createSession
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session missing or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Revision conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session missing or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Revision conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+  /sessions/{id}/commands:
+    post:
+      operationId: executeCommand
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionTrace'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session missing or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Revision conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+  /sessions/{id}/scenarios/{name}:
+    post:
+      operationId: executeScenario
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionTrace'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session missing or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Revision conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioRequest'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+            enum:
+              - insert
+              - collision
+              - update
+              - resize
+              - treeify
+              - why-no-tree
+              - tree-search
+              - tree-remove
+components:
+  schemas:
+    Key:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - STRING
+            - INTEGER
+            - COLLISION
+            - 'NULL'
+        value:
+          type: string
+          maxLength: 64
+          nullable: true
+        hashCodeOverride:
+          type: integer
+          format: int32
+          nullable: true
+      required:
+        - type
+    Operation:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - PUT
+            - GET
+            - REMOVE
+            - CLEAR
+            - RESET
+            - SCENARIO
+        key:
+          allOf:
+            - $ref: '#/components/schemas/Key'
+          nullable: true
+        value:
+          type: string
+          maxLength: 128
+          nullable: true
+      required:
+        - type
+    Result:
+      type: object
+      additionalProperties: false
+      properties:
+        found:
+          type: boolean
+        previousValue:
+          type: string
+          nullable: true
+        value:
+          type: string
+          nullable: true
+      required:
+        - found
+        - previousValue
+        - value
+    Node:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          $ref: '#/components/schemas/Key'
+        value:
+          type: string
+          nullable: true
+        rawHashCode:
+          type: integer
+          format: int32
+        hash:
+          type: integer
+          format: int32
+        next:
+          type: integer
+          format: int64
+          nullable: true
+        parent:
+          type: integer
+          format: int64
+          nullable: true
+        left:
+          type: integer
+          format: int64
+          nullable: true
+        right:
+          type: integer
+          format: int64
+          nullable: true
+        prev:
+          type: integer
+          format: int64
+          nullable: true
+        red:
+          type: boolean
+          nullable: true
+        linked:
+          type: boolean
+      required:
+        - id
+        - key
+        - value
+        - rawHashCode
+        - hash
+        - next
+        - parent
+        - left
+        - right
+        - prev
+        - red
+        - linked
+    Bucket:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        kind:
+          type: string
+          enum:
+            - LIST
+            - TREE
+            - TRANSFER
+        headId:
+          type: integer
+          format: int64
+        rootId:
+          type: integer
+          format: int64
+          nullable: true
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+      required:
+        - index
+        - kind
+        - headId
+        - rootId
+        - nodes
+    Snapshot:
+      type: object
+      additionalProperties: false
+      properties:
+        phase:
+          type: string
+          enum:
+            - WORKING
+            - COMMITTED
+        size:
+          type: integer
+          format: int32
+        capacity:
+          type: integer
+          format: int32
+        threshold:
+          type: integer
+          format: int32
+        loadFactor:
+          type: number
+        pendingCapacity:
+          type: integer
+          format: int32
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bucket'
+        pendingBuckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bucket'
+      required:
+        - phase
+        - size
+        - capacity
+        - threshold
+        - loadFactor
+        - pendingCapacity
+        - buckets
+        - pendingBuckets
+    Step:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        operation:
+          $ref: '#/components/schemas/Operation'
+        event:
+          type: string
+        stage:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        snapshot:
+          $ref: '#/components/schemas/Snapshot'
+      required:
+        - index
+        - operation
+        - event
+        - stage
+        - message
+        - details
+        - snapshot
+    Trace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          enum:
+            - 1
+        collection:
+          type: string
+          enum:
+            - HASH_MAP
+        operation:
+          $ref: '#/components/schemas/Operation'
+        result:
+          $ref: '#/components/schemas/Result'
+        before:
+          $ref: '#/components/schemas/Snapshot'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+        committed:
+          $ref: '#/components/schemas/Snapshot'
+      required:
+        - schemaVersion
+        - collection
+        - operation
+        - result
+        - before
+        - steps
+        - committed
+    Session:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        id:
+          type: string
+          format: uuid
+        collection:
+          type: string
+        revision:
+          type: integer
+          format: int64
+        expiresInSeconds:
+          type: integer
+          format: int32
+        state:
+          $ref: '#/components/schemas/Snapshot'
+      required:
+        - schemaVersion
+        - id
+        - collection
+        - revision
+        - expiresInSeconds
+        - state
+    SessionTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        sessionId:
+          type: string
+          format: uuid
+        revision:
+          type: integer
+          format: int64
+        trace:
+          $ref: '#/components/schemas/Trace'
+      required:
+        - schemaVersion
+        - sessionId
+        - revision
+        - trace
+    Error:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - schemaVersion
+        - code
+        - message
+    Scenario:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+      required:
+        - id
+        - title
+        - description
+    CreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        initialCapacity:
+          type: integer
+          enum:
+            - 0
+            - 16
+            - 32
+            - 64
+          default: 0
+      required: []
+    CommandRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedRevision:
+          type: integer
+          format: int64
+          minimum: 0
+        operation:
+          $ref: '#/components/schemas/Operation'
+      required:
+        - expectedRevision
+        - operation
+    ScenarioRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedRevision:
+          type: integer
+          format: int64
+          minimum: 0
+      required:
+        - expectedRevision
+    Health:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+        java:
+          type: string
+      required:
+        - status
+        - version
+        - java

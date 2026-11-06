@@ -1,0 +1,14 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+spring:
+  application:
+    name: java-collections-visualizer
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+visualizer:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}
+  session-ttl-seconds: ${SESSION_TTL_SECONDS:1800}
+  max-sessions: ${MAX_SESSIONS:128}

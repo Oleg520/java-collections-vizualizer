@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      MAX_SESSIONS: 128
+    mem_limit: 512m
