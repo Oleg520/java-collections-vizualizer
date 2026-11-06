@@ -133,6 +133,9 @@ code {
   gap: 5px;
   color: #a4b3a8;
 }
+.header-right > a:hover {
+  color: var(--lime);
+}
 .connection {
   display: flex;
   align-items: center;
@@ -1530,6 +1533,10 @@ h1 > span {
   }
   .header-right > a {
     font-size: 9px;
+  }
+  .repo-link > span,
+  .repo-link > svg:last-child {
+    display: none;
   }
   .workspace {
     display: flex;
