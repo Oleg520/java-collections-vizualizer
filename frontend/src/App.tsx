@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Code2,
   GitBranch,
+  Github,
   Info,
   Layers,
   LoaderCircle,
@@ -229,6 +230,18 @@ export default function App() {
                 ? "Java engine connected"
                 : "Подключение к Java"}
           </span>
+          <a
+            className="repo-link"
+            href="https://github.com/Oleg520/java-collections-vizualizer"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Исходный код проекта на GitHub"
+            title="Исходный код проекта на GitHub"
+          >
+            <Github size={15} />
+            <span>GitHub</span>
+            <ArrowUpRight size={14} />
+          </a>
           <a
             href="https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/java/util/HashMap.java"
             target="_blank"
