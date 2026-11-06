@@ -10,6 +10,19 @@ async function finish(page: Page) {
   await page.getByRole("button", { name: "В конец", exact: true }).click();
 }
 
+test("GitHub source link points to the public repository", async ({ page }) => {
+  await page.goto("/");
+  const source = page.getByRole("link", {
+    name: "Исходный код проекта на GitHub",
+  });
+  await expect(source).toHaveAttribute(
+    "href",
+    "https://github.com/Oleg520/java-collections-vizualizer",
+  );
+  await expect(source).toHaveAttribute("target", "_blank");
+  await expect(source).toHaveAttribute("rel", "noopener noreferrer");
+});
+
 test("real Java session, put/get/remove, null and immutable playback", async ({
   page,
 }) => {
