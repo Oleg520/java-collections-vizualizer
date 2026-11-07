@@ -129,6 +129,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: FULL_TRACE_DISABLED — full is disabled; no command runs and revision is unchanged. Use encoding=compact.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                schemaVersion: 1
+                code: FULL_TRACE_DISABLED
+                message: Полный trace отключён. Используйте encoding=compact.
         '404':
           description: Session missing or expired
           content:
@@ -169,7 +179,11 @@ paths:
               - full
               - compact
             default: full
-          description: compact retains every step but transmits repeated node versions once.
+          description: >-
+            compact retains every step but transmits repeated node versions once and is always allowed.
+            full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true
+            (visualizer.allow-full-trace); disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED
+            before executing the command or checking revision. Unknown encoding returns 400 INVALID_INPUT.
   /sessions/{id}/scenarios/{name}:
     post:
       operationId: executeScenario
@@ -188,6 +202,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '403':
+          description: FULL_TRACE_DISABLED — full is disabled; no scenario runs and revision is unchanged. Use encoding=compact.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                schemaVersion: 1
+                code: FULL_TRACE_DISABLED
+                message: Полный trace отключён. Используйте encoding=compact.
         '404':
           description: Session missing or expired
           content:
@@ -242,7 +266,11 @@ paths:
               - full
               - compact
             default: full
-          description: compact retains every step but transmits repeated node versions once.
+          description: >-
+            compact retains every step but transmits repeated node versions once and is always allowed.
+            full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true
+            (visualizer.allow-full-trace); disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED
+            before executing the scenario or checking revision. Unknown encoding returns 400 INVALID_INPUT.
 components:
   schemas:
     Key:

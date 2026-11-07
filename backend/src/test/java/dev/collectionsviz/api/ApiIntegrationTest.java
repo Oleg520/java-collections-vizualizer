@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(properties="visualizer.allow-full-trace=true")
 @AutoConfigureMockMvc
 class ApiIntegrationTest {
     @Autowired MockMvc mvc;
@@ -28,6 +28,7 @@ class ApiIntegrationTest {
         String a=create(),b=create();
         String body=mvc.perform(post("/api/v1/sessions/"+a+"/commands").contentType("application/json").content(command(0,"PUT","A","\"hello\"")))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1)).andExpect(jsonPath("trace.committed.size").value(1))
+            .andExpect(jsonPath("encoding").doesNotExist()).andExpect(jsonPath("trace.committed.buckets[0].nodes[0].key.value").value("A"))
             .andExpect(jsonPath("trace.result.found").value(false)).andExpect(jsonPath("trace.committed.capacity").value(16))
             .andReturn().getResponse().getContentAsString();
         JsonNode trace=json.readTree(body).get("trace"),steps=trace.get("steps");
@@ -72,6 +73,17 @@ class ApiIntegrationTest {
             .andExpect(jsonPath("nodePool[0].key.value").value("A"))
             .andExpect(jsonPath("trace.committed.buckets[0].nodeRefs[0]").value(0))
             .andExpect(jsonPath("trace.committed.buckets[0].nodes").doesNotExist());
+    }
+
+    @Test void explicitlyEnabledFullWorksForCommandsAndScenarios() throws Exception {
+        String id=create();
+        mvc.perform(post("/api/v1/sessions/"+id+"/commands?encoding=full").contentType("application/json").content(command(0,"PUT","A","null")))
+            .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1))
+            .andExpect(jsonPath("trace.committed.buckets[0].nodes[0].key.value").value("A"))
+            .andExpect(jsonPath("nodePool").doesNotExist());
+        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/treeify?encoding=full").contentType("application/json").content("{\"expectedRevision\":1}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("revision").value(2))
+            .andExpect(jsonPath("trace.committed.buckets[0].nodes.length()").value(9));
     }
 
 }
