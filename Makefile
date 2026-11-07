@@ -1,6 +1,6 @@
 .PHONY: build test backend frontend e2e
 build:
-	./mvnw -B verify
+	./mvnw -B clean verify
 	npm --prefix frontend ci
 	npm --prefix frontend run build
 
@@ -9,7 +9,7 @@ test:
 	npm --prefix frontend test
 
 backend:
-	java -jar backend/target/backend-0.1.0.jar
+	java -jar "$$(sh scripts/backend-jar.sh)"
 
 frontend:
 	npm --prefix frontend run dev

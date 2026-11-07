@@ -1,6 +1,6 @@
 [build]
   base = "frontend"
-  command = "npm ci && npm run build"
+  command = "sh ../scripts/fetch-version-tags.sh && npm ci && npm run build"
   publish = "dist"
 
 [build.environment]

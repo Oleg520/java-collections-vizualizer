@@ -43,10 +43,10 @@ Friendly Loan, его dev-окружение, PostgreSQL и Caddy сохрани
 Из чистого checkout нужного коммита `main`, локально (Java 21):
 
 ```bash
-./mvnw -B verify
+./mvnw -B clean verify
 git rev-parse --short HEAD
-sha256sum backend/target/backend-0.1.0.jar
-scp backend/target/backend-0.1.0.jar fl-prod-admin:backend-upload.jar
+sha256sum "$(sh scripts/backend-jar.sh)"
+scp "$(sh scripts/backend-jar.sh)" fl-prod-admin:backend-upload.jar
 ```
 
 На VDS укажите фактическую ревизию, проверьте SHA-256 и сохраните прежнюю ссылку:
@@ -86,6 +86,14 @@ ss -ltn | grep 18082
 sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 sudo systemctl reload caddy
 ```
+
+## Версии релизов
+
+Тег `X.Y.Z` должен указывать ровно на собираемый SHA `main`. Имя JAR определяется
+автоматически; хранение на VDS по SHA остаётся прежним. Перед первым deployment
+релизного SHA опубликуйте тег, затем вручную запускайте backend workflow и
+пересборку Netlify. Подробности, включая ограничение повторной доставки того же SHA
+с другим hash: [версии и процедура выпуска](../docs/VERSIONING.md).
 
 ## Ручной workflow доставки backend
 
@@ -220,7 +228,7 @@ Netlify project ID: `f9043ee7-d2f9-4e90-bbd4-d90bc69fd6a6`.
 Netlify автоматически собирает frontend из `main`. Java backend этим webhook
 не обновляется. Для ручного обновления backend используйте процедуру выше.
 
-Корневой `netlify.toml` задаёт base `frontend`, command `npm ci && npm run build`,
+Корневой `netlify.toml` задаёт base `frontend`, command `sh ../scripts/fetch-version-tags.sh && npm ci && npm run build`,
 publish `dist` относительно base. Production environment содержит:
 
 ```text

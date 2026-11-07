@@ -61,7 +61,7 @@ export default function App() {
           <span>
             Collections<span className="brand-suffix"> / visualizer</span>
           </span>
-          <span className="version">v0.1</span>
+          <span className="version">{__APP_VERSION__}</span>
         </a>
         <div className="header-right">
           <span className={`connection ${session ? "online" : ""}`}>
