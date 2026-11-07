@@ -87,6 +87,131 @@ sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 sudo systemctl reload caddy
 ```
 
+## Ручной workflow доставки backend
+
+Workflow `.github/workflows/deploy-backend.yml` запускается **только вручную**.
+Push, PR и merge не вызывают production deployment. Workflow должен сначала попасть
+в `main` после ревью и успешного CI. Первая production-проверка остаётся действием
+владельца: в рамках разработки workflow сервер и его сервисы не изменялись.
+
+### Как это работает
+
+1. GitHub фиксирует SHA `main` в момент Run workflow; другая ветка или тег отклоняются.
+   Оба job checkout используют этот неизменяемый SHA, даже если `main` позже продвинется.
+2. Отдельный job без SSH-секретов собирает JAR на hosted runner с Java 21, выполняет
+   `mvn verify` и локальные deployment fixtures. В summary записываются SHA и SHA-256
+   JAR; этот же файл сохраняется в Actions artifact на 7 дней.
+3. После проверок job с environment `backend-production` скачивает **тот же artifact**,
+   проверяет hash и передаёт его по SSH/SCP выделенному `jcv-deploy`.
+4. Root-owned helper принимает только полный SHA и SHA-256. Он проверяет обычный
+   файл, владельца, размер до 96 MiB и hash скопированных байтов. Release JAR никогда
+   не перезаписывается; ссылка `current.jar` переключается атомарно.
+5. Перезапускается только `java-collections-visualizer.service`. Проверяется JSON
+   `status=UP`, `java=21` по localhost и публичному HTTPS. При сбое возвращается старая
+   ссылка, сбрасывается start-limit только этого сервиса, затем он перезапускается
+   и обе проверки выполняются повторно. Workflow при этом завершается с ошибкой.
+
+GitHub concurrency и серверный file lock предотвращают параллельное переключение.
+Timestamp архива берётся из времени коммита для воспроизводимых повторных сборок.
+Повтор того же SHA с тем же hash допустим; если toolchain/dependencies дали другой
+hash, helper откажет, сохранив прежний JAR. Не удаляйте release ради обхода проверки.
+Смена ссылки сопровождается коротким перезапуском; in-memory-сессии теряются.
+SIGTERM/SIGHUP/SIGINT вызывают откат после начала переключения; при SIGKILL, потере
+питания или неуспешном откате требуется ручная проверка владельцем. Диагностика
+показывает только состояние фиксированного systemd-сервиса, не request payload/секреты.
+
+### Однократная настройка владельцем
+
+Следующие действия **не выполнены агентом**. Они выполняются владельцем через
+доверенный административный доступ после проверки helper и merge PR.
+Новый пользователь не должен входить в группы `sudo`, `jcv` или пользователей
+Friendly Loan; его права — запись в incoming и единственный sudo entry point.
+
+1. На доверенной локальной машине создайте отдельный ключ для Actions:
+
+   ```bash
+   ssh-keygen -t ed25519 -f jcv-deploy-actions -C jcv-backend-actions -N ''
+   ```
+
+   Файл `.pub` предназначен серверу. Приватный файл передаётся только в GitHub
+   Environment Secret; не добавляйте его в Git, PR, чаты или логи.
+
+2. На VDS из проверенного checkout установите пользователя и helper:
+
+   ```bash
+   sudo useradd --system --no-create-home --home-dir /var/lib/jcv-deploy \
+     --shell /bin/bash jcv-deploy
+   sudo install -d -o root -g root -m 0755 /var/lib/jcv-deploy
+   sudo install -d -o jcv-deploy -g jcv-deploy -m 0700 /var/lib/jcv-deploy/incoming
+   sudo install -d -o root -g root -m 0755 /var/lib/jcv-deploy/.ssh
+   sudo install -o root -g root -m 0755 deploy/backend_deploy.py /usr/local/sbin/jcv-deploy
+   ```
+
+   Если пользователь уже существует, сначала проверьте его назначение и права.
+   В root-owned `/var/lib/jcv-deploy/.ssh/authorized_keys` (mode 0644) поместите
+   **одну** строку: `restrict ` и далее полную строку из `jcv-deploy-actions.pub`.
+   Это оставляет SSH/SFTP-команды, запрещая forwarding и PTY; deploy user не может
+   переписывать собственные authorized_keys. Учитывайте существующие SSH AllowUsers/
+   AllowGroups: владелец добавляет нового пользователя в действующее разрешение,
+   сохраняя прежние аккаунты, и проверяет `sshd -t` перед reload SSH при необходимости.
+
+   `current.jar` уже должен указывать на рабочий JAR внутри `releases`. Каталоги
+   `/opt/java-collections-visualizer` и `releases` остаются `root:jcv`, mode 0750,
+   JAR — `root:jcv`, mode 0640. Incoming parent — root-owned, без записи для deploy user.
+   Helper не устанавливает JRE, unit, окружение, Caddy или другие приложения.
+
+3. Через `sudo visudo -f /etc/sudoers.d/jcv-deploy` добавьте только:
+
+   ```sudoers
+   jcv-deploy ALL=(root) NOPASSWD: /usr/local/sbin/jcv-deploy *
+   ```
+
+   Затем `sudo chmod 0440 /etc/sudoers.d/jcv-deploy` и
+   `sudo visudo -cf /etc/sudoers.d/jcv-deploy`. Helper сам строго валидирует два
+   аргумента; не выдавайте sudo для shell, Python interpreter, systemctl или install.
+   Файл helper и родительские каталоги должны быть доступны на запись только root.
+   Его будущие обновления также устанавливает администратор после ревью.
+
+4. Получите host public key **через доверенную Selectel console**, например из
+   `/etc/ssh/ssh_host_ed25519_key.pub`, и проверьте его fingerprint командой
+   `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`. Подготовьте known_hosts запись
+   для `135.106.208.51` (порт 22) с этим проверенным публичным ключом. Не доверяйте
+   непроверенному результату `ssh-keyscan`; не отключайте StrictHostKeyChecking.
+
+5. GitHub → Settings → Environments → создайте **`backend-production`**.
+   **До добавления секретов** настройте Deployment branches and tags → Selected
+   branches and tags → разрешить только **ветку `main`**, без тегов и PR-веток.
+   Это обязательная граница: проверку внутри workflow можно изменить в чужой ветке,
+   но environment не должен выдавать ей production secrets. Настройка не требует
+   платной branch protection; для этого публичного репозитория environments доступны.
+   При возможности добавьте required reviewer для дополнительного подтверждения.
+
+   В secrets этого environment (не общих repository secrets) создайте:
+
+   | Secret | Содержимое |
+   |---|---|
+   | `JCV_DEPLOY_SSH_KEY` | Приватный ключ отдельного `jcv-deploy`, целиком |
+   | `JCV_DEPLOY_KNOWN_HOSTS` | Проверенная known_hosts запись для VDS |
+
+### Запуск и результат
+
+1. Убедитесь, что нужные изменения уже reviewed/merged в `main` и CI успешен.
+2. GitHub → Actions → **Deploy backend manually** → **Run workflow** → Branch `main`.
+   Нажатие Run workflow — явное разрешение production deployment; без него запусков нет.
+3. При настроенном reviewer одобрите environment job. Откройте summary: там SHA,
+   hash и результат health checks; исходный JAR доступен в artifacts.
+4. При failed run смотрите причину и сообщение об откате. При
+   `Owner intervention required` используйте диагностические команды и ручную
+   процедуру отката выше. Не перезапускайте Friendly Loan, PostgreSQL или Caddy.
+
+Локальная проверка без SSH и сервисов: `python3 -m unittest discover -s deploy/tests -v`
+и `bash -n deploy/upload_backend.sh`. Fixture tests создают временные каталоги,
+подменяют systemctl/HTTP/SSH и проверяют отказ, откат и очистку ключевых файлов.
+Реальный production smoke test после настройки ещё предстоит владельцу.
+
+Официальные инструкции: [ручной запуск workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow),
+[environment secrets и ограничения веток](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
+
 ## Frontend
 
 Один GitHub-репозиторий: `Oleg520/java-collections-vizualizer`, ветка `main`.
