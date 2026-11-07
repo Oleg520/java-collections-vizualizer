@@ -18,6 +18,10 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: ./mvnw -B verify
+      - name: Check deployment fixtures without SSH or services
+        run: |
+          python3 -m unittest discover -s deploy/tests -v
+          bash -n deploy/upload_backend.sh
       - run: npm ci && npm run build && npm test
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
