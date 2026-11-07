@@ -18,6 +18,8 @@
 
 Правила разработки для участников и coding-агентов: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+[Подключение Google Search Console и индексация](docs/SEARCH_CONSOLE.md).
+
 ## Возможности
 
 - `put`, `get`, `remove`, `clear`, `reset`; String, Integer, учебные ключи с заданным hashCode, null-ключи и null-значения.
