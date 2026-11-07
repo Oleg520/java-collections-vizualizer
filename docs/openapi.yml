@@ -58,6 +58,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
           content:
@@ -98,6 +100,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
           content:
@@ -151,6 +155,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
           content:
@@ -224,6 +230,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
           content:
@@ -272,6 +280,26 @@ paths:
             (visualizer.allow-full-trace); disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED
             before executing the scenario or checking revision. Unknown encoding returns 400 INVALID_INPUT.
 components:
+  responses:
+    RateLimited:
+      description: >-
+        Client rate, live session, tracking capacity or concurrent work limit reached.
+        No command executes and revision remains unchanged. Admission precedes encoding/revision validation.
+        See docs/API_SECURITY.md for configurable limits and trusted proxy rules.
+      headers:
+        Retry-After:
+          description: Seconds before a user-initiated retry; no automatic mutation retry.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            schemaVersion: 1
+            code: RATE_LIMITED
+            message: Слишком много запросов. Повторите через 60 сек.; команда не выполнена.
   schemas:
     Key:
       type: object

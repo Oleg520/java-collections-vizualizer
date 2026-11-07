@@ -3,5 +3,7 @@ jcv-api.135-106-208-51.sslip.io {
 		max_size 32KB
 	}
 	header X-Content-Type-Options nosniff
-	reverse_proxy 127.0.0.1:18082
+	reverse_proxy 127.0.0.1:18082 {
+		header_up X-JCV-Client-IP {remote_host}
+	}
 }

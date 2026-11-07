@@ -1,4 +1,5 @@
 server:
+  forward-headers-strategy: none
   port: ${PORT:8080}
   tomcat:
     threads:
@@ -23,3 +24,12 @@ visualizer:
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}
   session-ttl-seconds: ${SESSION_TTL_SECONDS:1800}
   max-sessions: ${MAX_SESSIONS:128}
+  max-sessions-per-client: ${MAX_SESSIONS_PER_CLIENT:0}
+  trusted-proxies: ${TRUSTED_PROXIES:}
+  limits:
+    window-seconds: ${RATE_WINDOW_SECONDS:60}
+    session-creations: ${SESSION_CREATE_RATE_LIMIT:30}
+    work-requests: ${WORK_RATE_LIMIT:600}
+    tracked-clients: ${MAX_TRACKED_CLIENTS:4096}
+    concurrent-work: ${MAX_CONCURRENT_WORK:2}
+    concurrent-work-per-client: ${MAX_CONCURRENT_WORK_PER_CLIENT:1}

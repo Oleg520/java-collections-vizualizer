@@ -1,0 +1,64 @@
+{
+  "scope": "LOCAL isolated backend only; no VDS measurement",
+  "java": "21.0.13",
+  "heapMiB": 256,
+  "activeProcessors": 1,
+  "config": {
+    "windowSeconds": 2,
+    "createLimit": 6,
+    "workLimit": 120,
+    "globalSessions": 32,
+    "effectiveSessionsPerClient": 8,
+    "globalWork": 2,
+    "perClientWork": 1,
+    "trustedProxies": []
+  },
+  "realTomcat": {
+    "encodedAndMatrixCreationAliases": "201; shared same IP counters",
+    "nonRoutes": {
+      "/sessions/": 404,
+      "//sessions": 404,
+      "/../v1/sessions": 404
+    },
+    "spoofedProxyHeaders": "8 requests rejected as same client",
+    "liveSessionCapAfterNewWindow": "CLIENT_SESSION_LIMIT"
+  },
+  "heavySplit": {
+    "parallelRequests": 8,
+    "responses": [
+      200,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429,
+      429
+    ],
+    "successfulMutations": 1,
+    "revision": 97,
+    "steps": 990,
+    "jsonBytes": 3108893
+  },
+  "sustained": {
+    "requests": 96,
+    "responses": {
+      "429/WORK_LIMIT": 69,
+      "200/OK": 12,
+      "409/REVISION_CONFLICT": 8,
+      "429/RATE_LIMITED": 7
+    },
+    "finalRevision": 109
+  },
+  "health": {
+    "requests": 16,
+    "successes": 16,
+    "latencyMaxMs": 60.84
+  },
+  "measurement": {
+    "elapsedSeconds": 3.51,
+    "processCpuSeconds": 2.46,
+    "VmHWMKiB": 179268,
+    "VmRSSKiB": 179268
+  }
+}

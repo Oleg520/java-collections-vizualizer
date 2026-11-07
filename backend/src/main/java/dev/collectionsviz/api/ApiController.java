@@ -2,6 +2,7 @@ package dev.collectionsviz.api;
 
 import java.util.*;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +31,9 @@ public class ApiController {
     @GetMapping("/health") public Map<String,String> health() { return Map.of("status","UP","version","0.1.0","java",Runtime.version().feature()+""); }
     @GetMapping("/scenarios") public List<Scenario> scenarios() { return HashMapEngine.SCENARIOS; }
     @PostMapping("/sessions") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
-    public SessionStore.SessionState create(@RequestBody(required=false) CreateRequest request) {
-        return sessions.create(request==null || request.initialCapacity()==null ? 0 : request.initialCapacity());
+    public SessionStore.SessionState create(@RequestBody(required=false) CreateRequest request,HttpServletRequest httpRequest) {
+        return sessions.create(request==null || request.initialCapacity()==null ? 0 : request.initialCapacity(),
+            (String)httpRequest.getAttribute(ApiLimitFilter.CLIENT_ATTRIBUTE));
     }
     @GetMapping("/sessions/{id}") public SessionStore.SessionState get(@PathVariable UUID id) { return sessions.get(id); }
     @PostMapping("/sessions/{id}/commands")

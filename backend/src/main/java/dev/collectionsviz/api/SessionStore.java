@@ -18,27 +18,45 @@ public class SessionStore {
     public static class ApiException extends RuntimeException {
         public final int status;
         public final String code;
-        public ApiException(int status, String code, String message) { super(message); this.status=status; this.code=code; }
+        public final int retryAfter;
+        public ApiException(int status, String code, String message) { this(status,code,message,0); }
+        public ApiException(int status,String code,String message,int retryAfter) {
+            super(message); this.status=status; this.code=code; this.retryAfter=retryAfter;
+        }
     }
     private static class Session {
         final UUID id=UUID.randomUUID();
         final HashMapEngine engine;
+        final String owner;
         long revision, touched;
-        Session(int capacity, long now) { engine=new HashMapEngine(capacity); touched=now; }
+        Session(int capacity,long now,String owner) { engine=new HashMapEngine(capacity); touched=now; this.owner=owner; }
     }
     private final ConcurrentHashMap<UUID,Session> sessions=new ConcurrentHashMap<>();
     private final long ttlMillis;
     private final int maximum;
+    private final int maximumPerClient;
     private final Clock clock;
     @Autowired public SessionStore(@Value("${visualizer.session-ttl-seconds:1800}") long ttlSeconds,
-                                  @Value("${visualizer.max-sessions:128}") int maximum) {
-        this(ttlSeconds,maximum,Clock.systemUTC());
+                                  @Value("${visualizer.max-sessions:128}") int maximum,
+                                  @Value("${visualizer.max-sessions-per-client:0}") int maximumPerClient) {
+        this(ttlSeconds,maximum,maximumPerClient,Clock.systemUTC());
     }
-    SessionStore(long ttlSeconds,int maximum,Clock clock) { this.ttlMillis=ttlSeconds*1000; this.maximum=maximum; this.clock=clock; }
-    public synchronized SessionState create(int capacity) {
+    SessionStore(long ttlSeconds,int maximum,Clock clock) { this(ttlSeconds,maximum,0,clock); }
+    SessionStore(long ttlSeconds,int maximum,int maximumPerClient,Clock clock) {
+        if(ttlSeconds<1 || ttlSeconds>Integer.MAX_VALUE || maximum<1 || maximumPerClient<0)
+            throw new IllegalArgumentException("Invalid session limits");
+        this.ttlMillis=ttlSeconds*1000; this.maximum=maximum; this.clock=clock;
+        this.maximumPerClient=maximumPerClient==0?Math.min(32,Math.max(1,maximum/4)):maximumPerClient;
+    }
+    public SessionState create(int capacity) { return create(capacity,"internal"); }
+    public synchronized SessionState create(int capacity,String owner) {
+        if(owner==null) throw new IllegalArgumentException("Client identity required");
         cleanup();
         if(sessions.size()>=maximum) throw new ApiException(503,"SESSION_LIMIT","Демо занято. Попробуйте позже: достигнут лимит активных сессий.");
-        var s=new Session(capacity,clock.millis());
+        if(sessions.values().stream().filter(s -> s.owner.equals(owner)).count()>=maximumPerClient)
+            throw new ApiException(429,"CLIENT_SESSION_LIMIT","Достигнут лимит активных сессий клиента. Дождитесь истечения TTL.",
+                (int)Math.min(Integer.MAX_VALUE,ttlMillis/1000));
+        var s=new Session(capacity,clock.millis(),owner);
         sessions.put(s.id,s);
         return state(s);
     }
