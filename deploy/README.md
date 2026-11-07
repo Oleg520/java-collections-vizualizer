@@ -1,9 +1,15 @@
 # Production: Netlify + Selectel
 
-Backend опубликован 7 ноября 2026 года:
-`https://jcv-api.135-106-208-51.sslip.io`.
-Health: `/api/v1/health`. HTTPS обслуживает существующий Caddy;
+Первый публичный выпуск: **7 ноября 2026 года**.
+
+- Приложение: https://java-collections-visualizer.netlify.app
+- API: https://jcv-api.135-106-208-51.sslip.io
+- Health: https://jcv-api.135-106-208-51.sslip.io/api/v1/health
+
+HTTPS API обслуживает существующий Caddy;
 сертификат Let's Encrypt обновляется автоматически.
+Исходная версия Java: `830b799`; SHA-256 установленного JAR:
+`cfd6979ba5aba77b96a0d28ac867b8cfbaddad480db27129d0d1df3800e0d2bc`.
 
 ## Backend
 
@@ -47,7 +53,7 @@ scp backend/target/backend-0.1.0.jar fl-prod-admin:backend-upload.jar
 
 ```bash
 sha256sum ~/backend-upload.jar
-readlink /opt/java-collections-visualizer/current.jar
+sudo readlink /opt/java-collections-visualizer/current.jar
 # Заменить REVISION фактическим идентификатором собранного коммита:
 sudo install -o root -g jcv -m 0640 ~/backend-upload.jar \
   /opt/java-collections-visualizer/releases/REVISION.jar
@@ -84,6 +90,11 @@ sudo systemctl reload caddy
 ## Frontend
 
 Один GitHub-репозиторий: `Oleg520/java-collections-vizualizer`, ветка `main`.
+Netlify project ID: `f9043ee7-d2f9-4e90-bbd4-d90bc69fd6a6`.
+К репозиторию добавлены отдельный read-only deploy key и webhook события push;
+Netlify автоматически собирает frontend из `main`. Java backend этим webhook
+не обновляется. Для ручного обновления backend используйте процедуру выше.
+
 Корневой `netlify.toml` задаёт base `frontend`, command `npm ci && npm run build`,
 publish `dist` относительно base. Production environment содержит:
 
@@ -98,22 +109,27 @@ VITE_API_URL=https://jcv-api.135-106-208-51.sslip.io
 VITE_API_URL=https://jcv-api.135-106-208-51.sslip.io npm --prefix frontend run build
 ```
 
-После создания Netlify-проекта установите в `/etc/java-collections-visualizer.env`:
+На сервере в `/etc/java-collections-visualizer.env` установлено:
 
 ```text
-ALLOWED_ORIGINS=https://YOUR-PROJECT.netlify.app
+ALLOWED_ORIGINS=https://java-collections-visualizer.netlify.app
 ```
 
-Указывайте точный HTTPS origin без завершающего `/`, затем перезапустите только
-новый Java-сервис. Проверяйте preflight OPTIONS и реальные команды из браузера.
+При смене домена указывайте точный HTTPS origin без завершающего `/`, затем
+перезапустите только новый Java-сервис. Проверяйте preflight OPTIONS и реальные команды из браузера.
 Preview-домены не разрешаются автоматически. API-токены Netlify хранятся в
 локальном конфиге CLI, а не в Git; `.netlify/` исключён через `.gitignore`.
 
-## Проверки первого выпуска backend
+## Проверки первого публичного выпуска
 
 - `./mvnw verify`: 18 тестов, успешная сборка JAR.
 - Публичный HTTPS: валидный сертификат, TLS 1.3, health UP / Java 21.
 - Через HTTPS: put/get/update/remove, null, clear/reset и все 8 готовых сценариев.
+- Публичный Netlify UI проверен Playwright в Chromium desktop 1440×1080 и Pixel 7:
+  put/get/remove, перемотка истории и все 8 сценариев; нет ошибок JS/CORS и
+  горизонтального переполнения страницы.
+- Preflight OPTIONS разрешает точный Netlify origin и отклоняет посторонний origin.
+- GitHub Actions на коммите `465b243`: сборки, Java/Vitest и 18 E2E — success.
 - Проверены localhost binding, автозапуск и фактические ограничения systemd.
 - Основной и dev-сайт Friendly Loan после изменений возвращают HTTP 200.
 - Docker не устанавливался. Исходники приложения и Issues #2–#5 не изменялись.
