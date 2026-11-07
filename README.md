@@ -16,6 +16,8 @@
 [Мобильный интерфейс](docs/hashmap-mobile.png) · [Контракт API](docs/API.md) ·
 [OpenAPI](docs/openapi.yml) · [Отчёт о реализации](docs/IMPLEMENTATION_REPORT.md)
 
+Правила разработки для участников и coding-агентов: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Возможности
 
 - `put`, `get`, `remove`, `clear`, `reset`; String, Integer, учебные ключи с заданным hashCode, null-ключи и null-значения.
