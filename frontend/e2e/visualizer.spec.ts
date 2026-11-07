@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { test, expect, type Page } from "@playwright/test";
 
@@ -10,6 +11,26 @@ async function ready(page: Page) {
 async function finish(page: Page) {
   await page.getByRole("button", { name: "В конец", exact: true }).click();
 }
+
+test("UI and health report the same exact-commit build version", async ({
+  page,
+  request,
+}) => {
+  const version = execFileSync("sh", ["../scripts/git-version.sh"], {
+    encoding: "utf8",
+  }).trim();
+  await page.goto("/");
+  await expect(page.locator(".version")).toHaveText(version);
+  const response = await request.get("/api/v1/health");
+  expect(response.ok()).toBeTruthy();
+  const health = await response.json();
+  const sha = execFileSync("git", ["rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+  expect(health.version).toBe(
+    version === "dev" ? `0.0.0-${sha}-SNAPSHOT` : version,
+  );
+});
 
 test("GitHub source link points to the public repository", async ({ page }) => {
   await page.goto("/");

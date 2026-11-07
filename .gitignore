@@ -12,3 +12,4 @@
 **/*.tsbuildinfo
 **/__pycache__/
 **/.netlify/
+**/.git-versioned-pom.xml

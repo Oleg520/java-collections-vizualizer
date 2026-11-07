@@ -1,0 +1,7 @@
+<extensions xmlns="http://maven.apache.org/EXTENSIONS/1.0.0">
+  <extension>
+    <groupId>me.qoomon</groupId>
+    <artifactId>maven-git-versioning-extension</artifactId>
+    <version>9.12.3</version>
+  </extension>
+</extensions>

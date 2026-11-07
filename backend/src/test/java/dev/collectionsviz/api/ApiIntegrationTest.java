@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+    @Autowired org.springframework.boot.info.BuildProperties build;
     String create() throws Exception {
         return json.readTree(mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{}"))
             .andExpect(status().isCreated()).andExpect(jsonPath("state.capacity").value(0))
@@ -61,7 +62,8 @@ class ApiIntegrationTest {
             .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:5173"));
         mvc.perform(options("/api/v1/sessions").header("Origin","https://unlisted.example").header("Access-Control-Request-Method","POST"))
             .andExpect(status().isForbidden());
-        mvc.perform(get("/api/v1/health")).andExpect(jsonPath("status").value("UP")).andExpect(jsonPath("java").value("21"));
+        mvc.perform(get("/api/v1/health")).andExpect(jsonPath("status").value("UP")).andExpect(jsonPath("java").value("21"))
+            .andExpect(jsonPath("version").value(build.getVersion()));
     }
     @Test void compactContractIsOptInAndBadEncodingCannotCommit() throws Exception {
         String id=create(),url="/api/v1/sessions/"+id+"/commands";

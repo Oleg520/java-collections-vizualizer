@@ -28,7 +28,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "java -jar ../backend/target/backend-0.1.0.jar",
+      command: "cd .. && make backend",
       url: "http://127.0.0.1:8080/api/v1/health",
       reuseExistingServer: !process.env.CI,
       timeout: 90000,

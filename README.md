@@ -36,12 +36,12 @@
 
 ## Быстрый запуск
 
-Нужны **JDK 21** (`java` в PATH либо `JAVA_HOME`), **Node.js 22.12+** и npm.
+Нужны **JDK 21** (`java` в PATH либо `JAVA_HOME`), **Node.js 22.12+** и npm, **Git** и POSIX shell (`sh`). Сборка выполняется из Git checkout с тегами.
 Maven 3.9.11 скачивается Maven Wrapper; отдельно устанавливать Maven не нужно.
 Первый запуск сборки требует сети для загрузки зависимостей.
 
 ```bash
-./mvnw verify
+./mvnw clean verify
 npm --prefix frontend ci
 npm --prefix frontend run build
 ```
@@ -49,7 +49,7 @@ npm --prefix frontend run build
 В первом терминале:
 
 ```bash
-java -jar backend/target/backend-0.1.0.jar
+java -jar "$(sh scripts/backend-jar.sh)"
 ```
 
 Во втором:
@@ -60,7 +60,7 @@ npm --prefix frontend run dev
 
 Откройте **http://127.0.0.1:5173**. Vite проксирует `/api` на `http://127.0.0.1:8080`.
 Проверка backend: `curl http://127.0.0.1:8080/api/v1/health`.
-Windows: используйте `mvnw.cmd` вместо `./mvnw`. Альтернативно доступны
+Windows: запускайте команды в Git Bash; при использовании `mvnw.cmd` также нужен `sh` в PATH. Альтернативно доступны
 `make build`, `make backend`, `make frontend`, `make test`, `make e2e`.
 
 Для разработки backend с Spring Boot:
@@ -69,6 +69,15 @@ Windows: используйте `mvnw.cmd` вместо `./mvnw`. Альтерн
 ./mvnw install -DskipTests
 ./mvnw -pl backend spring-boot:run
 ```
+
+## Версии и релизы
+
+Версия автоматически берётся из единственного тега `X.Y.Z` на собираемом коммите.
+Maven создаёт `backend-X.Y.Z.jar`, `/api/v1/health` и интерфейс показывают `X.Y.Z`.
+Без тега backend получает `0.0.0-<SHA>-SNAPSHOT`, интерфейс показывает `dev`.
+Ручные изменения POM или React для выпуска не нужны.
+
+[Правила, Docker/CI, независимая сборка Netlify и процедура выпуска](docs/VERSIONING.md).
 
 ## Проверка
 
@@ -105,7 +114,7 @@ GitHub Actions: Java/TS-сборка, unit/API-тесты, Chromium desktop/mobi
 исполняет большие split и два пакета параллельных сценариев):
 
 ```bash
-java -Xms64m -Xmx256m -jar backend/target/backend-0.1.0.jar
+java -Xms64m -Xmx256m -jar "$(sh scripts/backend-jar.sh)"
 # В другом терминале; Python 3, без дополнительных пакетов:
 python3 scripts/profile.py --pid JAVA_PID --jcmd "$JAVA_HOME/bin/jcmd"
 ```

@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.web.bind.annotation.*;
 import dev.collectionsviz.core.HashMapEngine;
 import dev.collectionsviz.core.Protocol.*;
@@ -16,10 +17,11 @@ public class ApiController {
     public record CommandRequest(@NotNull @PositiveOrZero Long expectedRevision, @NotNull Operation operation) {}
     public record ScenarioRequest(@NotNull @PositiveOrZero Long expectedRevision) {}
     private final SessionStore sessions;
+    private final BuildProperties build;
     private final boolean allowFullTrace;
-    public ApiController(SessionStore sessions,
+    public ApiController(SessionStore sessions, BuildProperties build,
                          @Value("${visualizer.allow-full-trace:false}") boolean allowFullTrace) {
-        this.sessions=sessions; this.allowFullTrace=allowFullTrace;
+        this.sessions=sessions; this.build=build; this.allowFullTrace=allowFullTrace;
     }
     private boolean compactEncoding(String encoding) {
         boolean compact=CompactTrace.requested(encoding);
@@ -28,7 +30,7 @@ public class ApiController {
                 "Полный trace отключён. Используйте encoding=compact.");
         return compact;
     }
-    @GetMapping("/health") public Map<String,String> health() { return Map.of("status","UP","version","0.1.0","java",Runtime.version().feature()+""); }
+    @GetMapping("/health") public Map<String,String> health() { return Map.of("status","UP","version",build.getVersion(),"java",Runtime.version().feature()+""); }
     @GetMapping("/scenarios") public List<Scenario> scenarios() { return HashMapEngine.SCENARIOS; }
     @PostMapping("/sessions") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     public SessionStore.SessionState create(@RequestBody(required=false) CreateRequest request,HttpServletRequest httpRequest) {

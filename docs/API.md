@@ -141,7 +141,7 @@ ID не переиспользуются в сессии, сохраняются
 Для локальной диагностики явно разрешите исходный полный формат:
 
 ```bash
-ALLOW_FULL_TRACE=true java -jar backend/target/backend-0.1.0.jar
+ALLOW_FULL_TRACE=true java -jar "$(sh scripts/backend-jar.sh)"
 ```
 
 В этом режиме отсутствие encoding и `encoding=full` возвращают прежний JSON с
