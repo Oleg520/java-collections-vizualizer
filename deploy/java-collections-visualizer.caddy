@@ -1,0 +1,7 @@
+jcv-api.135-106-208-51.sslip.io {
+	request_body {
+		max_size 32KB
+	}
+	header X-Content-Type-Options nosniff
+	reverse_proxy 127.0.0.1:18082
+}

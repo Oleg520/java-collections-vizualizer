@@ -6,6 +6,9 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[context.production.environment]
+  VITE_API_URL = "https://jcv-api.135-106-208-51.sslip.io"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

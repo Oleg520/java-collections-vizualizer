@@ -11,3 +11,4 @@
 *:Zone.Identifier
 **/*.tsbuildinfo
 **/__pycache__/
+**/.netlify/
