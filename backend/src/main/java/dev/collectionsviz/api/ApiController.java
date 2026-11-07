@@ -3,6 +3,7 @@ package dev.collectionsviz.api;
 import java.util.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import dev.collectionsviz.core.HashMapEngine;
 import dev.collectionsviz.core.Protocol.*;
@@ -14,7 +15,18 @@ public class ApiController {
     public record CommandRequest(@NotNull @PositiveOrZero Long expectedRevision, @NotNull Operation operation) {}
     public record ScenarioRequest(@NotNull @PositiveOrZero Long expectedRevision) {}
     private final SessionStore sessions;
-    public ApiController(SessionStore sessions) { this.sessions=sessions; }
+    private final boolean allowFullTrace;
+    public ApiController(SessionStore sessions,
+                         @Value("${visualizer.allow-full-trace:false}") boolean allowFullTrace) {
+        this.sessions=sessions; this.allowFullTrace=allowFullTrace;
+    }
+    private boolean compactEncoding(String encoding) {
+        boolean compact=CompactTrace.requested(encoding);
+        if (!compact && !allowFullTrace)
+            throw new SessionStore.ApiException(403,"FULL_TRACE_DISABLED",
+                "Полный trace отключён. Используйте encoding=compact.");
+        return compact;
+    }
     @GetMapping("/health") public Map<String,String> health() { return Map.of("status","UP","version","0.1.0","java",Runtime.version().feature()+""); }
     @GetMapping("/scenarios") public List<Scenario> scenarios() { return HashMapEngine.SCENARIOS; }
     @PostMapping("/sessions") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
@@ -25,14 +37,14 @@ public class ApiController {
     @PostMapping("/sessions/{id}/commands")
     public Object command(@PathVariable UUID id,@Valid @RequestBody CommandRequest request,
                           @RequestParam(defaultValue="full") String encoding) {
-        boolean compact = CompactTrace.requested(encoding); // Validate before committing a command.
+        boolean compact = compactEncoding(encoding); // Validate before committing a command.
         var response = sessions.execute(id,request.expectedRevision(),request.operation());
         return compact ? CompactTrace.encode(response) : response;
     }
     @PostMapping("/sessions/{id}/scenarios/{name}")
     public Object scenario(@PathVariable UUID id,@PathVariable String name,@Valid @RequestBody ScenarioRequest request,
                            @RequestParam(defaultValue="full") String encoding) {
-        boolean compact = CompactTrace.requested(encoding);
+        boolean compact = compactEncoding(encoding);
         var response = sessions.scenario(id,request.expectedRevision(),name);
         return compact ? CompactTrace.encode(response) : response;
     }
