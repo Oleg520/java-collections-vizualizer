@@ -23,11 +23,17 @@ public class ApiController {
     }
     @GetMapping("/sessions/{id}") public SessionStore.SessionState get(@PathVariable UUID id) { return sessions.get(id); }
     @PostMapping("/sessions/{id}/commands")
-    public SessionStore.SessionTrace command(@PathVariable UUID id,@Valid @RequestBody CommandRequest request) {
-        return sessions.execute(id,request.expectedRevision(),request.operation());
+    public Object command(@PathVariable UUID id,@Valid @RequestBody CommandRequest request,
+                          @RequestParam(defaultValue="full") String encoding) {
+        boolean compact = CompactTrace.requested(encoding); // Validate before committing a command.
+        var response = sessions.execute(id,request.expectedRevision(),request.operation());
+        return compact ? CompactTrace.encode(response) : response;
     }
     @PostMapping("/sessions/{id}/scenarios/{name}")
-    public SessionStore.SessionTrace scenario(@PathVariable UUID id,@PathVariable String name,@Valid @RequestBody ScenarioRequest request) {
-        return sessions.scenario(id,request.expectedRevision(),name);
+    public Object scenario(@PathVariable UUID id,@PathVariable String name,@Valid @RequestBody ScenarioRequest request,
+                           @RequestParam(defaultValue="full") String encoding) {
+        boolean compact = CompactTrace.requested(encoding);
+        var response = sessions.scenario(id,request.expectedRevision(),name);
+        return compact ? CompactTrace.encode(response) : response;
     }
 }

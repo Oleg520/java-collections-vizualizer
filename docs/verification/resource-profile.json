@@ -1,0 +1,530 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-11-07T06:43:18.276964+00:00",
+  "encoding": "compact",
+  "retainedHeapAfterBatches": [
+    {
+      "usedHeapKiB": 15559,
+      "VmHWMKiB": 312156,
+      "VmRSSKiB": 312156
+    },
+    {
+      "usedHeapKiB": 15570,
+      "VmHWMKiB": 312408,
+      "VmRSSKiB": 245152
+    }
+  ],
+  "httpCompression": {
+    "contentEncoding": "gzip",
+    "wireBytes": 4057
+  },
+  "workload": {
+    "sessions": 19,
+    "concurrency": 4,
+    "repeatedScenarios": 192
+  },
+  "scenariosAndLimits": [
+    {
+      "name": "insert/initialCapacity=0",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "nodeVersions": 1,
+      "jsonBytes": 5408,
+      "gzipBytes": 1180,
+      "httpMs": 69.94,
+      "VmHWMKiB": 224488,
+      "VmRSSKiB": 224488
+    },
+    {
+      "name": "collision/initialCapacity=0",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "nodeVersions": 6,
+      "jsonBytes": 14774,
+      "gzipBytes": 1659,
+      "httpMs": 7.04,
+      "VmHWMKiB": 224528,
+      "VmRSSKiB": 224528
+    },
+    {
+      "name": "update/initialCapacity=0",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "nodeVersions": 5,
+      "jsonBytes": 9513,
+      "gzipBytes": 1508,
+      "httpMs": 5.97,
+      "VmHWMKiB": 224548,
+      "VmRSSKiB": 224548
+    },
+    {
+      "name": "resize/initialCapacity=0",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "nodeVersions": 15,
+      "jsonBytes": 91452,
+      "gzipBytes": 4097,
+      "httpMs": 23.46,
+      "VmHWMKiB": 224784,
+      "VmRSSKiB": 224784
+    },
+    {
+      "name": "treeify/initialCapacity=0",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "nodeVersions": 82,
+      "jsonBytes": 91525,
+      "gzipBytes": 4187,
+      "httpMs": 8.65,
+      "VmHWMKiB": 224832,
+      "VmRSSKiB": 224832
+    },
+    {
+      "name": "why-no-tree/initialCapacity=0",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "nodeVersions": 26,
+      "jsonBytes": 65352,
+      "gzipBytes": 3285,
+      "httpMs": 8.21,
+      "VmHWMKiB": 224908,
+      "VmRSSKiB": 224908
+    },
+    {
+      "name": "tree-search/initialCapacity=0",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "nodeVersions": 78,
+      "jsonBytes": 95884,
+      "gzipBytes": 4180,
+      "httpMs": 6.02,
+      "VmHWMKiB": 224988,
+      "VmRSSKiB": 224988
+    },
+    {
+      "name": "tree-remove/initialCapacity=0",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "nodeVersions": 83,
+      "jsonBytes": 123640,
+      "gzipBytes": 5115,
+      "httpMs": 7.58,
+      "VmHWMKiB": 225088,
+      "VmRSSKiB": 225088
+    },
+    {
+      "name": "insert/initialCapacity=16",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "nodeVersions": 1,
+      "jsonBytes": 5411,
+      "gzipBytes": 1192,
+      "httpMs": 2.0,
+      "VmHWMKiB": 225132,
+      "VmRSSKiB": 225132
+    },
+    {
+      "name": "collision/initialCapacity=16",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "nodeVersions": 6,
+      "jsonBytes": 14775,
+      "gzipBytes": 1663,
+      "httpMs": 2.43,
+      "VmHWMKiB": 225168,
+      "VmRSSKiB": 225168
+    },
+    {
+      "name": "update/initialCapacity=16",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "nodeVersions": 5,
+      "jsonBytes": 9514,
+      "gzipBytes": 1511,
+      "httpMs": 2.41,
+      "VmHWMKiB": 225192,
+      "VmRSSKiB": 225192
+    },
+    {
+      "name": "resize/initialCapacity=16",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "nodeVersions": 15,
+      "jsonBytes": 91453,
+      "gzipBytes": 4102,
+      "httpMs": 4.87,
+      "VmHWMKiB": 225248,
+      "VmRSSKiB": 225248
+    },
+    {
+      "name": "treeify/initialCapacity=16",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "nodeVersions": 82,
+      "jsonBytes": 91526,
+      "gzipBytes": 4190,
+      "httpMs": 5.27,
+      "VmHWMKiB": 225328,
+      "VmRSSKiB": 225328
+    },
+    {
+      "name": "why-no-tree/initialCapacity=16",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "nodeVersions": 26,
+      "jsonBytes": 65353,
+      "gzipBytes": 3289,
+      "httpMs": 3.94,
+      "VmHWMKiB": 225380,
+      "VmRSSKiB": 225380
+    },
+    {
+      "name": "tree-search/initialCapacity=16",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "nodeVersions": 78,
+      "jsonBytes": 95885,
+      "gzipBytes": 4184,
+      "httpMs": 3.92,
+      "VmHWMKiB": 225408,
+      "VmRSSKiB": 225408
+    },
+    {
+      "name": "tree-remove/initialCapacity=16",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "nodeVersions": 83,
+      "jsonBytes": 123641,
+      "gzipBytes": 5124,
+      "httpMs": 4.37,
+      "VmHWMKiB": 225504,
+      "VmRSSKiB": 225504
+    },
+    {
+      "name": "insert/initialCapacity=32",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "nodeVersions": 1,
+      "jsonBytes": 5411,
+      "gzipBytes": 1193,
+      "httpMs": 1.73,
+      "VmHWMKiB": 225592,
+      "VmRSSKiB": 225592
+    },
+    {
+      "name": "collision/initialCapacity=32",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "nodeVersions": 6,
+      "jsonBytes": 14775,
+      "gzipBytes": 1663,
+      "httpMs": 2.28,
+      "VmHWMKiB": 225612,
+      "VmRSSKiB": 225612
+    },
+    {
+      "name": "update/initialCapacity=32",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "nodeVersions": 5,
+      "jsonBytes": 9514,
+      "gzipBytes": 1511,
+      "httpMs": 2.16,
+      "VmHWMKiB": 225636,
+      "VmRSSKiB": 225636
+    },
+    {
+      "name": "resize/initialCapacity=32",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "nodeVersions": 15,
+      "jsonBytes": 91453,
+      "gzipBytes": 4104,
+      "httpMs": 4.46,
+      "VmHWMKiB": 225992,
+      "VmRSSKiB": 225992
+    },
+    {
+      "name": "treeify/initialCapacity=32",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "nodeVersions": 82,
+      "jsonBytes": 91526,
+      "gzipBytes": 4193,
+      "httpMs": 3.29,
+      "VmHWMKiB": 226052,
+      "VmRSSKiB": 226052
+    },
+    {
+      "name": "why-no-tree/initialCapacity=32",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "nodeVersions": 26,
+      "jsonBytes": 65353,
+      "gzipBytes": 3290,
+      "httpMs": 3.3,
+      "VmHWMKiB": 226100,
+      "VmRSSKiB": 226100
+    },
+    {
+      "name": "tree-search/initialCapacity=32",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "nodeVersions": 78,
+      "jsonBytes": 95885,
+      "gzipBytes": 4185,
+      "httpMs": 3.05,
+      "VmHWMKiB": 226148,
+      "VmRSSKiB": 226148
+    },
+    {
+      "name": "tree-remove/initialCapacity=32",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "nodeVersions": 83,
+      "jsonBytes": 123641,
+      "gzipBytes": 5124,
+      "httpMs": 4.51,
+      "VmHWMKiB": 226240,
+      "VmRSSKiB": 226240
+    },
+    {
+      "name": "insert/initialCapacity=64",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "nodeVersions": 1,
+      "jsonBytes": 5411,
+      "gzipBytes": 1191,
+      "httpMs": 1.8,
+      "VmHWMKiB": 226256,
+      "VmRSSKiB": 226256
+    },
+    {
+      "name": "collision/initialCapacity=64",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "nodeVersions": 6,
+      "jsonBytes": 14775,
+      "gzipBytes": 1662,
+      "httpMs": 1.99,
+      "VmHWMKiB": 226288,
+      "VmRSSKiB": 226288
+    },
+    {
+      "name": "update/initialCapacity=64",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "nodeVersions": 5,
+      "jsonBytes": 9514,
+      "gzipBytes": 1510,
+      "httpMs": 1.88,
+      "VmHWMKiB": 226308,
+      "VmRSSKiB": 226308
+    },
+    {
+      "name": "resize/initialCapacity=64",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "nodeVersions": 15,
+      "jsonBytes": 91453,
+      "gzipBytes": 4102,
+      "httpMs": 3.0,
+      "VmHWMKiB": 226348,
+      "VmRSSKiB": 226348
+    },
+    {
+      "name": "treeify/initialCapacity=64",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "nodeVersions": 82,
+      "jsonBytes": 91526,
+      "gzipBytes": 4191,
+      "httpMs": 2.97,
+      "VmHWMKiB": 226564,
+      "VmRSSKiB": 226564
+    },
+    {
+      "name": "why-no-tree/initialCapacity=64",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "nodeVersions": 26,
+      "jsonBytes": 65353,
+      "gzipBytes": 3289,
+      "httpMs": 3.29,
+      "VmHWMKiB": 226608,
+      "VmRSSKiB": 226608
+    },
+    {
+      "name": "tree-search/initialCapacity=64",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "nodeVersions": 78,
+      "jsonBytes": 95885,
+      "gzipBytes": 4183,
+      "httpMs": 3.02,
+      "VmHWMKiB": 226636,
+      "VmRSSKiB": 226636
+    },
+    {
+      "name": "tree-remove/initialCapacity=64",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "nodeVersions": 83,
+      "jsonBytes": 123641,
+      "gzipBytes": 5122,
+      "httpMs": 3.69,
+      "VmHWMKiB": 226700,
+      "VmRSSKiB": 226700
+    },
+    {
+      "name": "spread/escaped=False/size=49",
+      "steps": 59,
+      "snapshotNodeViews": 2888,
+      "nodeVersions": 49,
+      "jsonBytes": 264123,
+      "gzipBytes": 5140,
+      "httpMs": 4.33,
+      "VmHWMKiB": 228120,
+      "VmRSSKiB": 228120
+    },
+    {
+      "name": "spread/escaped=False/size=97",
+      "steps": 107,
+      "snapshotNodeViews": 10376,
+      "nodeVersions": 97,
+      "jsonBytes": 838377,
+      "gzipBytes": 11212,
+      "httpMs": 7.77,
+      "VmHWMKiB": 231856,
+      "VmRSSKiB": 231856
+    },
+    {
+      "name": "spread/escaped=False/size=128",
+      "steps": 6,
+      "snapshotNodeViews": 765,
+      "nodeVersions": 128,
+      "jsonBytes": 125087,
+      "gzipBytes": 4718,
+      "httpMs": 3.1,
+      "VmHWMKiB": 232496,
+      "VmRSSKiB": 232496
+    },
+    {
+      "name": "tree-split/escaped=False/size=49",
+      "steps": 79,
+      "snapshotNodeViews": 3851,
+      "nodeVersions": 54,
+      "jsonBytes": 89889,
+      "gzipBytes": 3654,
+      "httpMs": 2.41,
+      "VmHWMKiB": 233520,
+      "VmRSSKiB": 233520
+    },
+    {
+      "name": "tree-split/escaped=False/size=97",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 1387103,
+      "gzipBytes": 25101,
+      "httpMs": 36.82,
+      "VmHWMKiB": 242996,
+      "VmRSSKiB": 242996
+    },
+    {
+      "name": "tree-split/escaped=False/size=128",
+      "steps": 31,
+      "snapshotNodeViews": 3944,
+      "nodeVersions": 137,
+      "jsonBytes": 90115,
+      "gzipBytes": 4609,
+      "httpMs": 2.6,
+      "VmHWMKiB": 242268,
+      "VmRSSKiB": 237776
+    },
+    {
+      "name": "tree-split/escaped=True/size=49",
+      "steps": 79,
+      "snapshotNodeViews": 3851,
+      "nodeVersions": 54,
+      "jsonBytes": 217464,
+      "gzipBytes": 4467,
+      "httpMs": 3.28,
+      "VmHWMKiB": 242268,
+      "VmRSSKiB": 239596
+    },
+    {
+      "name": "tree-split/escaped=True/size=97",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 3108893,
+      "gzipBytes": 36089,
+      "httpMs": 16.34,
+      "VmHWMKiB": 242268,
+      "VmRSSKiB": 240100
+    },
+    {
+      "name": "tree-split/escaped=True/size=128",
+      "steps": 31,
+      "snapshotNodeViews": 3944,
+      "nodeVersions": 137,
+      "jsonBytes": 250765,
+      "gzipBytes": 5624,
+      "httpMs": 4.04,
+      "VmHWMKiB": 242268,
+      "VmRSSKiB": 240376
+    },
+    {
+      "name": "concurrent-tree-split/0",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 1387103,
+      "gzipBytes": 25100,
+      "httpMs": 49.52,
+      "VmHWMKiB": 274188,
+      "VmRSSKiB": 274188
+    },
+    {
+      "name": "concurrent-tree-split/3",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 1387103,
+      "gzipBytes": 25102,
+      "httpMs": 39.83,
+      "VmHWMKiB": 274188,
+      "VmRSSKiB": 274188
+    },
+    {
+      "name": "concurrent-tree-split/2",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 1387103,
+      "gzipBytes": 25102,
+      "httpMs": 59.39,
+      "VmHWMKiB": 274188,
+      "VmRSSKiB": 274188
+    },
+    {
+      "name": "concurrent-tree-split/1",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "nodeVersions": 830,
+      "jsonBytes": 1387103,
+      "gzipBytes": 25102,
+      "httpMs": 68.79,
+      "VmHWMKiB": 274188,
+      "VmRSSKiB": 274188
+    }
+  ],
+  "sustained": {
+    "httpP50Ms": 5.18,
+    "httpP95Ms": 7.91,
+    "responseBytesMax": 122388,
+    "VmHWMKiB": 312408,
+    "VmRSSKiB": 245420
+  }
+}

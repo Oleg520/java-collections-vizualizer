@@ -1,0 +1,7 @@
+{
+  "scenario": "97-entry tree split, compact trace, after GC",
+  "usedSize": 18793556,
+  "totalSize": 20586496,
+  "embedderHeapUsedSize": 25873560,
+  "backingStorageSize": 434652
+}

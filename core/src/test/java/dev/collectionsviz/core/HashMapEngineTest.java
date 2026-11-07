@@ -163,12 +163,74 @@ class HashMapEngineTest {
         op(e,OperationType.RESET,null,null); assertEquals(0,e.snapshot().capacity());
         put(e,"A",42); assertTrue(nodes(e.snapshot()).getFirst().id()>first);
     }
-    @Test void allScenariosAreExecutableAndDeterministic() {
-        for(var scenario:HashMapEngine.SCENARIOS) {
-            var a=new HashMapEngine(); var b=new HashMapEngine();
+    @Test void allScenariosAreExecutableAndDeterministicAtEveryInitialCapacity() {
+        for (int capacity : List.of(0,16,32,64)) for (var scenario : HashMapEngine.SCENARIOS) {
+            var a = new HashMapEngine(capacity); var b = new HashMapEngine(capacity);
+            put(a,"pre-existing",7); put(b,"pre-existing",7);
             var ta=a.scenario(scenario.id()); var tb=b.scenario(scenario.id());
             assertEquals(ta,tb); assertTrace(ta,a); invariant(a.snapshot());
+            var events=ta.steps().stream().map(Step::event).toList();
+            switch (scenario.id()) {
+                case "resize" -> {
+                    assertEquals(32,ta.committed().capacity()); assertEquals(13,ta.committed().size());
+                    assertTrue(events.contains("RESIZE_COMPLETED"));
+                    assertTrue(ta.steps().stream().anyMatch(step -> step.event().equals("BUCKET_SPLIT")
+                        && step.details().get("fromBucket").equals(1) && step.details().get("toBucket").equals(17)));
+                }
+                case "why-no-tree" -> {
+                    assertEquals(32,ta.committed().capacity()); assertEquals(9,ta.committed().size());
+                    assertTrue(events.contains("TREEIFY_DEFERRED")); assertFalse(events.contains("TREEIFY_COMPLETED"));
+                }
+                case "treeify", "tree-search", "tree-remove" -> {
+                    assertTrue(events.contains("TREEIFY_COMPLETED")); assertEquals(64,ta.committed().capacity());
+                    if (scenario.id().equals("tree-search")) { assertTrue(ta.result().found()); assertEquals("v7",ta.result().value()); }
+                    if (scenario.id().equals("tree-remove")) { assertEquals(1,ta.committed().size()); assertTrue(events.contains("UNTREEIFIED")); }
+                }
+                default -> assertEquals(16,ta.committed().capacity());
+            }
+            op(a,OperationType.RESET,null,null);
+            assertEquals(capacity,a.snapshot().threshold(),"demo must not change the session constructor setting");
+            put(a,"after-reset",3); assertEquals(capacity == 0 ? 16 : capacity,a.snapshot().capacity());
         }
+    }
+    @Test void limitsRejectAtomicallyAndUpdatesStillWorkAtCapacity() {
+        var e=new HashMapEngine();
+        for(int i=0;i<128;i++) put(e,"K"+i,42);
+        var before=e.snapshot();
+        assertThrows(IllegalArgumentException.class,()->put(e,"overflow",42));
+        assertEquals(before,e.snapshot());
+        assertTrue(put(e,"K1",42).result().found());
+        assertEquals(128,e.snapshot().size()); invariant(e.snapshot());
+        assertThrows(IllegalArgumentException.class,()->op(e,OperationType.PUT,KeySpec.string("long"),"x".repeat(129)));
+        assertEquals(before,e.snapshot());
+        var registry=new HashMapEngine();
+        for(int i=0;i<512;i++) op(registry,OperationType.GET,KeySpec.collision("R"+i,42),null);
+        assertThrows(IllegalArgumentException.class,()->op(registry,OperationType.GET,KeySpec.collision("overflow",42),null));
+        assertEquals(0,registry.snapshot().capacity());
+        op(registry,OperationType.RESET,null,null); put(registry,"overflow",43);
+    }
+    @Test void equalityEventsDistinguishIdentityFromActualEquals() {
+        var e=new HashMapEngine(); var nil=new KeySpec(KeyType.NULL,null,null);
+        op(e,OperationType.PUT,nil,"null-key");
+        var identity=op(e,OperationType.GET,nil,null).steps().stream().filter(s->s.event().equals("KEY_COMPARED")).findFirst().orElseThrow();
+        assertEquals(true,identity.details().get("identityEqual")); assertEquals(false,identity.details().get("equalsChecked"));
+        op(e,OperationType.PUT,KeySpec.string(new String("equal")),"value");
+        var equal=op(e,OperationType.GET,KeySpec.string(new String("equal")),null).steps().stream().filter(s->s.event().equals("KEY_COMPARED") && Boolean.TRUE.equals(s.details().get("equal"))).findFirst().orElseThrow();
+        assertEquals(false,equal.details().get("identityEqual")); assertEquals(true,equal.details().get("equalsChecked"));
+    }
+    @Test void pastSnapshotsDoNotChangeWhenLiveNodesAreUpdatedOrReorganized() {
+        var e=new HashMapEngine(64);
+        put(e,"K1",42); var old=put(e,"K2",42);
+        var saved=old.committed(); var savedNodes=nodes(saved);
+        long firstId=savedNodes.getFirst().id();
+        op(e,OperationType.PUT,KeySpec.collision("K1",42),"new-value");
+        for(int i=3;i<=9;i++) put(e,"K"+i,42);
+        op(e,OperationType.REMOVE,KeySpec.collision("K1",42),null);
+        assertEquals(2,saved.size()); assertEquals("LIST",saved.buckets().getFirst().kind());
+        assertEquals("K1",savedNodes.getFirst().value()); assertEquals(firstId,savedNodes.getFirst().id());
+        assertEquals(saved,old.steps().getLast().snapshot());
+        assertThrows(UnsupportedOperationException.class,()->saved.buckets().clear());
+        assertThrows(UnsupportedOperationException.class,()->old.steps().clear());
     }
     static void assertTrace(Trace<HashMapSnapshot> trace,HashMapEngine e) {
         assertEquals(trace.committed(),e.snapshot()); assertEquals(trace.committed(),trace.steps().getLast().snapshot());

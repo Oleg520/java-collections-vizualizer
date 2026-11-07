@@ -64,6 +64,9 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         };
     }
     @Override public Trace<HashMapSnapshot> execute(Operation operation) {
+        return execute(operation, initialCapacity);
+    }
+    private Trace<HashMapSnapshot> execute(Operation operation, int resetCapacity) {
         if (operation == null || operation.type() == null || operation.type() == OperationType.SCENARIO)
             throw new IllegalArgumentException("Допустимые операции: PUT, GET, REMOVE, CLEAR, RESET");
         if (operation.value() != null && operation.value().length() > 128) throw new IllegalArgumentException("Значение: до 128 символов");
@@ -112,8 +115,12 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                     result = new Result(false, null, null);
                 }
                 case RESET -> {
-                    fresh(initialCapacity);
+                    fresh(resetCapacity);
                     map.emit("MAP_RESET", "Новая коллекция: таблица снова выделяется лениво");
+                    map.emit("CONFIGURED", resetCapacity == 0
+                        ? "Используется new HashMap(); первая таблица будет на 16 бакетов"
+                        : "Используется new HashMap(" + resetCapacity + "); массив пока не выделен",
+                        "initialCapacity", resetCapacity, "sessionInitialCapacity", initialCapacity);
                     result = new Result(false, null, null);
                 }
                 default -> throw new IllegalArgumentException("Неизвестная операция");
@@ -182,17 +189,9 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         if (SCENARIOS.stream().noneMatch(s -> s.id().equals(name))) throw new IllegalArgumentException("Неизвестный сценарий");
         var before = snapshot();
         var steps = new ArrayList<Step<HashMapSnapshot>>();
-        append(steps, execute(new Operation(OperationType.RESET, null, null)));
-        boolean tree = name.startsWith("tree");
-        if (tree) {
-            // This is a real constructor choice, captured explicitly before the first put.
-            current = new Operation(OperationType.RESET, null, "initialCapacity=64");
-            recording = new ArrayList<>();
-            fresh(64);
-            map.emit("CONFIGURED", "Сценарий использует new HashMap(64); массив пока не выделен", "initialCapacity",64);
-            steps.addAll(recording);
-            recording = null; current = null;
-        }
+        // Demonstrations own their constructor choice. The session's reset setting stays intact.
+        int scenarioCapacity = name.startsWith("tree") ? 64 : 0;
+        append(steps, execute(new Operation(OperationType.RESET, null, null), scenarioCapacity));
         Trace<HashMapSnapshot> last;
         switch (name) {
             case "insert" -> last = append(steps, put(KeySpec.string("Java"), "Hello"));

@@ -62,4 +62,16 @@ class ApiIntegrationTest {
             .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/health")).andExpect(jsonPath("status").value("UP")).andExpect(jsonPath("java").value("21"));
     }
+    @Test void compactContractIsOptInAndBadEncodingCannotCommit() throws Exception {
+        String id=create(),url="/api/v1/sessions/"+id+"/commands";
+        mvc.perform(post(url+"?encoding=bad").contentType("application/json").content(command(0,"PUT","A","null")))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/sessions/"+id)).andExpect(jsonPath("revision").value(0));
+        mvc.perform(post(url+"?encoding=compact").contentType("application/json").content(command(0,"PUT","A","null")))
+            .andExpect(status().isOk()).andExpect(jsonPath("encoding").value("node-table-v1"))
+            .andExpect(jsonPath("nodePool[0].key.value").value("A"))
+            .andExpect(jsonPath("trace.committed.buckets[0].nodeRefs[0]").value(0))
+            .andExpect(jsonPath("trace.committed.buckets[0].nodes").doesNotExist());
+    }
+
 }

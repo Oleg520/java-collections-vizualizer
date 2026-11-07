@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 1,
+  "workload": {
+    "sessions": 15,
+    "concurrency": 4,
+    "repeatedScenarios": 96
+  },
+  "scenariosAndLimits": [
+    {
+      "name": "insert/initialCapacity=0",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "jsonBytes": 5987,
+      "gzipBytes": 1159,
+      "httpMs": 35.7,
+      "VmHWMKiB": 223104,
+      "VmRSSKiB": 223104
+    },
+    {
+      "name": "collision/initialCapacity=0",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "jsonBytes": 21375,
+      "gzipBytes": 1691,
+      "httpMs": 4.14,
+      "VmHWMKiB": 223168,
+      "VmRSSKiB": 223168
+    },
+    {
+      "name": "update/initialCapacity=0",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "jsonBytes": 11817,
+      "gzipBytes": 1496,
+      "httpMs": 2.82,
+      "VmHWMKiB": 223204,
+      "VmRSSKiB": 223204
+    },
+    {
+      "name": "resize/initialCapacity=0",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "jsonBytes": 232443,
+      "gzipBytes": 5190,
+      "httpMs": 13.63,
+      "VmHWMKiB": 223660,
+      "VmRSSKiB": 223660
+    },
+    {
+      "name": "treeify/initialCapacity=0",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "jsonBytes": 248718,
+      "gzipBytes": 5383,
+      "httpMs": 8.09,
+      "VmHWMKiB": 223804,
+      "VmRSSKiB": 223804
+    },
+    {
+      "name": "why-no-tree/initialCapacity=0",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "jsonBytes": 182281,
+      "gzipBytes": 4365,
+      "httpMs": 5.29,
+      "VmHWMKiB": 223880,
+      "VmRSSKiB": 223880
+    },
+    {
+      "name": "tree-search/initialCapacity=0",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "jsonBytes": 274617,
+      "gzipBytes": 5825,
+      "httpMs": 4.9,
+      "VmHWMKiB": 223924,
+      "VmRSSKiB": 223924
+    },
+    {
+      "name": "tree-remove/initialCapacity=0",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "jsonBytes": 349845,
+      "gzipBytes": 7222,
+      "httpMs": 6.68,
+      "VmHWMKiB": 224016,
+      "VmRSSKiB": 224016
+    },
+    {
+      "name": "insert/initialCapacity=16",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "jsonBytes": 5990,
+      "gzipBytes": 1170,
+      "httpMs": 1.82,
+      "VmHWMKiB": 224040,
+      "VmRSSKiB": 224040
+    },
+    {
+      "name": "collision/initialCapacity=16",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "jsonBytes": 21376,
+      "gzipBytes": 1694,
+      "httpMs": 2.22,
+      "VmHWMKiB": 224056,
+      "VmRSSKiB": 224056
+    },
+    {
+      "name": "update/initialCapacity=16",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "jsonBytes": 11818,
+      "gzipBytes": 1499,
+      "httpMs": 1.98,
+      "VmHWMKiB": 224068,
+      "VmRSSKiB": 224068
+    },
+    {
+      "name": "resize/initialCapacity=16",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "jsonBytes": 232444,
+      "gzipBytes": 5193,
+      "httpMs": 3.96,
+      "VmHWMKiB": 224160,
+      "VmRSSKiB": 224160
+    },
+    {
+      "name": "treeify/initialCapacity=16",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "jsonBytes": 248719,
+      "gzipBytes": 5385,
+      "httpMs": 3.61,
+      "VmHWMKiB": 224228,
+      "VmRSSKiB": 224228
+    },
+    {
+      "name": "why-no-tree/initialCapacity=16",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "jsonBytes": 182282,
+      "gzipBytes": 4368,
+      "httpMs": 3.23,
+      "VmHWMKiB": 225316,
+      "VmRSSKiB": 225316
+    },
+    {
+      "name": "tree-search/initialCapacity=16",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "jsonBytes": 274618,
+      "gzipBytes": 5829,
+      "httpMs": 4.06,
+      "VmHWMKiB": 225432,
+      "VmRSSKiB": 225432
+    },
+    {
+      "name": "tree-remove/initialCapacity=16",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "jsonBytes": 349846,
+      "gzipBytes": 7226,
+      "httpMs": 4.65,
+      "VmHWMKiB": 225560,
+      "VmRSSKiB": 225560
+    },
+    {
+      "name": "insert/initialCapacity=32",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "jsonBytes": 5990,
+      "gzipBytes": 1171,
+      "httpMs": 2.05,
+      "VmHWMKiB": 225608,
+      "VmRSSKiB": 225608
+    },
+    {
+      "name": "collision/initialCapacity=32",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "jsonBytes": 21376,
+      "gzipBytes": 1694,
+      "httpMs": 2.13,
+      "VmHWMKiB": 226904,
+      "VmRSSKiB": 226904
+    },
+    {
+      "name": "update/initialCapacity=32",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "jsonBytes": 11818,
+      "gzipBytes": 1500,
+      "httpMs": 1.97,
+      "VmHWMKiB": 227192,
+      "VmRSSKiB": 227192
+    },
+    {
+      "name": "resize/initialCapacity=32",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "jsonBytes": 232444,
+      "gzipBytes": 5193,
+      "httpMs": 4.12,
+      "VmHWMKiB": 227232,
+      "VmRSSKiB": 227232
+    },
+    {
+      "name": "treeify/initialCapacity=32",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "jsonBytes": 248719,
+      "gzipBytes": 5386,
+      "httpMs": 3.45,
+      "VmHWMKiB": 227296,
+      "VmRSSKiB": 227296
+    },
+    {
+      "name": "why-no-tree/initialCapacity=32",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "jsonBytes": 182282,
+      "gzipBytes": 4369,
+      "httpMs": 3.47,
+      "VmHWMKiB": 227320,
+      "VmRSSKiB": 227320
+    },
+    {
+      "name": "tree-search/initialCapacity=32",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "jsonBytes": 274618,
+      "gzipBytes": 5829,
+      "httpMs": 3.16,
+      "VmHWMKiB": 227328,
+      "VmRSSKiB": 227328
+    },
+    {
+      "name": "tree-remove/initialCapacity=32",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "jsonBytes": 349846,
+      "gzipBytes": 7226,
+      "httpMs": 4.09,
+      "VmHWMKiB": 227344,
+      "VmRSSKiB": 227344
+    },
+    {
+      "name": "insert/initialCapacity=64",
+      "steps": 11,
+      "snapshotNodeViews": 3,
+      "jsonBytes": 5990,
+      "gzipBytes": 1170,
+      "httpMs": 2.15,
+      "VmHWMKiB": 227416,
+      "VmRSSKiB": 227416
+    },
+    {
+      "name": "collision/initialCapacity=64",
+      "steps": 28,
+      "snapshotNodeViews": 36,
+      "jsonBytes": 21376,
+      "gzipBytes": 1695,
+      "httpMs": 2.6,
+      "VmHWMKiB": 227452,
+      "VmRSSKiB": 227452
+    },
+    {
+      "name": "update/initialCapacity=64",
+      "steps": 17,
+      "snapshotNodeViews": 12,
+      "jsonBytes": 11818,
+      "gzipBytes": 1500,
+      "httpMs": 2.55,
+      "VmHWMKiB": 227476,
+      "VmRSSKiB": 227476
+    },
+    {
+      "name": "resize/initialCapacity=64",
+      "steps": 102,
+      "snapshotNodeViews": 731,
+      "jsonBytes": 232444,
+      "gzipBytes": 5194,
+      "httpMs": 4.15,
+      "VmHWMKiB": 227536,
+      "VmRSSKiB": 227536
+    },
+    {
+      "name": "treeify/initialCapacity=64",
+      "steps": 145,
+      "snapshotNodeViews": 874,
+      "jsonBytes": 248719,
+      "gzipBytes": 5384,
+      "httpMs": 3.68,
+      "VmHWMKiB": 227544,
+      "VmRSSKiB": 227544
+    },
+    {
+      "name": "why-no-tree/initialCapacity=64",
+      "steps": 116,
+      "snapshotNodeViews": 609,
+      "jsonBytes": 182282,
+      "gzipBytes": 4368,
+      "httpMs": 3.81,
+      "VmHWMKiB": 227640,
+      "VmRSSKiB": 227640
+    },
+    {
+      "name": "tree-search/initialCapacity=64",
+      "steps": 158,
+      "snapshotNodeViews": 987,
+      "jsonBytes": 274618,
+      "gzipBytes": 5827,
+      "httpMs": 3.62,
+      "VmHWMKiB": 227656,
+      "VmRSSKiB": 227656
+    },
+    {
+      "name": "tree-remove/initialCapacity=64",
+      "steps": 212,
+      "snapshotNodeViews": 1245,
+      "jsonBytes": 349846,
+      "gzipBytes": 7224,
+      "httpMs": 4.56,
+      "VmHWMKiB": 227696,
+      "VmRSSKiB": 227696
+    },
+    {
+      "name": "spread/escaped=False/size=49",
+      "steps": 59,
+      "snapshotNodeViews": 2888,
+      "jsonBytes": 1383611,
+      "gzipBytes": 16095,
+      "httpMs": 4.98,
+      "VmHWMKiB": 228844,
+      "VmRSSKiB": 228844
+    },
+    {
+      "name": "spread/escaped=False/size=97",
+      "steps": 107,
+      "snapshotNodeViews": 10376,
+      "jsonBytes": 4834937,
+      "gzipBytes": 251215,
+      "httpMs": 12.6,
+      "VmHWMKiB": 232500,
+      "VmRSSKiB": 232500
+    },
+    {
+      "name": "spread/escaped=False/size=128",
+      "steps": 6,
+      "snapshotNodeViews": 765,
+      "jsonBytes": 465385,
+      "gzipBytes": 23071,
+      "httpMs": 4.34,
+      "VmHWMKiB": 232980,
+      "VmRSSKiB": 232980
+    },
+    {
+      "name": "tree-split/escaped=False/size=49",
+      "steps": 79,
+      "snapshotNodeViews": 3851,
+      "jsonBytes": 1558443,
+      "gzipBytes": 21237,
+      "httpMs": 4.8,
+      "VmHWMKiB": 235600,
+      "VmRSSKiB": 235600
+    },
+    {
+      "name": "tree-split/escaped=False/size=97",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "jsonBytes": 37357623,
+      "gzipBytes": 1913503,
+      "httpMs": 150.62,
+      "VmHWMKiB": 241368,
+      "VmRSSKiB": 241368
+    },
+    {
+      "name": "tree-split/escaped=False/size=128",
+      "steps": 31,
+      "snapshotNodeViews": 3944,
+      "jsonBytes": 1627327,
+      "gzipBytes": 81493,
+      "httpMs": 4.49,
+      "VmHWMKiB": 242616,
+      "VmRSSKiB": 242616
+    },
+    {
+      "name": "tree-split/escaped=True/size=49",
+      "steps": 79,
+      "snapshotNodeViews": 3851,
+      "jsonBytes": 5365848,
+      "gzipBytes": 118708,
+      "httpMs": 6.64,
+      "VmHWMKiB": 243284,
+      "VmRSSKiB": 243284
+    },
+    {
+      "name": "tree-split/escaped=True/size=97",
+      "steps": 990,
+      "snapshotNodeViews": 96006,
+      "jsonBytes": 129203118,
+      "gzipBytes": 2575738,
+      "httpMs": 180.63,
+      "VmHWMKiB": 244180,
+      "VmRSSKiB": 244180
+    },
+    {
+      "name": "tree-split/escaped=True/size=128",
+      "steps": 31,
+      "snapshotNodeViews": 3944,
+      "jsonBytes": 5626567,
+      "gzipBytes": 108110,
+      "httpMs": 12.47,
+      "VmHWMKiB": 244336,
+      "VmRSSKiB": 244336
+    }
+  ],
+  "sustained": {
+    "httpP50Ms": 9.47,
+    "httpP95Ms": 14.37,
+    "responseBytesMax": 350619,
+    "VmHWMKiB": 245512,
+    "VmRSSKiB": 245512
+  },
+  "description": "Full-format baseline, same JVM heap limit; latencies are informational, not a controlled benchmark."
+}

@@ -56,10 +56,12 @@ final class InstrumentedHashMap<K,V> {
     }
     boolean matches(Node<K,V> node, int hash, Object key) {
         boolean hashEqual = node.hash == hash;
-        boolean equal = hashEqual && (node.key == key || (key != null && key.equals(node.key)));
+        boolean identityEqual = hashEqual && node.key == key;
+        boolean equalsChecked = hashEqual && !identityEqual && key != null;
+        boolean equal = identityEqual || (equalsChecked && key.equals(node.key));
         emit("KEY_COMPARED", equal ? "Hash и ключ совпали: запись найдена" : "Ключ не совпал: продолжаем поиск",
              "nodeId", node.id, "nodeKey", String.valueOf(node.key), "hashEqual", hashEqual,
-             "equalsChecked", hashEqual, "equal", equal);
+             "identityEqual", identityEqual, "equalsChecked", equalsChecked, "equal", equal);
         return equal;
     }
     void visit(Node<K,V> node, int hash, Object key) {

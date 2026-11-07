@@ -120,7 +120,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionTrace'
+                oneOf:
+                  - $ref: '#/components/schemas/SessionTrace'
+                  - $ref: '#/components/schemas/CompactSessionTrace'
         '400':
           description: Invalid input
           content:
@@ -158,6 +160,16 @@ paths:
           schema:
             type: string
             format: uuid
+        - in: query
+          name: encoding
+          required: false
+          schema:
+            type: string
+            enum:
+              - full
+              - compact
+            default: full
+          description: compact retains every step but transmits repeated node versions once.
   /sessions/{id}/scenarios/{name}:
     post:
       operationId: executeScenario
@@ -167,7 +179,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionTrace'
+                oneOf:
+                  - $ref: '#/components/schemas/SessionTrace'
+                  - $ref: '#/components/schemas/CompactSessionTrace'
         '400':
           description: Invalid input
           content:
@@ -219,6 +233,16 @@ paths:
               - why-no-tree
               - tree-search
               - tree-remove
+        - in: query
+          name: encoding
+          required: false
+          schema:
+            type: string
+            enum:
+              - full
+              - compact
+            default: full
+          description: compact retains every step but transmits repeated node versions once.
 components:
   schemas:
     Key:
@@ -593,3 +617,166 @@ components:
         - status
         - version
         - java
+    BucketRefs:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        kind:
+          type: string
+          enum:
+            - LIST
+            - TREE
+            - TRANSFER
+        headId:
+          type: integer
+          format: int64
+        rootId:
+          type: integer
+          format: int64
+          nullable: true
+        nodeRefs:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+          description: Zero-based indices into response.nodePool; these are not stable node IDs.
+      required:
+        - index
+        - kind
+        - headId
+        - rootId
+        - nodeRefs
+    CompactSnapshot:
+      type: object
+      additionalProperties: false
+      properties:
+        phase:
+          type: string
+          enum:
+            - WORKING
+            - COMMITTED
+        size:
+          type: integer
+          format: int32
+        capacity:
+          type: integer
+          format: int32
+        threshold:
+          type: integer
+          format: int32
+        loadFactor:
+          type: number
+        pendingCapacity:
+          type: integer
+          format: int32
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/BucketRefs'
+        pendingBuckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/BucketRefs'
+      required:
+        - phase
+        - size
+        - capacity
+        - threshold
+        - loadFactor
+        - pendingCapacity
+        - buckets
+        - pendingBuckets
+    CompactStep:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        operation:
+          $ref: '#/components/schemas/Operation'
+        event:
+          type: string
+        stage:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        snapshot:
+          $ref: '#/components/schemas/CompactSnapshot'
+      required:
+        - index
+        - operation
+        - event
+        - stage
+        - message
+        - details
+        - snapshot
+    CompactTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          enum:
+            - 1
+        collection:
+          type: string
+          enum:
+            - HASH_MAP
+        operation:
+          $ref: '#/components/schemas/Operation'
+        result:
+          $ref: '#/components/schemas/Result'
+        before:
+          $ref: '#/components/schemas/CompactSnapshot'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompactStep'
+        committed:
+          $ref: '#/components/schemas/CompactSnapshot'
+      required:
+        - schemaVersion
+        - collection
+        - operation
+        - result
+        - before
+        - steps
+        - committed
+    CompactSessionTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        sessionId:
+          type: string
+          format: uuid
+        revision:
+          type: integer
+          format: int64
+        trace:
+          $ref: '#/components/schemas/CompactTrace'
+        encoding:
+          type: string
+          enum:
+            - node-table-v1
+        nodePool:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+          description: Immutable node versions, shared by all frames within this response.
+      required:
+        - schemaVersion
+        - sessionId
+        - revision
+        - trace
+        - encoding
+        - nodePool

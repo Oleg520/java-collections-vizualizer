@@ -154,6 +154,7 @@ export default function App() {
         try {
           setSession(await api.get(session.id));
           setHistoryIndex(-1);
+          setCursor(0);
         } catch {
           /* Preserve the original actionable error; explicit recovery is available. */
         }

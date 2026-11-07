@@ -1,5 +1,15 @@
 server:
   port: ${PORT:8080}
+  tomcat:
+    threads:
+      max: ${HTTP_THREADS:8}
+      min-spare: 2
+    max-connections: 64
+    accept-count: 32
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 1024
   error:
     include-message: never
 spring:

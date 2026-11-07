@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import { test, expect, type Page } from "@playwright/test";
 
 async function ready(page: Page) {
@@ -110,9 +111,9 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
   await expect(page.locator(".algorithm-list")).toContainText("h ^ (h >>> 16)");
   // Let the SVG transitions settle before saving documentation screenshots.
   await page.waitForTimeout(350);
-  if (testInfo.project.name === "desktop")
+  if (process.env.UPDATE_SCREENSHOTS && testInfo.project.name === "desktop")
     await page.screenshot({ path: "../docs/hashmap-tree.png", fullPage: true });
-  if (testInfo.project.name === "mobile")
+  if (process.env.UPDATE_SCREENSHOTS && testInfo.project.name === "mobile")
     await page.screenshot({
       path: "../docs/hashmap-mobile.png",
       fullPage: true,
@@ -168,4 +169,162 @@ test("different tabs own different sessions and invalid input is actionable", as
   );
   await expect(second.getByTestId("committed-size")).toHaveText("1");
   await second.close();
+});
+
+for (const initialCapacity of [0, 16, 32, 64]) {
+  test(`all Java demos with initialCapacity=${initialCapacity}`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    // Only changes constructor input; all responses come from the real backend.
+    await page.route("**/api/v1/sessions", (route) =>
+      route.continue({ postData: JSON.stringify({ initialCapacity }) }),
+    );
+    await ready(page);
+    const demos = [
+      ["insert", "01 Обычная вставка", 1, 16],
+      ["collision", "02 Коллизия", 3, 16],
+      ["update", "03 Обновление ключа", 1, 16],
+      ["resize", "04 Resize и split", 13, 32],
+      ["treeify", "05 Красно-чёрное дерево", 9, 64],
+      ["why-no-tree", "06 Почему нет дерева", 9, 32],
+      ["tree-search", "07 Поиск в дереве", 9, 64],
+      ["tree-remove", "08 Удаление из дерева", 1, 64],
+    ] as const;
+    for (const [id, name, size, capacity] of demos) {
+      const responsePromise = page.waitForResponse((r) =>
+        r.url().includes(`/scenarios/${id}?`),
+      );
+      await page
+        .getByRole("button", { name: new RegExp(name.replace("?", "\\?")) })
+        .click();
+      const response = await responsePromise;
+      expect(response.ok()).toBe(true);
+      expect((await response.json()).encoding).toBe("node-table-v1");
+      await expect(
+        page.getByRole("button", { name: "Выполнить put" }),
+      ).toBeEnabled();
+      await finish(page);
+      await expect(page.getByTestId("metric-size")).toHaveText(String(size));
+      await expect(page.getByTestId("metric-capacity")).toHaveText(
+        String(capacity),
+      );
+    }
+    await page.getByRole("button", { name: "Начать заново" }).click();
+    await expect(page.getByTestId("committed-size")).toHaveText("0");
+    await finish(page);
+    await expect(page.getByTestId("metric-threshold")).toHaveText(
+      String(initialCapacity),
+    );
+    expect(errors).toEqual([]);
+  });
+}
+
+test("large tree split, conflict recovery and offline history", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.setTimeout(60000);
+  const created = page.waitForResponse(
+    (r) => /\/sessions$/.test(r.url()) && r.request().method() === "POST",
+  );
+  await ready(page);
+  const session = await (await created).json();
+  let revision = 0;
+  for (let i = 0; i < 96; i++) {
+    const response = await request.post(
+      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact`,
+      {
+        data: {
+          expectedRevision: revision,
+          operation: {
+            type: "PUT",
+            key: {
+              type: "COLLISION",
+              value: `K${String(i).padStart(3, "0")}`,
+              hashCodeOverride: i % 2 === 0 ? 1 : 129,
+            },
+            value: "v".repeat(128),
+          },
+        },
+      },
+    );
+    expect(response.ok()).toBe(true);
+    revision = (await response.json()).revision;
+    await response.dispose();
+  }
+  // The browser still owns revision 0: a conflicting command must fetch state without retrying it.
+  let writes = 0;
+  page.on("request", (r) => {
+    if (r.url().includes("/commands") && r.method() === "POST") writes++;
+  });
+  await page.getByRole("button", { name: "Выполнить put" }).click();
+  await expect(page.getByRole("alert")).toContainText("Состояние изменилось");
+  await expect(page.getByTestId("committed-size")).toHaveText("96");
+  expect(writes).toBe(1);
+  await page.getByLabel("Тип ключа").selectOption("COLLISION");
+  await page.getByRole("textbox", { name: "Ключ", exact: true }).fill("K096");
+  await page.getByRole("textbox", { name: "hashCode", exact: true }).fill("1");
+  const responsePromise = page.waitForResponse(
+    (r) => r.url().includes("/commands") && r.status() === 200,
+  );
+  await page.getByRole("button", { name: "Выполнить put" }).click();
+  const response = await responsePromise;
+  const encoded = await response.json();
+  expect(encoded.nodePool.length).toBeLessThan(5000);
+  expect(encoded.trace.steps.length).toBeGreaterThan(100);
+  await expect(page.getByTestId("committed-size")).toHaveText("97");
+  await finish(page);
+  await expect(page.getByTestId("metric-capacity")).toHaveText("256");
+  await expect(page.getByText("RB TREE", { exact: true })).toHaveCount(2);
+  const zoomLabel = page.locator(".zoom-controls > span");
+  const fitZoom = Number.parseInt((await zoomLabel.textContent())!);
+  await page.getByRole("button", { name: "Уменьшить масштаб", exact: true }).click();
+  await expect.poll(async () => Number.parseInt((await zoomLabel.textContent())!)).toBeLessThan(fitZoom);
+  const smallerZoom = Number.parseInt((await zoomLabel.textContent())!);
+  await page.getByRole("button", { name: "Увеличить масштаб", exact: true }).click();
+  await expect.poll(async () => Number.parseInt((await zoomLabel.textContent())!)).toBeGreaterThan(smallerZoom);
+  await page.getByRole("button", { name: "Масштаб 100%", exact: true }).click();
+  expect(
+    await page
+      .getByTestId("diagram")
+      .evaluate((el) => el.scrollWidth > el.clientWidth),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Сбросить масштаб", exact: true })
+    .click();
+  await page.context().setOffline(true);
+  await page.getByRole("button", { name: "В начало", exact: true }).click();
+  await expect(page.getByTestId("metric-size")).toHaveText("96");
+  await page.getByLabel("Скорость воспроизведения").selectOption("4");
+  await page
+    .getByRole("button", { name: "Воспроизвести", exact: true })
+    .click();
+  await expect(page.getByTestId("step-number")).not.toHaveText("1");
+  await page.getByRole("button", { name: "Пауза", exact: true }).click();
+  await finish(page);
+  await expect(page.getByTestId("metric-size")).toHaveText("97");
+  expect(writes).toBe(2);
+  await page.context().setOffline(false);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("HeapProfiler.collectGarbage");
+  const heap = await cdp.send("Runtime.getHeapUsage");
+  await testInfo.attach("browser-memory.json", {
+    body: JSON.stringify(heap, null, 2),
+    contentType: "application/json",
+  });
+  if (process.env.UPDATE_SCREENSHOTS) await writeFile(
+    `../docs/verification/browser-memory-${testInfo.project.name}.json`,
+    JSON.stringify({ scenario: "97-entry tree split, compact trace, after GC", ...heap }, null, 2) + "\n",
+  );
+  expect(heap.usedSize).toBeLessThan(96 * 1024 * 1024);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

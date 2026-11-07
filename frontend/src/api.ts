@@ -1,4 +1,5 @@
-import type { Operation, Scenario, Session, SessionTrace } from "./types";
+import { decodeTrace, type CompactSessionTrace } from "./trace";
+import type { Operation, Scenario, Session } from "./types";
 const base = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 export class ApiError extends Error {
   constructor(
@@ -42,12 +43,18 @@ export const api = {
   get: (id: string) => request<Session>(`/sessions/${id}`),
   scenarios: () => request<Scenario[]>("/scenarios"),
   command: (session: Session, operation: Operation) =>
-    request<SessionTrace>(`/sessions/${session.id}/commands`, {
-      expectedRevision: session.revision,
-      operation,
-    }),
+    request<CompactSessionTrace>(
+      `/sessions/${session.id}/commands?encoding=compact`,
+      {
+        expectedRevision: session.revision,
+        operation,
+      },
+    ).then(decodeTrace),
   scenario: (session: Session, name: string) =>
-    request<SessionTrace>(`/sessions/${session.id}/scenarios/${name}`, {
-      expectedRevision: session.revision,
-    }),
+    request<CompactSessionTrace>(
+      `/sessions/${session.id}/scenarios/${name}?encoding=compact`,
+      {
+        expectedRevision: session.revision,
+      },
+    ).then(decodeTrace),
 };

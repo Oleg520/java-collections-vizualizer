@@ -1825,12 +1825,40 @@ h1 > span {
 
 /* Reading sizes for dense technical panels. */
 @media (min-width: 1001px) {
-  .scenario-button strong { font-size: 12px; }
-  .scenario-button small { font-size: 10px; }
-  .sidebar-note, .sidebar-description { font-size: 11px; }
-  .metric > small { font-size: 9px; }
-  .event-row code { font-size: 9px; }
-  .event-row small { font-size: 10px; }
-  .page-heading p { font-size: 12px; }
-  .field > span, .primary-button { font-size: 12px; }
+  .scenario-button strong {
+    font-size: 12px;
+  }
+  .scenario-button small {
+    font-size: 10px;
+  }
+  .sidebar-note,
+  .sidebar-description {
+    font-size: 11px;
+  }
+  .metric > small {
+    font-size: 9px;
+  }
+  .event-row code {
+    font-size: 9px;
+  }
+  .event-row small {
+    font-size: 10px;
+  }
+  .page-heading p {
+    font-size: 12px;
+  }
+  .field > span,
+  .primary-button {
+    font-size: 12px;
+  }
+}
+
+/* Keep SVG mounted so removing the final node can finish its exit animation. */
+.diagram-scroll {
+  position: relative;
+}
+.empty-diagram {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
