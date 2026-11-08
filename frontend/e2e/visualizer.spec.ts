@@ -130,6 +130,8 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
   expect(await page.locator(".black-node").count()).toBeGreaterThan(0);
   await page.getByRole("button", { name: "Algorithm", exact: true }).click();
   await expect(page.locator(".algorithm-list")).toContainText("h ^ (h >>> 16)");
+  if (testInfo.project.name === "mobile")
+    await page.getByTitle("Бакет 42: TREE", { exact: true }).click();
   // Let the SVG transitions settle before saving documentation screenshots.
   await page.waitForTimeout(350);
   if (process.env.UPDATE_SCREENSHOTS && testInfo.project.name === "desktop")

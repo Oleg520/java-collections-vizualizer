@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Boxes, Minus, Plus, ScanLine } from "lucide-react";
+import { Boxes, Maximize, Minus, Plus, ScanLine } from "lucide-react";
 import { layoutSnapshot } from "./layout";
 import {
   keyLabel,
@@ -22,7 +22,7 @@ export function Diagram({
   selectedId?: number;
 }) {
   const layout = useMemo(() => layoutSnapshot(state), [state]);
-  const [zoom, setZoom] = useState<number | null>(null);
+  const [zoom, setZoom] = useState<number | "fit" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(800);
   useEffect(() => {
@@ -34,7 +34,26 @@ export function Diagram({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const scale = zoom ?? Math.min(1, viewportWidth / layout.width);
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia("(max-width: 680px)").matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 680px)");
+    const update = () => setMobile(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const fitScale = Math.min(1, viewportWidth / layout.width);
+  const scale = zoom === "fit" ? fitScale : (zoom ?? (mobile ? 1 : fitScale));
+  const centerOn = (x: number, y: number) => {
+    const element = scrollRef.current;
+    if (!element) return;
+    element.scrollTo({
+      left: (x + 58) * scale - element.clientWidth / 2,
+      top: (y + 32) * scale + 8 - element.clientHeight / 2,
+      behavior: "instant",
+    });
+  };
   const [hideEmpty, setHideEmpty] = useState(false);
   const [focusedBucket, setFocusedBucket] = useState<number | null>(null);
   useEffect(() => {
@@ -93,10 +112,30 @@ export function Diagram({
           </button>
           <button
             className="icon-button"
+            aria-label="Вместить по ширине"
+            title="Вместить по ширине"
+            onClick={() => {
+              setZoom("fit");
+              scrollRef.current?.scrollTo({
+                left: 0,
+                top: 0,
+                behavior: "instant",
+              });
+            }}
+          >
+            <Maximize size={15} />
+          </button>
+          <button
+            className="icon-button"
             aria-label="Сбросить масштаб"
             onClick={() => {
               setZoom(null);
               setFocusedBucket(null);
+              scrollRef.current?.scrollTo({
+                left: 0,
+                top: 0,
+                behavior: "instant",
+              });
             }}
           >
             <ScanLine size={15} />
@@ -122,7 +161,17 @@ export function Diagram({
                 key={i}
                 title={`Бакет ${i}: ${occupied.get(i)?.kind ?? "пустой"}`}
                 className={`bucket-cell ${occupied.has(i) ? "occupied" : ""} ${activeBucket === i || focusedBucket === i ? "active" : ""}`}
-                onClick={() => setFocusedBucket(i === focusedBucket ? null : i)}
+                onClick={() => {
+                  setFocusedBucket(i === focusedBucket ? null : i);
+                  const bucket = occupied.get(i);
+                  const target = layout.nodes.find(
+                    (n) =>
+                      n.bucket === i &&
+                      !n.pending &&
+                      (bucket?.rootId == null || n.node.id === bucket.rootId),
+                  );
+                  if (target) centerOn(target.x, target.y);
+                }}
               >
                 <span className="bucket-index">
                   {String(i).padStart(2, "0")}
@@ -168,7 +217,28 @@ export function Diagram({
           </span>
         </div>
       )}
-      <div className="diagram-scroll" data-testid="diagram" ref={scrollRef}>
+      <div className="diagram-navigation">
+        <span>Прокрутите схему · нажмите на бакет, чтобы перейти к узлам</span>
+        {selectedId !== undefined && positions.has(selectedId) && (
+          <button
+            className="icon-button"
+            onClick={() => {
+              const node = positions.get(selectedId)!;
+              centerOn(node.x, node.y);
+            }}
+          >
+            К выбранному узлу
+          </button>
+        )}
+      </div>
+      <div
+        className="diagram-scroll"
+        data-testid="diagram"
+        ref={scrollRef}
+        tabIndex={0}
+        role="region"
+        aria-label="Прокручиваемая схема HashMap"
+      >
         {layout.nodes.length === 0 && (
           <div className="empty-diagram">
             <div className="empty-icon">
