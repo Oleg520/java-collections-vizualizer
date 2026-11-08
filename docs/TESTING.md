@@ -23,7 +23,7 @@ Playwright также может использовать уже запущен�
 переходы list/tree, split на две половины, видимость узлов в рабочих снимках,
 стабильность ID, сохранность предыдущих снимков и результат trace.
 
-GitHub Actions: Java/TS-сборка, unit/API-тесты, Chromium desktop/mobile E2E.
+GitHub Actions запускает `Build and verify` только при pull request (не при push в ветку или публикации тега): Java/TS-сборка, unit/API-тесты, Chromium desktop/mobile E2E.
 Все восемь сценариев проверяются при initialCapacity 0/16/32/64. E2E также
 проверяет большой split на 97-й вставке, конфликт revision и offline-воспроизведение.
 Обычный прогон не меняет скриншоты документации; для их обновления:
