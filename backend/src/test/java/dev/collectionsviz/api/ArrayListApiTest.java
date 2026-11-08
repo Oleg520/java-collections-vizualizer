@@ -54,6 +54,23 @@ class ArrayListApiTest {
         mvc.perform(post(base+"/scenarios/treeify?encoding=compact").contentType("application/json").content("{\"expectedRevision\":0}")).andExpect(status().isBadRequest());
         mvc.perform(get(base)).andExpect(jsonPath("revision").value(0)).andExpect(jsonPath("state.size").value(0));
     }
+    @Test void extraneousElementsReturn400WithoutChangingStateOrRevision() throws Exception {
+        var session=sessions.create(CollectionType.ARRAY_LIST,null,"extraneous-elements-test");
+        sessions.execute(session.id(),0,Operation.array(OperationType.ADD,null,Element.of("keep"),null));
+        var before=sessions.get(session.id());
+        for(var type:List.of(OperationType.GET_AT,OperationType.REMOVE_AT,OperationType.CLEAR,OperationType.RESET,OperationType.ENSURE_CAPACITY,OperationType.TRIM_TO_SIZE)) {
+            Integer index=type==OperationType.GET_AT || type==OperationType.REMOVE_AT ? 0 : null;
+            Integer capacity=type==OperationType.ENSURE_CAPACITY ? 24 : null;
+            for(var element:List.of(Element.of(null),Element.of("unexpected"))) {
+                var operation=Operation.array(type,index,element,capacity);
+                mvc.perform(post("/api/v1/sessions/"+session.id()+"/commands?encoding=compact")
+                    .contentType("application/json").content(json.writeValueAsString(new ApiController.CommandRequest(1L,operation))))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("code").value("INVALID_INPUT"))
+                    .andExpect(jsonPath("message").value("Эта операция не принимает element"));
+                assertEquals(before,sessions.get(session.id()));
+            }
+        }
+    }
     static Buffer decodeBuffer(int ref, CompactArrayTrace trace) {
         var b=trace.bufferPool().get(ref);
         return new Buffer(b.id(),b.capacity(),b.cellRefs().stream().map(i->i==null?null:trace.cellPool().get(i)).toList());
@@ -81,6 +98,7 @@ class ArrayListApiTest {
         for(int i=0;i<source.steps().size();i++) {
             var expected=source.steps().get(i); var actual=compact.trace().steps().get(i);
             assertEquals(expected.snapshot(),decode(actual.snapshot(),compact));
+            assertEquals(expected.operation(),actual.operation());
             assertEquals(expected.event(),actual.event()); assertEquals(expected.details(),actual.details());
         }
         return compact;

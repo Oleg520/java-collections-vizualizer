@@ -214,7 +214,9 @@ KEY_COMPARED различает `identityEqual` (результат `==`) и `eq
 `element = {type: STRING|INTEGER|NULL, value: string|null}`. INTEGER хранится в
 JSON как строка Java int, нормализованная сервером; STRING остаётся строкой.
 Настоящий null передаётся как `{"type":"NULL"}`; отсутствующий element не заменяет
-его для команд, требующих значение. Максимум 128 UTF-16 code units, пустая строка
+его для команд, требующих значение. Для GET_AT, REMOVE_AT, CLEAR, RESET,
+ENSURE_CAPACITY и TRIM_TO_SIZE поле element должно отсутствовать либо быть JSON null;
+типизированный элемент (включая `{"type":"NULL"}`) возвращает 400 до мутации. Максимум 128 UTF-16 code units, пустая строка
 и Unicode разрешены. `index` / `minCapacity` — JSON int32; дроби отклоняются.
 ADD_AT принимает 0..size, GET_AT/SET_AT/REMOVE_AT — 0..size-1. Отрицательный
 minCapacity — no-op согласно JDK. Удаление реализовано только по индексу.

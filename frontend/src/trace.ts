@@ -1,5 +1,8 @@
 import type {
+  ArrayBuffer,
+  ArraySnapshot,
   Bucket,
+  Cell,
   MapNode,
   SessionTrace,
   Snapshot,
@@ -61,7 +64,6 @@ export function decodeTrace(
   };
 }
 
-import type { ArraySnapshot, ArrayBuffer, Cell } from "./types";
 export interface ArrayFrame
   extends Omit<ArraySnapshot, "buffer" | "pendingBuffer"> {
   bufferRef: number;

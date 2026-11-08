@@ -1,4 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
+import type { CompactArrayTrace } from "../src/trace";
+import type { Operation } from "../src/types";
 async function ready(page: Page) {
   await page.goto("/");
   await expect(
@@ -132,12 +134,36 @@ test("all nine Java scenarios, growth buffers, 320px and reduced motion; HashMap
       "linear-search",
     ].indexOf(id);
     await page.locator(".scenario-button").nth(index).click();
-    expect((await (await response).json()).encoding).toBe("array-frames-v1");
+    const encoded: CompactArrayTrace = await (await response).json();
+    expect(encoded.encoding).toBe("array-frames-v1");
     await finish(page);
     await expect(page.getByTestId("metric-size")).toHaveText(String(size));
     await expect(page.getByTestId("metric-capacity")).toHaveText(
       String(capacity),
     );
+    const labels: Partial<Record<string, [Operation["type"], string][]>> = {
+      "read-replace": [["GET_AT", "get(1)"]],
+      "remove-middle": [["REMOVE_AT", "remove(1)"]],
+      capacity: [
+        ["ENSURE_CAPACITY", "ensureCapacity(10)"],
+        ["TRIM_TO_SIZE", "trimToSize()"],
+        ["CLEAR", "clear()"],
+      ],
+      nulls: [["SET_AT", "set(2, null)"]],
+    };
+    for (const [type, label] of labels[id] ?? []) {
+      const step = encoded.trace.steps.find(
+        (s) => s.event === "OPERATION_STARTED" && s.operation.type === type,
+      )!;
+      if (type === "SET_AT")
+        expect(step.operation.element).toEqual({ type: "NULL", value: null });
+      else expect(step.operation.element).toBeNull();
+      await page.locator(".event-row").nth(step.index).click();
+      await expect(page.locator(".step-op")).toHaveText(label);
+      await expect(page.locator(".step-explanation code")).toHaveText(
+        `OPERATION_STARTED · ${label}`,
+      );
+    }
     if (id === "growth") {
       await page
         .locator(".event-row")

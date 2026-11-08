@@ -85,7 +85,9 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
         Object input = null;
         switch (op.type()) {
             case ADD, ADD_AT, SET_AT, INDEX_OF -> input = value(op.element());
-            case GET_AT, REMOVE_AT, CLEAR, RESET, ENSURE_CAPACITY, TRIM_TO_SIZE -> { }
+            case GET_AT, REMOVE_AT, CLEAR, RESET, ENSURE_CAPACITY, TRIM_TO_SIZE -> {
+                if (op.element() != null) throw new IllegalArgumentException("Эта операция не принимает element");
+            }
             default -> throw new IllegalArgumentException("Операция недоступна для ArrayList");
         }
         boolean indexed = Set.of(OperationType.ADD_AT, OperationType.GET_AT, OperationType.SET_AT, OperationType.REMOVE_AT).contains(op.type());
@@ -251,7 +253,11 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
     }
     private void add(List<Step<ArrayListSnapshot>> steps, Object value) { run(steps, OperationType.ADD, null, value, null); }
     private void run(List<Step<ArrayListSnapshot>> steps, OperationType type, Integer index, Object value, Integer capacity) {
-        append(steps, execute(Operation.array(type, index, Element.of(value), capacity)));
+        Element element = switch (type) {
+            case ADD, ADD_AT, SET_AT, INDEX_OF -> Element.of(value);
+            default -> null;
+        };
+        append(steps, execute(Operation.array(type, index, element, capacity)));
     }
     private static void append(List<Step<ArrayListSnapshot>> steps, Trace<ArrayListSnapshot> trace) {
         for (var s : trace.steps()) steps.add(new Step<>(steps.size(), s.operation(), s.event(), s.stage(), s.message(), s.details(), s.snapshot()));

@@ -8,7 +8,11 @@ import static dev.collectionsviz.core.Protocol.OperationType.*;
 
 class ArrayListEngineTest {
     static Trace<ArrayListSnapshot> run(ArrayListEngine e, OperationType type, Integer index, Object value, Integer cap) {
-        return e.execute(Operation.array(type,index,Element.of(value),cap));
+        Element element = switch (type) {
+            case ADD, ADD_AT, SET_AT, INDEX_OF -> Element.of(value);
+            default -> null;
+        };
+        return e.execute(Operation.array(type,index,element,cap));
     }
     static Trace<ArrayListSnapshot> run(ArrayListEngine e, OperationType type) { return run(e,type,null,null,null); }
     static Trace<ArrayListSnapshot> add(ArrayListEngine e, Object value) { return run(e,ADD,null,value,null); }
@@ -117,6 +121,50 @@ class ArrayListEngineTest {
             assertEquals(fresh.committed().capacity(),trace.committed().capacity());
             for(int i=0;i<trace.steps().size();i++) assertEquals(i,trace.steps().get(i).index());
             run(e,RESET); assertEquals(5,e.snapshot().capacity()); assertEquals(0,e.snapshot().size());
+        }
+    }
+    @Test void scenarioTracesOnlyContainArgumentsOfTheExecutedOperation() {
+        assertScenarioOperations("read-replace", List.of(
+            Operation.array(RESET,null,null,null),
+            Operation.array(ADD,null,Element.of("A"),null),
+            Operation.array(ADD,null,Element.of("B"),null),
+            Operation.array(ADD,null,Element.of("C"),null),
+            Operation.array(GET_AT,1,null,null),
+            Operation.array(SET_AT,1,Element.of(42),null)));
+        assertScenarioOperations("capacity", List.of(
+            Operation.array(RESET,null,null,null),
+            Operation.array(ENSURE_CAPACITY,null,null,10),
+            Operation.array(ADD,null,Element.of("A"),null),
+            Operation.array(ENSURE_CAPACITY,null,null,24),
+            Operation.array(TRIM_TO_SIZE,null,null,null),
+            Operation.array(CLEAR,null,null,null),
+            Operation.array(TRIM_TO_SIZE,null,null,null),
+            Operation.array(ADD,null,Element.of("B"),null)));
+        assertScenarioOperations("nulls", List.of(
+            Operation.array(RESET,null,null,null),
+            Operation.array(ADD,null,Element.of(null),null),
+            Operation.array(ADD,null,Element.of("null"),null),
+            Operation.array(ADD,null,Element.of(null),null),
+            Operation.array(GET_AT,0,null,null),
+            Operation.array(SET_AT,2,Element.of(null),null),
+            Operation.array(REMOVE_AT,2,null,null)));
+    }
+    private static void assertScenarioOperations(String name, List<Operation> expected) {
+        var trace = new ArrayListEngine().scenario(name);
+        assertEquals(expected,trace.steps().stream().filter(s -> s.event().equals("OPERATION_STARTED")).map(Step::operation).toList());
+        for (var step : trace.steps()) assertTrue(expected.contains(step.operation()),step.operation().toString());
+    }
+    @Test void extraneousElementsAreRejectedBeforeMutationIncludingTypedNull() {
+        var e = new ArrayListEngine(); add(e,"keep");
+        var before = e.snapshot();
+        for (var type : List.of(GET_AT,REMOVE_AT,CLEAR,RESET,ENSURE_CAPACITY,TRIM_TO_SIZE)) {
+            Integer index = type == GET_AT || type == REMOVE_AT ? 0 : null;
+            Integer capacity = type == ENSURE_CAPACITY ? 24 : null;
+            for (var element : List.of(Element.of(null),Element.of("unexpected"))) {
+                var error = assertThrows(IllegalArgumentException.class,() -> e.execute(Operation.array(type,index,element,capacity)));
+                assertEquals("Эта операция не принимает element",error.getMessage());
+                assertEquals(before,e.snapshot());
+            }
         }
     }
 }

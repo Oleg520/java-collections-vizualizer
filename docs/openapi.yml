@@ -378,6 +378,8 @@ components:
           allOf:
           - $ref: '#/components/schemas/Element'
           nullable: true
+          description: Required for ADD, ADD_AT, SET_AT and INDEX_OF (including typed NULL).
+            Other operations require an omitted or JSON-null element; typed elements are rejected before mutation.
         minCapacity:
           type: integer
           format: int32

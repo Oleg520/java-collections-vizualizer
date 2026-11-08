@@ -1,11 +1,6 @@
 import { expect, it } from "vitest";
 import { decodeTrace, type ArrayFrame, type CompactArrayTrace } from "./trace";
-import {
-  isArray,
-  operationLabel,
-  elementLabel,
-  type ArraySnapshot,
-} from "./types";
+import { isArray, elementLabel, type ArraySnapshot } from "./types";
 const frame = (ref: number): ArrayFrame => ({
   collection: "ARRAY_LIST",
   phase: "WORKING",
@@ -94,27 +89,4 @@ it("rejects invalid cell and buffer references and inconsistent lengths", () => 
   const source = input();
   source.bufferPool[0].capacity = 5;
   expect(() => decodeTrace(source)).toThrow("Повреждённый буфер");
-});
-
-it("labels nullable transport fields without inventing empty arguments", () => {
-  expect(
-    operationLabel({
-      type: "ADD",
-      key: null,
-      value: null,
-      index: null,
-      minCapacity: null,
-      element: { type: "INTEGER", value: "10" },
-    }),
-  ).toBe("add(10)");
-  expect(
-    operationLabel({
-      type: "SCENARIO",
-      key: null,
-      value: "growth",
-      index: null,
-      minCapacity: null,
-      element: null,
-    }),
-  ).toBe("demo / growth");
 });

@@ -142,11 +142,36 @@ export const keyLabel = (key: KeySpec): string =>
       : (key.value ?? "");
 export const valueLabel = (value: string | null): string =>
   value === null ? "null" : JSON.stringify(value);
-export const operationLabel = (op: Operation): string =>
-  op.element || op.index != null || op.minCapacity != null
-    ? `${({ ADD_AT: "add", GET_AT: "get", SET_AT: "set", REMOVE_AT: "remove", INDEX_OF: "indexOf", ENSURE_CAPACITY: "ensureCapacity" } as Record<string, string>)[op.type] ?? op.type.toLowerCase()}(${[op.index, op.element ? elementLabel(op.element) : undefined, op.minCapacity].filter((v) => v != null).join(", ")})`
-    : op.type === "TRIM_TO_SIZE"
-      ? "trimToSize()"
-      : op.type === "SCENARIO"
-        ? `demo / ${op.value}`
-        : `${op.type.toLowerCase()}(${op.key ? keyLabel(op.key) : ""}${op.type === "PUT" ? ", " + valueLabel(op.value) : ""})`;
+export function operationLabel(op: Operation): string {
+  const key = op.key ? keyLabel(op.key) : "";
+  const element = op.element ? elementLabel(op.element) : "";
+  const index = op.index ?? "";
+  switch (op.type) {
+    case "SCENARIO":
+      return `demo / ${op.value}`;
+    case "PUT":
+      return `put(${key}, ${valueLabel(op.value)})`;
+    case "GET":
+    case "REMOVE":
+      return `${op.type.toLowerCase()}(${key})`;
+    case "ADD":
+      return `add(${element})`;
+    case "ADD_AT":
+      return `add(${index}, ${element})`;
+    case "GET_AT":
+      return `get(${index})`;
+    case "SET_AT":
+      return `set(${index}, ${element})`;
+    case "REMOVE_AT":
+      return `remove(${index})`;
+    case "INDEX_OF":
+      return `indexOf(${element})`;
+    case "ENSURE_CAPACITY":
+      return `ensureCapacity(${op.minCapacity ?? ""})`;
+    case "TRIM_TO_SIZE":
+      return "trimToSize()";
+    case "CLEAR":
+    case "RESET":
+      return `${op.type.toLowerCase()}()`;
+  }
+}
