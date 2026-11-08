@@ -1862,3 +1862,26 @@ h1 > span {
   inset: 0;
   pointer-events: none;
 }
+
+.diagram-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: #9bab94;
+  font-size: 11px;
+}
+@media (max-width: 680px) {
+  .visualization .panel-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .zoom-controls .icon-button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .diagram-scroll {
+    max-height: 420px;
+  }
+}
