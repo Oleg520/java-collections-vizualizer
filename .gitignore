@@ -13,3 +13,21 @@
 **/__pycache__/
 **/.netlify/
 **/.git-versioned-pom.xml
+
+# Local credentials and operator material (examples remain tracked)
+.env.*
+*.env
+!*.env.example
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+id_ecdsa*
+.ssh/
+.netrc
+.git-credentials
+*.tfstate*
