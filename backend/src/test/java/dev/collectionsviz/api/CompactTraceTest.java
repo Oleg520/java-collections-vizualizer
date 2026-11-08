@@ -20,7 +20,7 @@ class CompactTraceTest {
         Trace<HashMapSnapshot> source=null;
         for(int i=0;i<97;i++) source=engine.execute(new Operation(OperationType.PUT,
             KeySpec.collision(String.format("%03d",i)+"\0".repeat(61),i%2==0?1:129),"\0".repeat(128)));
-        var response=new SessionStore.SessionTrace(1,UUID.randomUUID(),97,source);
+        var response=new SessionStore.SessionTrace<>(1,UUID.randomUUID(),97,source);
         var compact=CompactTrace.encode(response);
         assertEquals(source.before(),decode(compact.trace().before(),compact.nodePool()));
         assertEquals(source.committed(),decode(compact.trace().committed(),compact.nodePool()));

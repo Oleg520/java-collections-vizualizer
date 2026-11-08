@@ -26,9 +26,8 @@ public class TraceResponseMetrics extends OncePerRequestFilter implements Respon
     @Override public Object beforeBodyWrite(Object body,MethodParameter method,MediaType type,
         Class<? extends HttpMessageConverter<?>> converter,ServerHttpRequest request,ServerHttpResponse response) {
         Kind kind=null;
-        if(body instanceof CompactTrace) kind=new Kind("HASH_MAP","compact");
-        else if(body instanceof CompactArrayTrace) kind=new Kind("ARRAY_LIST","compact");
-        else if(body instanceof SessionStore.SessionTrace trace)
+        if(body instanceof CompactTraceResponse trace) kind=new Kind(trace.trace().collection(),"compact");
+        else if(body instanceof SessionStore.SessionTrace<?> trace)
             kind=new Kind(trace.trace().collection(),"full");
         if(kind!=null && request instanceof ServletServerHttpRequest servlet)
             servlet.getServletRequest().setAttribute(TRACE,kind);

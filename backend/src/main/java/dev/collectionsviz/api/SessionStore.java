@@ -8,15 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import dev.collectionsviz.core.HashMapEngine;
-import dev.collectionsviz.core.ArrayListEngine;
+import dev.collectionsviz.core.CollectionRegistry;
 import dev.collectionsviz.core.CollectionEngine;
 import dev.collectionsviz.core.Protocol.*;
 
 @Service
 public class SessionStore {
     public record SessionState(int schemaVersion, UUID id, String collection, long revision, long expiresInSeconds, Snapshot state) {}
-    public record SessionTrace(int schemaVersion, UUID sessionId, long revision, Trace<? extends Snapshot> trace) {}
+    public record SessionTrace<S extends Snapshot>(int schemaVersion, UUID sessionId, long revision, Trace<S> trace) {}
     public static class ApiException extends RuntimeException {
         public final int status;
         public final String code;
@@ -34,7 +33,7 @@ public class SessionStore {
         long revision, touched;
         Session(CollectionType collection,Integer capacity,long now,String owner) {
             this.collection=collection;
-            engine=collection==CollectionType.ARRAY_LIST ? new ArrayListEngine(capacity) : new HashMapEngine(capacity==null?0:capacity);
+            engine=CollectionRegistry.STANDARD.require(collection).create(capacity);
             touched=now; this.owner=owner;
         }
     }
@@ -75,26 +74,25 @@ public class SessionStore {
         if(owner==null || collection==null) throw new IllegalArgumentException("Client identity and collection required");
         return access(id,owner,s -> {
             if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Обновите сессию.");
-            CollectionEngine<? extends Snapshot> replacement=collection==CollectionType.ARRAY_LIST
-                ? new ArrayListEngine(capacity) : new HashMapEngine(capacity==null?0:capacity);
+            CollectionEngine<? extends Snapshot> replacement=CollectionRegistry.STANDARD.require(collection).create(capacity);
             s.engine=replacement;
             s.collection=collection;
             s.revision++;
             return state(s);
         });
     }
-    public SessionTrace execute(UUID id,long expectedRevision,Operation operation) {
+    public SessionTrace<?> execute(UUID id,long expectedRevision,Operation operation) {
         return mutate(id,expectedRevision,engine -> engine.execute(operation));
     }
-    public SessionTrace scenario(UUID id,long expectedRevision,String name) {
+    public SessionTrace<?> scenario(UUID id,long expectedRevision,String name) {
         return mutate(id,expectedRevision,engine -> engine.scenario(name));
     }
-    private SessionTrace mutate(UUID id,long expectedRevision,Function<CollectionEngine<? extends Snapshot>,Trace<? extends Snapshot>> action) {
+    private SessionTrace<?> mutate(UUID id,long expectedRevision,Function<CollectionEngine<? extends Snapshot>,Trace<? extends Snapshot>> action) {
         return access(id,s -> {
             if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Текущая версия: " + s.revision + ". Обновите сессию.");
             var trace=action.apply(s.engine);
             s.revision++;
-            return new SessionTrace(1,id,s.revision,trace);
+            return new SessionTrace<>(1,id,s.revision,trace);
         });
     }
     private <T> T access(UUID id,Function<Session,T> action) {

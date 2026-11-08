@@ -7,8 +7,7 @@ import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.web.bind.annotation.*;
-import dev.collectionsviz.core.HashMapEngine;
-import dev.collectionsviz.core.ArrayListEngine;
+import dev.collectionsviz.core.CollectionRegistry;
 import dev.collectionsviz.core.Protocol.*;
 
 @RestController
@@ -26,17 +25,14 @@ public class ApiController {
         this.sessions=sessions; this.build=build; this.allowFullTrace=allowFullTrace;
     }
     private boolean compactEncoding(String encoding) {
-        boolean compact=CompactTrace.requested(encoding);
+        boolean compact=CompactTraceRegistry.requested(encoding);
         if (!compact && !allowFullTrace)
             throw new SessionStore.ApiException(403,"FULL_TRACE_DISABLED",
                 "Полный trace отключён. Используйте encoding=compact.");
         return compact;
     }
-    private Object encode(SessionStore.SessionTrace response) {
-        return response.trace().collection().equals("ARRAY_LIST") ? CompactArrayTrace.encode(response) : CompactTrace.encode(response);
-    }
     @GetMapping("/health") public Map<String,String> health() { return Map.of("status","UP","version",build.getVersion(),"java",Runtime.version().feature()+""); }
-    @GetMapping("/scenarios") public List<Scenario> scenarios(@RequestParam(defaultValue="HASH_MAP") CollectionType collection) { return collection==CollectionType.ARRAY_LIST ? ArrayListEngine.SCENARIOS : HashMapEngine.SCENARIOS; }
+    @GetMapping("/scenarios") public List<Scenario> scenarios(@RequestParam(defaultValue="HASH_MAP") CollectionType collection) { return CollectionRegistry.STANDARD.require(collection).scenarios(); }
     @PostMapping("/sessions") @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
     public SessionStore.SessionState create(@RequestBody(required=false) CreateRequest request,HttpServletRequest httpRequest) {
         return sessions.create(request==null ? CollectionType.HASH_MAP : request.collection(), request==null ? null : request.initialCapacity(),
@@ -53,13 +49,13 @@ public class ApiController {
                           @RequestParam(defaultValue="full") String encoding) {
         boolean compact = compactEncoding(encoding); // Validate before committing a command.
         var response = sessions.execute(id,request.expectedRevision(),request.operation());
-        return compact ? encode(response) : response;
+        return compact ? CompactTraceRegistry.STANDARD.encode(response) : response;
     }
     @PostMapping("/sessions/{id}/scenarios/{name}")
     public Object scenario(@PathVariable UUID id,@PathVariable String name,@Valid @RequestBody ScenarioRequest request,
                            @RequestParam(defaultValue="full") String encoding) {
         boolean compact = compactEncoding(encoding);
         var response = sessions.scenario(id,request.expectedRevision(),name);
-        return compact ? encode(response) : response;
+        return compact ? CompactTraceRegistry.STANDARD.encode(response) : response;
     }
 }
