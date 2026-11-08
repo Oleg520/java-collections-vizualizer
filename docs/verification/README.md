@@ -53,4 +53,3 @@ Tomcat. Размеры и задержки всех сценариев сохр�
 - [Память браузера desktop](browser-memory-desktop.json),
   [mobile](browser-memory-mobile.json).
 - [Скрипт нагрузки](../../scripts/profile.py), команды — в [проверках](../TESTING.md).
-
