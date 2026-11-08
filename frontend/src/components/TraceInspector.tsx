@@ -9,6 +9,7 @@ import {
   type Trace,
 } from "../types";
 export function TraceInspector({
+  collection,
   trace,
   step,
   cursor,
@@ -18,6 +19,7 @@ export function TraceInspector({
   onCloseNode,
   navigate,
 }: {
+  collection?: string;
   trace?: Trace;
   step?: Step;
   cursor: number;
@@ -98,14 +100,19 @@ export function TraceInspector({
             Схема этапов, не исполняемый код. Активный этап приходит из Java
             trace.
           </p>
-          {algorithm.map(([stage, code, note]) => (
-            <div key={stage} className={step?.stage === stage ? "active" : ""}>
-              <code>{code}</code>
-              <small>{note}</small>
-            </div>
-          ))}
+          {(collection === "ARRAY_LIST" ? arrayAlgorithm : algorithm).map(
+            ([stage, code, note]) => (
+              <div
+                key={stage}
+                className={step?.stage === stage ? "active" : ""}
+              >
+                <code>{code}</code>
+                <small>{note}</small>
+              </div>
+            ),
+          )}
           <a
-            href="https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/java/util/HashMap.java"
+            href={`https://github.com/openjdk/jdk21u/blob/${collection === "ARRAY_LIST" ? "jdk-21.0.5%2B11" : "3f3a1f534b7f2f5be6d7ded9d9832fa9394e763c"}/src/java.base/share/classes/java/util/${collection === "ARRAY_LIST" ? "ArrayList" : "HashMap"}.java`}
             target="_blank"
             rel="noreferrer"
           >
@@ -126,7 +133,13 @@ export function TraceInspector({
               {Object.entries(step.details).map(([k, v]) => (
                 <div key={k}>
                   <dt>{k}</dt>
-                  <dd>{v === null ? "null" : String(v)}</dd>
+                  <dd>
+                    {v === null
+                      ? "null"
+                      : typeof v === "object"
+                        ? JSON.stringify(v)
+                        : String(v)}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -174,7 +187,13 @@ function NodeDetails({
         }).map(([k, v]) => (
           <div key={k}>
             <dt>{k}</dt>
-            <dd>{v === null ? "null" : String(v)}</dd>
+            <dd>
+              {v === null
+                ? "null"
+                : typeof v === "object"
+                  ? JSON.stringify(v)
+                  : String(v)}
+            </dd>
           </div>
         ))}
       </dl>
@@ -201,4 +220,29 @@ const algorithm = [
     "(hash & oldCapacity) == 0",
     "Оставить индекс или прибавить oldCapacity",
   ],
+];
+
+const arrayAlgorithm = [
+  [
+    "operation",
+    "add / get / set / remove / indexOf",
+    "Начало и фиксация результата",
+  ],
+  ["index", "0 ≤ index < size (add: ≤ size)", "Проверка границ; прямой доступ"],
+  [
+    "capacity",
+    "old + max(minGrowth, old >> 1)",
+    "OpenJDK 21: default-empty → max(10, minCapacity); explicit-empty → 1 при add",
+  ],
+  [
+    "shift",
+    "System.arraycopy",
+    "Одна блочная операция перемещает ссылки; объекты не клонируются",
+  ],
+  [
+    "mutation",
+    "elementData[index] = element",
+    "Запись, замена или очистка ссылки",
+  ],
+  ["search", "null / equals", "Линейный поиск первого совпадения"],
 ];

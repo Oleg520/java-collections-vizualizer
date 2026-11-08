@@ -27,3 +27,26 @@ The application's original source is distributed under GPL-2.0; the OpenJDK
 portions retain their original notices and Classpath exception. Dependency
 licenses remain with their respective projects; exact dependencies are recorded
 in Maven POM files and `frontend/package-lock.json`.
+
+## ArrayList and growth sizing
+
+`core/src/main/java/dev/collectionsviz/core/ArrayListEngine.java` adapts the
+constructor markers, grow, add, indexed insertion/removal, get/set, clear,
+indexOf, ensureCapacity and trimToSize algorithms from OpenJDK 21 ArrayList.
+The upstream Oracle copyright and GPL-2.0 with Classpath exception header is
+preserved. This subset omits iterators, views, modCount/fail-fast behavior,
+serialization, cloning, and methods outside the documented command set.
+It adds input/resource validation, occurrence IDs, immutable snapshots,
+semantic events, and teaching scenarios. No private JDK state is reflected.
+
+- Tag: `jdk-21.0.5+11` in https://github.com/openjdk/jdk21u
+- Retrieved: 2026-11-08
+- Source: `src/java.base/share/classes/java/util/ArrayList.java`
+- SHA-256: `c7db659273f9130e08b0d4508c34ff655e157b9ed48cdc7f5f5a2146ebb1c137`
+- Sizing reference: `src/java.base/share/classes/jdk/internal/util/ArraysSupport.java`
+- SHA-256: `e9981bbb7caaa1c4d15fb3be016c115d6b48a8456573e7bdd2ca3d8b7dbb9520`
+
+Within the 256-slot teaching limit, sizing follows newLength's ordinary branch.
+Requests above that limit are rejected before allocation; hugeLength/OOM paths
+are intentionally outside the supported demonstration. Growth policy is an
+OpenJDK implementation detail, not an ArrayList public API guarantee.

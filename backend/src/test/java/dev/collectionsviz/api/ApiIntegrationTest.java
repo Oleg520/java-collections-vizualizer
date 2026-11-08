@@ -88,4 +88,11 @@ class ApiIntegrationTest {
             .andExpect(jsonPath("trace.committed.buckets[0].nodes.length()").value(9));
     }
 
+    @Test void explicitlyEnabledArrayListFullTraceHasRealBuffers() throws Exception {
+        String id=json.readTree(mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{\"collection\":\"ARRAY_LIST\"}"))
+            .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asText();
+        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/growth?encoding=full").contentType("application/json").content("{\"expectedRevision\":0}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("trace.committed.capacity").value(15))
+            .andExpect(jsonPath("trace.committed.buffer.cells.length()").value(15)).andExpect(jsonPath("encoding").doesNotExist());
+    }
 }

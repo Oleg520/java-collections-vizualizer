@@ -55,3 +55,33 @@ bash -n deploy/upload_backend.sh
 ```
 
 Команды выполняются из корня репозитория, кроме явно отмеченных команд frontend.
+
+## ArrayList regression coverage
+
+The existing Maven, Vitest and Playwright commands now cover both collections;
+CI runs these same commands. `ArrayListEngineTest` compares 10,000 seeded operations
+with a real Java ArrayList without reflection, including nulls, duplicates,
+Integer boundaries, Unicode, get/set/remove results and invalid indices.
+Separate fixtures check capacity (default/zero/positive, 10→15→22), marker
+preservation, shifts, stable occurrence IDs, tail clearing, snapshot immutability,
+resource rejection and all nine scenarios.
+
+`ArrayListApiTest` checks compact round trips for every frame, full-trace rejection,
+JSON integer validation, session isolation, concurrent revision conflicts and TTL.
+`ApiIntegrationTest` also checks explicitly enabled full ArrayList traces. A search
+at 128 elements / capacity 256 with 128 escaped NUL characters per value must stay
+below 256 KiB in compact form and be at least 10 times smaller than full JSON.
+
+`arrayTrace.test.ts` checks buffer sharing and rejects malformed references.
+`arraylist.spec.ts` runs real Java commands and all scenarios on desktop/mobile,
+checks old/new grow buffers, null versus empty, playback without mutations,
+constructor changes, lost responses, 409 recovery, switching during a request,
+320px width, reduced motion and HashMap treeification after ArrayList.
+
+```bash
+npm --prefix frontend run test:e2e -- arraylist.spec.ts
+UPDATE_SCREENSHOTS=1 npm --prefix frontend run test:e2e -- arraylist.spec.ts
+```
+
+The screenshot command updates `docs/arraylist-desktop.png` and
+`docs/arraylist-mobile.png`. No production service is involved.

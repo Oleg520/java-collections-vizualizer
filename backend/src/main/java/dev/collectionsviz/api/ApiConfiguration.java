@@ -16,7 +16,7 @@ public class ApiConfiguration implements WebMvcConfigurer {
             .allowedHeaders("Content-Type").maxAge(3600);
     }
     @Bean Jackson2ObjectMapperBuilderCustomizer jsonLimits() {
-        return builder -> builder.postConfigurer(mapper -> mapper.getFactory().setStreamReadConstraints(
+        return builder -> builder.featuresToDisable(com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_FLOAT_AS_INT).postConfigurer(mapper -> mapper.getFactory().setStreamReadConstraints(
             StreamReadConstraints.builder().maxNestingDepth(12).maxStringLength(4096).maxDocumentLength(32768).build()));
     }
 }

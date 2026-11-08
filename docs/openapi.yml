@@ -2,11 +2,11 @@ openapi: 3.0.3
 info:
   title: Java Collections Visualizer
   version: 1.0.0
-  description: Transport contract v1. Java owns state; traces are immutable. SCENARIO is a response-only
-    operation; use the scenarios endpoint.
+  description: Transport contract v1. Java owns state; traces are immutable. SCENARIO is a response-only operation;
+    use the scenarios endpoint.
 servers:
-  - url: http://localhost:8080/api/v1
-    description: Local development
+- url: http://localhost:8080/api/v1
+  description: Local development
 paths:
   /health:
     get:
@@ -30,6 +30,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Scenario'
+      parameters:
+      - in: query
+        name: collection
+        schema: &id001
+          type: string
+          enum:
+          - HASH_MAP
+          - ARRAY_LIST
+          default: HASH_MAP
+        description: Defaults to HashMap (8 scenarios); ArrayList has 9 scenarios.
   /sessions:
     post:
       operationId: createSession
@@ -109,12 +119,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
   /sessions/{id}/commands:
     post:
       operationId: executeCommand
@@ -125,8 +135,9 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/SessionTrace'
-                  - $ref: '#/components/schemas/CompactSessionTrace'
+                - $ref: '#/components/schemas/SessionTrace'
+                - $ref: '#/components/schemas/CompactSessionTrace'
+                - $ref: '#/components/schemas/CompactArraySessionTrace'
         '400':
           description: Invalid input
           content:
@@ -170,26 +181,25 @@ paths:
             schema:
               $ref: '#/components/schemas/CommandRequest'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - in: query
-          name: encoding
-          required: false
-          schema:
-            type: string
-            enum:
-              - full
-              - compact
-            default: full
-          description: >-
-            compact retains every step but transmits repeated node versions once and is always allowed.
-            full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true
-            (visualizer.allow-full-trace); disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED
-            before executing the command or checking revision. Unknown encoding returns 400 INVALID_INPUT.
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: encoding
+        required: false
+        schema:
+          type: string
+          enum:
+          - full
+          - compact
+          default: full
+        description: compact retains every step but transmits repeated node versions once and is always allowed.
+          full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true (visualizer.allow-full-trace);
+          disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED before executing the command or checking
+          revision. Unknown encoding returns 400 INVALID_INPUT.
   /sessions/{id}/scenarios/{name}:
     post:
       operationId: executeScenario
@@ -200,8 +210,9 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/SessionTrace'
-                  - $ref: '#/components/schemas/CompactSessionTrace'
+                - $ref: '#/components/schemas/SessionTrace'
+                - $ref: '#/components/schemas/CompactSessionTrace'
+                - $ref: '#/components/schemas/CompactArraySessionTrace'
         '400':
           description: Invalid input
           content:
@@ -245,47 +256,54 @@ paths:
             schema:
               $ref: '#/components/schemas/ScenarioRequest'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - in: path
-          name: name
-          required: true
-          schema:
-            type: string
-            enum:
-              - insert
-              - collision
-              - update
-              - resize
-              - treeify
-              - why-no-tree
-              - tree-search
-              - tree-remove
-        - in: query
-          name: encoding
-          required: false
-          schema:
-            type: string
-            enum:
-              - full
-              - compact
-            default: full
-          description: >-
-            compact retains every step but transmits repeated node versions once and is always allowed.
-            full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true
-            (visualizer.allow-full-trace); disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED
-            before executing the scenario or checking revision. Unknown encoding returns 400 INVALID_INPUT.
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: name
+        required: true
+        schema:
+          type: string
+          enum:
+          - insert
+          - collision
+          - update
+          - resize
+          - treeify
+          - why-no-tree
+          - tree-search
+          - tree-remove
+          - first-add
+          - explicit-zero
+          - growth
+          - insert-middle
+          - remove-middle
+          - read-replace
+          - nulls
+          - capacity
+          - linear-search
+      - in: query
+        name: encoding
+        required: false
+        schema:
+          type: string
+          enum:
+          - full
+          - compact
+          default: full
+        description: compact retains every step but transmits repeated node/buffer/cell versions once and is always
+          allowed. full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true (visualizer.allow-full-trace);
+          disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED before executing the scenario or checking
+          revision. Unknown encoding returns 400 INVALID_INPUT.
 components:
   responses:
     RateLimited:
-      description: >-
-        Client rate, live session, tracking capacity or concurrent work limit reached.
-        No command executes and revision remains unchanged. Admission precedes encoding/revision validation.
-        See docs/API_SECURITY.md for configurable limits and trusted proxy rules.
+      description: Client rate, live session, tracking capacity or concurrent work limit reached. No command executes
+        and revision remains unchanged. Admission precedes encoding/revision validation. See docs/API_SECURITY.md
+        for configurable limits and trusted proxy rules.
       headers:
         Retry-After:
           description: Seconds before a user-initiated retry; no automatic mutation retry.
@@ -308,10 +326,10 @@ components:
         type:
           type: string
           enum:
-            - STRING
-            - INTEGER
-            - COLLISION
-            - 'NULL'
+          - STRING
+          - INTEGER
+          - COLLISION
+          - 'NULL'
         value:
           type: string
           maxLength: 64
@@ -321,7 +339,7 @@ components:
           format: int32
           nullable: true
       required:
-        - type
+      - type
     Operation:
       type: object
       additionalProperties: false
@@ -329,22 +347,45 @@ components:
         type:
           type: string
           enum:
-            - PUT
-            - GET
-            - REMOVE
-            - CLEAR
-            - RESET
-            - SCENARIO
+          - PUT
+          - GET
+          - REMOVE
+          - CLEAR
+          - RESET
+          - SCENARIO
+          - ADD
+          - ADD_AT
+          - GET_AT
+          - SET_AT
+          - REMOVE_AT
+          - INDEX_OF
+          - ENSURE_CAPACITY
+          - TRIM_TO_SIZE
         key:
           allOf:
-            - $ref: '#/components/schemas/Key'
+          - $ref: '#/components/schemas/Key'
           nullable: true
         value:
           type: string
           maxLength: 128
           nullable: true
+        index:
+          type: integer
+          format: int32
+          nullable: true
+          description: 'ADD_AT: 0..size; GET_AT/SET_AT/REMOVE_AT: 0..size-1. Fractions rejected.'
+        element:
+          allOf:
+          - $ref: '#/components/schemas/Element'
+          nullable: true
+        minCapacity:
+          type: integer
+          format: int32
+          nullable: true
+          description: ENSURE_CAPACITY only. Negative is a JDK no-op. Computed allocation above 256 is rejected
+            before mutation.
       required:
-        - type
+      - type
     Result:
       type: object
       additionalProperties: false
@@ -357,10 +398,31 @@ components:
         value:
           type: string
           nullable: true
+        kind:
+          type: string
+          nullable: true
+          enum:
+          - ELEMENT
+          - BOOLEAN
+          - INT
+          - VOID
+          - RESET
+          description: ArrayList return kind; null for HashMap.
+        element:
+          allOf:
+          - $ref: '#/components/schemas/Element'
+          nullable: true
+        booleanValue:
+          type: boolean
+          nullable: true
+        intValue:
+          type: integer
+          format: int32
+          nullable: true
       required:
-        - found
-        - previousValue
-        - value
+      - found
+      - previousValue
+      - value
     Node:
       type: object
       additionalProperties: false
@@ -405,18 +467,18 @@ components:
         linked:
           type: boolean
       required:
-        - id
-        - key
-        - value
-        - rawHashCode
-        - hash
-        - next
-        - parent
-        - left
-        - right
-        - prev
-        - red
-        - linked
+      - id
+      - key
+      - value
+      - rawHashCode
+      - hash
+      - next
+      - parent
+      - left
+      - right
+      - prev
+      - red
+      - linked
     Bucket:
       type: object
       additionalProperties: false
@@ -427,9 +489,9 @@ components:
         kind:
           type: string
           enum:
-            - LIST
-            - TREE
-            - TRANSFER
+          - LIST
+          - TREE
+          - TRANSFER
         headId:
           type: integer
           format: int64
@@ -442,11 +504,11 @@ components:
           items:
             $ref: '#/components/schemas/Node'
       required:
-        - index
-        - kind
-        - headId
-        - rootId
-        - nodes
+      - index
+      - kind
+      - headId
+      - rootId
+      - nodes
     Snapshot:
       type: object
       additionalProperties: false
@@ -454,8 +516,8 @@ components:
         phase:
           type: string
           enum:
-            - WORKING
-            - COMMITTED
+          - WORKING
+          - COMMITTED
         size:
           type: integer
           format: int32
@@ -479,14 +541,14 @@ components:
           items:
             $ref: '#/components/schemas/Bucket'
       required:
-        - phase
-        - size
-        - capacity
-        - threshold
-        - loadFactor
-        - pendingCapacity
-        - buckets
-        - pendingBuckets
+      - phase
+      - size
+      - capacity
+      - threshold
+      - loadFactor
+      - pendingCapacity
+      - buckets
+      - pendingBuckets
     Step:
       type: object
       additionalProperties: false
@@ -508,13 +570,13 @@ components:
         snapshot:
           $ref: '#/components/schemas/Snapshot'
       required:
-        - index
-        - operation
-        - event
-        - stage
-        - message
-        - details
-        - snapshot
+      - index
+      - operation
+      - event
+      - stage
+      - message
+      - details
+      - snapshot
     Trace:
       type: object
       additionalProperties: false
@@ -522,11 +584,11 @@ components:
         schemaVersion:
           type: integer
           enum:
-            - 1
+          - 1
         collection:
           type: string
           enum:
-            - HASH_MAP
+          - HASH_MAP
         operation:
           $ref: '#/components/schemas/Operation'
         result:
@@ -540,40 +602,22 @@ components:
         committed:
           $ref: '#/components/schemas/Snapshot'
       required:
-        - schemaVersion
-        - collection
-        - operation
-        - result
-        - before
-        - steps
-        - committed
+      - schemaVersion
+      - collection
+      - operation
+      - result
+      - before
+      - steps
+      - committed
     Session:
-      type: object
-      additionalProperties: false
-      properties:
-        schemaVersion:
-          type: integer
-          format: int32
-        id:
-          type: string
-          format: uuid
-        collection:
-          type: string
-        revision:
-          type: integer
-          format: int64
-        expiresInSeconds:
-          type: integer
-          format: int32
-        state:
-          $ref: '#/components/schemas/Snapshot'
-      required:
-        - schemaVersion
-        - id
-        - collection
-        - revision
-        - expiresInSeconds
-        - state
+      oneOf:
+      - $ref: '#/components/schemas/HashMapSession'
+      - $ref: '#/components/schemas/ArrayListSession'
+      discriminator:
+        propertyName: collection
+        mapping:
+          HASH_MAP: '#/components/schemas/HashMapSession'
+          ARRAY_LIST: '#/components/schemas/ArrayListSession'
     SessionTrace:
       type: object
       additionalProperties: false
@@ -588,12 +632,19 @@ components:
           type: integer
           format: int64
         trace:
-          $ref: '#/components/schemas/Trace'
+          oneOf:
+          - $ref: '#/components/schemas/Trace'
+          - $ref: '#/components/schemas/ArrayTrace'
+          discriminator:
+            propertyName: collection
+            mapping:
+              HASH_MAP: '#/components/schemas/Trace'
+              ARRAY_LIST: '#/components/schemas/ArrayTrace'
       required:
-        - schemaVersion
-        - sessionId
-        - revision
-        - trace
+      - schemaVersion
+      - sessionId
+      - revision
+      - trace
     Error:
       type: object
       additionalProperties: false
@@ -606,9 +657,9 @@ components:
         message:
           type: string
       required:
-        - schemaVersion
-        - code
-        - message
+      - schemaVersion
+      - code
+      - message
     Scenario:
       type: object
       additionalProperties: false
@@ -620,21 +671,22 @@ components:
         description:
           type: string
       required:
-        - id
-        - title
-        - description
+      - id
+      - title
+      - description
     CreateRequest:
       type: object
       additionalProperties: false
       properties:
+        collection: *id001
         initialCapacity:
           type: integer
-          enum:
-            - 0
-            - 16
-            - 32
-            - 64
-          default: 0
+          format: int32
+          nullable: true
+          minimum: 0
+          maximum: 256
+          description: 'HashMap: omitted/0,16,32,64. ArrayList: omitted/null means default-empty, explicit 0 means
+            explicit-empty; positive capacity allocates immediately.'
       required: []
     CommandRequest:
       type: object
@@ -647,8 +699,8 @@ components:
         operation:
           $ref: '#/components/schemas/Operation'
       required:
-        - expectedRevision
-        - operation
+      - expectedRevision
+      - operation
     ScenarioRequest:
       type: object
       additionalProperties: false
@@ -658,7 +710,7 @@ components:
           format: int64
           minimum: 0
       required:
-        - expectedRevision
+      - expectedRevision
     Health:
       type: object
       additionalProperties: false
@@ -670,9 +722,9 @@ components:
         java:
           type: string
       required:
-        - status
-        - version
-        - java
+      - status
+      - version
+      - java
     BucketRefs:
       type: object
       additionalProperties: false
@@ -683,9 +735,9 @@ components:
         kind:
           type: string
           enum:
-            - LIST
-            - TREE
-            - TRANSFER
+          - LIST
+          - TREE
+          - TRANSFER
         headId:
           type: integer
           format: int64
@@ -700,11 +752,11 @@ components:
             minimum: 0
           description: Zero-based indices into response.nodePool; these are not stable node IDs.
       required:
-        - index
-        - kind
-        - headId
-        - rootId
-        - nodeRefs
+      - index
+      - kind
+      - headId
+      - rootId
+      - nodeRefs
     CompactSnapshot:
       type: object
       additionalProperties: false
@@ -712,8 +764,8 @@ components:
         phase:
           type: string
           enum:
-            - WORKING
-            - COMMITTED
+          - WORKING
+          - COMMITTED
         size:
           type: integer
           format: int32
@@ -737,14 +789,14 @@ components:
           items:
             $ref: '#/components/schemas/BucketRefs'
       required:
-        - phase
-        - size
-        - capacity
-        - threshold
-        - loadFactor
-        - pendingCapacity
-        - buckets
-        - pendingBuckets
+      - phase
+      - size
+      - capacity
+      - threshold
+      - loadFactor
+      - pendingCapacity
+      - buckets
+      - pendingBuckets
     CompactStep:
       type: object
       additionalProperties: false
@@ -766,13 +818,13 @@ components:
         snapshot:
           $ref: '#/components/schemas/CompactSnapshot'
       required:
-        - index
-        - operation
-        - event
-        - stage
-        - message
-        - details
-        - snapshot
+      - index
+      - operation
+      - event
+      - stage
+      - message
+      - details
+      - snapshot
     CompactTrace:
       type: object
       additionalProperties: false
@@ -780,11 +832,11 @@ components:
         schemaVersion:
           type: integer
           enum:
-            - 1
+          - 1
         collection:
           type: string
           enum:
-            - HASH_MAP
+          - HASH_MAP
         operation:
           $ref: '#/components/schemas/Operation'
         result:
@@ -798,13 +850,13 @@ components:
         committed:
           $ref: '#/components/schemas/CompactSnapshot'
       required:
-        - schemaVersion
-        - collection
-        - operation
-        - result
-        - before
-        - steps
-        - committed
+      - schemaVersion
+      - collection
+      - operation
+      - result
+      - before
+      - steps
+      - committed
     CompactSessionTrace:
       type: object
       additionalProperties: false
@@ -823,16 +875,392 @@ components:
         encoding:
           type: string
           enum:
-            - node-table-v1
+          - node-table-v1
         nodePool:
           type: array
           items:
             $ref: '#/components/schemas/Node'
           description: Immutable node versions, shared by all frames within this response.
       required:
-        - schemaVersion
-        - sessionId
-        - revision
-        - trace
-        - encoding
-        - nodePool
+      - schemaVersion
+      - sessionId
+      - revision
+      - trace
+      - encoding
+      - nodePool
+    Element:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+          - STRING
+          - INTEGER
+          - 'NULL'
+        value:
+          type: string
+          maxLength: 128
+          nullable: true
+          description: Java String or decimal Java Integer text. NULL requires omitted/null value.
+      required:
+      - type
+    Cell:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Stable teaching occurrence ID, not an object address.
+        element:
+          $ref: '#/components/schemas/Element'
+      required:
+      - id
+      - element
+    ArrayBuffer:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 256
+        cells:
+          type: array
+          maxItems: 256
+          items:
+            type: object
+            nullable: true
+            allOf:
+            - $ref: '#/components/schemas/Cell'
+          description: One slot per capacity. JSON null = no retained occurrence; Cell with element.type=NULL =
+            retained null occurrence. Working frames may have duplicates or references beyond size.
+      required:
+      - id
+      - capacity
+      - cells
+    ArraySnapshot:
+      type: object
+      additionalProperties: false
+      properties:
+        collection: &id002
+          type: string
+          enum:
+          - ARRAY_LIST
+        phase: &id003
+          type: string
+          enum:
+          - WORKING
+          - COMMITTED
+        size: &id004
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 128
+        capacity: &id005
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 256
+        emptyMode: &id006
+          type: string
+          enum:
+          - DEFAULT_EMPTY
+          - EXPLICIT_EMPTY
+          - ALLOCATED
+        initialCapacity: &id007
+          type: integer
+          format: int32
+          nullable: true
+          minimum: 0
+          maximum: 256
+          description: Session reset configuration; scenarios choose their own starting constructor.
+        buffer:
+          $ref: '#/components/schemas/ArrayBuffer'
+        pendingBuffer:
+          type: object
+          nullable: true
+          allOf:
+          - $ref: '#/components/schemas/ArrayBuffer'
+      required:
+      - collection
+      - phase
+      - size
+      - capacity
+      - emptyMode
+      - initialCapacity
+      - buffer
+      - pendingBuffer
+    ArrayFrame:
+      type: object
+      additionalProperties: false
+      properties:
+        collection: *id002
+        phase: *id003
+        size: *id004
+        capacity: *id005
+        emptyMode: *id006
+        initialCapacity: *id007
+        bufferRef:
+          type: integer
+          format: int32
+          minimum: 0
+        pendingBufferRef:
+          type: integer
+          format: int32
+          nullable: true
+          minimum: 0
+      required:
+      - collection
+      - phase
+      - size
+      - capacity
+      - emptyMode
+      - initialCapacity
+      - bufferRef
+      - pendingBufferRef
+    ArrayBufferRefs:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        capacity:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 256
+        cellRefs:
+          type: array
+          maxItems: 256
+          items:
+            type: integer
+            format: int32
+            nullable: true
+            minimum: 0
+          description: Zero-based cellPool indices, null for free slots; length equals capacity.
+      required:
+      - id
+      - capacity
+      - cellRefs
+    ArrayStep:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        operation:
+          $ref: '#/components/schemas/Operation'
+        event:
+          type: string
+        stage:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        snapshot:
+          $ref: '#/components/schemas/ArraySnapshot'
+      required:
+      - index
+      - operation
+      - event
+      - stage
+      - message
+      - details
+      - snapshot
+    ArrayTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          enum:
+          - 1
+        collection:
+          type: string
+          enum:
+          - ARRAY_LIST
+        operation:
+          $ref: '#/components/schemas/Operation'
+        result:
+          $ref: '#/components/schemas/Result'
+        before:
+          $ref: '#/components/schemas/ArraySnapshot'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArrayStep'
+        committed:
+          $ref: '#/components/schemas/ArraySnapshot'
+      required:
+      - schemaVersion
+      - collection
+      - operation
+      - result
+      - before
+      - steps
+      - committed
+    CompactArrayStep:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+        operation:
+          $ref: '#/components/schemas/Operation'
+        event:
+          type: string
+        stage:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        snapshot:
+          $ref: '#/components/schemas/ArrayFrame'
+      required:
+      - index
+      - operation
+      - event
+      - stage
+      - message
+      - details
+      - snapshot
+    CompactArrayTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          enum:
+          - 1
+        collection:
+          type: string
+          enum:
+          - ARRAY_LIST
+        operation:
+          $ref: '#/components/schemas/Operation'
+        result:
+          $ref: '#/components/schemas/Result'
+        before:
+          $ref: '#/components/schemas/ArrayFrame'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompactArrayStep'
+        committed:
+          $ref: '#/components/schemas/ArrayFrame'
+      required:
+      - schemaVersion
+      - collection
+      - operation
+      - result
+      - before
+      - steps
+      - committed
+    CompactArraySessionTrace:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+          enum:
+          - 1
+        sessionId:
+          type: string
+          format: uuid
+        revision:
+          type: integer
+          format: int64
+        encoding:
+          type: string
+          enum:
+          - array-frames-v1
+        trace:
+          $ref: '#/components/schemas/CompactArrayTrace'
+        bufferPool:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArrayBufferRefs'
+        cellPool:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cell'
+      required:
+      - schemaVersion
+      - sessionId
+      - revision
+      - encoding
+      - trace
+      - bufferPool
+      - cellPool
+    HashMapSession:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        id:
+          type: string
+          format: uuid
+        collection:
+          type: string
+          enum:
+          - HASH_MAP
+        revision:
+          type: integer
+          format: int64
+        expiresInSeconds:
+          type: integer
+          format: int32
+        state:
+          $ref: '#/components/schemas/Snapshot'
+      required:
+      - schemaVersion
+      - id
+      - collection
+      - revision
+      - expiresInSeconds
+      - state
+    ArrayListSession:
+      type: object
+      additionalProperties: false
+      properties:
+        schemaVersion:
+          type: integer
+          format: int32
+        id:
+          type: string
+          format: uuid
+        collection:
+          type: string
+          enum:
+          - ARRAY_LIST
+        revision:
+          type: integer
+          format: int64
+        expiresInSeconds:
+          type: integer
+          format: int32
+        state:
+          $ref: '#/components/schemas/ArraySnapshot'
+      required:
+      - schemaVersion
+      - id
+      - collection
+      - revision
+      - expiresInSeconds
+      - state

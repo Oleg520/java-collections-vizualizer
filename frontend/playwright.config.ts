@@ -29,6 +29,14 @@ export default defineConfig({
   webServer: [
     {
       command: "cd .. && make backend",
+      // The suite creates many isolated sessions from one localhost client.
+      // Production limits remain unchanged and are covered by API limit tests.
+      env: {
+        MAX_SESSIONS: "256",
+        MAX_SESSIONS_PER_CLIENT: "256",
+        SESSION_CREATE_RATE_LIMIT: "256",
+        WORK_RATE_LIMIT: "5000",
+      },
       url: "http://127.0.0.1:8080/api/v1/health",
       reuseExistingServer: !process.env.CI,
       timeout: 90000,
