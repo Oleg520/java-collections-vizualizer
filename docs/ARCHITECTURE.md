@@ -13,7 +13,9 @@ backend/    Spring Boot 3.5.16, REST, сессии, optimistic revision, TTL, CO
 frontend/   React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + Motion + SVG
   api.ts / types.ts     HTTP и контракт
   trace.ts              разрешение ссылок компактного trace без повторения алгоритма
-  App.tsx               операции, история, независимое воспроизведение
+  App.tsx               композиция UI, связь hooks и выбор отображаемого снимка
+  hooks/useJavaSession  сессия Java, последовательные запросы и восстановление состояния
+  hooks/useTracePlayback история trace, курсор, скорость и локальное воспроизведение
   layout.ts             только размещение по ссылкам из Java
   Diagram.tsx           SVG и прерываемые анимации по стабильным ID
 ```
