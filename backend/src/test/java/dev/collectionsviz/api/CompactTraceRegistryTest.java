@@ -31,6 +31,18 @@ class CompactTraceRegistryTest {
         }
     }
 
+    @Test void passesValidatedTraceDirectlyToEncoder() {
+        var source = new SessionStore.SessionTrace<>(1, UUID.randomUUID(), 7,
+            CollectionRegistry.HASH_MAP.create(null).scenario("treeify"));
+        var registry = new CompactTraceRegistry(List.of(
+            new CompactTraceRegistry.Registration<>(CollectionRegistry.HASH_MAP, response -> {
+                assertSame(source, response);
+                assertSame(source.trace(), response.trace());
+                return response;
+            })));
+        assertSame(source, registry.encode(source));
+    }
+
     @Test void rejectsDuplicatesMissingEncodersAndUnknownTraceIds() {
         var binding = new CompactTraceRegistry.Registration<>(CollectionRegistry.HASH_MAP, CompactTrace::encode);
         assertThrows(IllegalArgumentException.class, () -> new CompactTraceRegistry(List.of(binding, binding)));
