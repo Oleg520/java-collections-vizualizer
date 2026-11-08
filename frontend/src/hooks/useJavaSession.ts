@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api";
 import type {
+  CollectionType,
   Operation,
   Scenario,
   Session,
@@ -23,31 +24,53 @@ export function useJavaSession(playback: PlaybackActions) {
   const [slow, setSlow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const epoch = useRef(0);
+  const config = useRef<{ collection: CollectionType; capacity?: number }>({
+    collection: "HASH_MAP",
+  });
+  const [collection, setCollection] = useState<CollectionType>("HASH_MAP");
 
-  const startSession = async () => {
-    if (busyRef.current) return;
+  const startSession = async (
+    next = config.current.collection,
+    capacity: number | null | undefined = next === config.current.collection
+      ? config.current.capacity
+      : undefined,
+  ) => {
+    const generation = ++epoch.current;
+    config.current = { collection: next, capacity: capacity ?? undefined };
+    setCollection(next);
+    setSession(null);
+    setScenarios([]);
+    playback.reset();
     busyRef.current = true;
     setBusy(true);
     setError(null);
     playback.pause();
     try {
       const [newSession, demos] = await Promise.all([
-        api.create(),
-        api.scenarios(),
+        api.create(next, capacity ?? undefined),
+        api.scenarios(next),
       ]);
+      if (generation !== epoch.current) return;
       setSession(newSession);
       setScenarios(demos);
       playback.reset();
     } catch (e) {
+      if (generation !== epoch.current) return;
       setError(errorMessage(e));
     } finally {
-      busyRef.current = false;
-      setBusy(false);
+      if (generation === epoch.current) {
+        busyRef.current = false;
+        setBusy(false);
+      }
     }
   };
 
   useEffect(() => {
     void startSession();
+    return () => {
+      epoch.current++;
+    };
   }, []);
   useEffect(() => {
     if (!busy) {
@@ -60,12 +83,14 @@ export function useJavaSession(playback: PlaybackActions) {
 
   const execute = async (request: () => Promise<SessionTrace>) => {
     if (busyRef.current || !session) return;
+    const generation = epoch.current;
     busyRef.current = true;
     setBusy(true);
     setError(null);
     playback.pause();
     try {
       const response = await request();
+      if (generation !== epoch.current) return;
       setSession({
         ...session,
         revision: response.revision,
@@ -73,19 +98,24 @@ export function useJavaSession(playback: PlaybackActions) {
       });
       playback.accept(response.trace);
     } catch (e) {
+      if (generation !== epoch.current) return;
       setError(errorMessage(e));
       // A lost response may have committed: recover state but never retry the mutation.
       if (e instanceof ApiError && (e.status === 409 || e.status === 0)) {
         try {
-          setSession(await api.get(session.id));
+          const recovered = await api.get(session.id);
+          if (generation !== epoch.current) return;
+          setSession(recovered);
           playback.showCommitted();
         } catch {
           /* Keep the original actionable error; explicit recovery remains available. */
         }
       }
     } finally {
-      busyRef.current = false;
-      setBusy(false);
+      if (generation === epoch.current) {
+        busyRef.current = false;
+        setBusy(false);
+      }
     }
   };
   const command = (operation: Operation) => {
@@ -96,6 +126,8 @@ export function useJavaSession(playback: PlaybackActions) {
   };
 
   return {
+    collection,
+    switchCollection: (next: CollectionType) => void startSession(next, null),
     session,
     scenarios,
     busy,

@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import dev.collectionsviz.core.HashMapEngine;
+import dev.collectionsviz.core.ArrayListEngine;
+import dev.collectionsviz.core.CollectionEngine;
 import dev.collectionsviz.core.Protocol.*;
 
 @Service
 public class SessionStore {
-    public record SessionState(int schemaVersion, UUID id, String collection, long revision, long expiresInSeconds, HashMapSnapshot state) {}
-    public record SessionTrace(int schemaVersion, UUID sessionId, long revision, Trace<HashMapSnapshot> trace) {}
+    public record SessionState(int schemaVersion, UUID id, String collection, long revision, long expiresInSeconds, Snapshot state) {}
+    public record SessionTrace(int schemaVersion, UUID sessionId, long revision, Trace<? extends Snapshot> trace) {}
     public static class ApiException extends RuntimeException {
         public final int status;
         public final String code;
@@ -26,10 +28,15 @@ public class SessionStore {
     }
     private static class Session {
         final UUID id=UUID.randomUUID();
-        final HashMapEngine engine;
+        final CollectionEngine<? extends Snapshot> engine;
+        final CollectionType collection;
         final String owner;
         long revision, touched;
-        Session(int capacity,long now,String owner) { engine=new HashMapEngine(capacity); touched=now; this.owner=owner; }
+        Session(CollectionType collection,Integer capacity,long now,String owner) {
+            this.collection=collection;
+            engine=collection==CollectionType.ARRAY_LIST ? new ArrayListEngine(capacity) : new HashMapEngine(capacity==null?0:capacity);
+            touched=now; this.owner=owner;
+        }
     }
     private final ConcurrentHashMap<UUID,Session> sessions=new ConcurrentHashMap<>();
     private final long ttlMillis;
@@ -49,14 +56,16 @@ public class SessionStore {
         this.maximumPerClient=maximumPerClient==0?Math.min(32,Math.max(1,maximum/4)):maximumPerClient;
     }
     public SessionState create(int capacity) { return create(capacity,"internal"); }
-    public synchronized SessionState create(int capacity,String owner) {
+    public SessionState create(int capacity,String owner) { return create(CollectionType.HASH_MAP,capacity,owner); }
+    public synchronized SessionState create(CollectionType collection,Integer capacity,String owner) {
+        if(collection==null) collection=CollectionType.HASH_MAP;
         if(owner==null) throw new IllegalArgumentException("Client identity required");
         cleanup();
         if(sessions.size()>=maximum) throw new ApiException(503,"SESSION_LIMIT","Демо занято. Попробуйте позже: достигнут лимит активных сессий.");
         if(sessions.values().stream().filter(s -> s.owner.equals(owner)).count()>=maximumPerClient)
             throw new ApiException(429,"CLIENT_SESSION_LIMIT","Достигнут лимит активных сессий клиента. Дождитесь истечения TTL.",
                 (int)Math.min(Integer.MAX_VALUE,ttlMillis/1000));
-        var s=new Session(capacity,clock.millis(),owner);
+        var s=new Session(collection,capacity,clock.millis(),owner);
         sessions.put(s.id,s);
         return state(s);
     }
@@ -67,7 +76,7 @@ public class SessionStore {
     public SessionTrace scenario(UUID id,long expectedRevision,String name) {
         return mutate(id,expectedRevision,engine -> engine.scenario(name));
     }
-    private SessionTrace mutate(UUID id,long expectedRevision,Function<HashMapEngine,Trace<HashMapSnapshot>> action) {
+    private SessionTrace mutate(UUID id,long expectedRevision,Function<CollectionEngine<? extends Snapshot>,Trace<? extends Snapshot>> action) {
         return access(id,s -> {
             if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Текущая версия: " + s.revision + ". Обновите сессию.");
             var trace=action.apply(s.engine);
@@ -86,7 +95,7 @@ public class SessionStore {
             return action.apply(s);
         }
     }
-    private SessionState state(Session s) { return new SessionState(1,s.id,"HASH_MAP",s.revision,ttlMillis/1000,s.engine.snapshot()); }
+    private SessionState state(Session s) { return new SessionState(1,s.id,s.collection.name(),s.revision,ttlMillis/1000,s.engine.snapshot()); }
     private ApiException missing() { return new ApiException(404,"SESSION_NOT_FOUND","Сессия не найдена или истекла. Создайте новую сессию."); }
     @Scheduled(fixedDelay=60000)
     public void cleanup() {

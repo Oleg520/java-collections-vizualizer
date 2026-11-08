@@ -1,5 +1,9 @@
-import { decodeTrace, type CompactSessionTrace } from "./trace";
-import type { Operation, Scenario, Session } from "./types";
+import {
+  decodeTrace,
+  type CompactArrayTrace,
+  type CompactSessionTrace,
+} from "./trace";
+import type { CollectionType, Operation, Scenario, Session } from "./types";
 const base = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 export class ApiError extends Error {
   constructor(
@@ -39,11 +43,13 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
   return payload as T;
 }
 export const api = {
-  create: () => request<Session>("/sessions", {}),
+  create: (collection: CollectionType = "HASH_MAP", initialCapacity?: number) =>
+    request<Session>("/sessions", { collection, initialCapacity }),
   get: (id: string) => request<Session>(`/sessions/${id}`),
-  scenarios: () => request<Scenario[]>("/scenarios"),
+  scenarios: (collection: CollectionType = "HASH_MAP") =>
+    request<Scenario[]>(`/scenarios?collection=${collection}`),
   command: (session: Session, operation: Operation) =>
-    request<CompactSessionTrace>(
+    request<CompactSessionTrace | CompactArrayTrace>(
       `/sessions/${session.id}/commands?encoding=compact`,
       {
         expectedRevision: session.revision,
@@ -51,7 +57,7 @@ export const api = {
       },
     ).then(decodeTrace),
   scenario: (session: Session, name: string) =>
-    request<CompactSessionTrace>(
+    request<CompactSessionTrace | CompactArrayTrace>(
       `/sessions/${session.id}/scenarios/${name}?encoding=compact`,
       {
         expectedRevision: session.revision,

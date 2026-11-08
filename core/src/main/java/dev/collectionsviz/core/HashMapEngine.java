@@ -67,8 +67,9 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         return execute(operation, initialCapacity);
     }
     private Trace<HashMapSnapshot> execute(Operation operation, int resetCapacity) {
-        if (operation == null || operation.type() == null || operation.type() == OperationType.SCENARIO)
+        if (operation == null || operation.type() == null || !Set.of(OperationType.PUT, OperationType.GET, OperationType.REMOVE, OperationType.CLEAR, OperationType.RESET).contains(operation.type()))
             throw new IllegalArgumentException("Допустимые операции: PUT, GET, REMOVE, CLEAR, RESET");
+        if (operation.index() != null || operation.element() != null || operation.minCapacity() != null) throw new IllegalArgumentException("HashMap не принимает поля ArrayList");
         if (operation.value() != null && operation.value().length() > 128) throw new IllegalArgumentException("Значение: до 128 символов");
         Object key = switch(operation.type()) {
             case PUT, GET, REMOVE -> key(operation.key());

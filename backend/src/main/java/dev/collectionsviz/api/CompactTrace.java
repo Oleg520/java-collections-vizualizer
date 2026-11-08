@@ -28,7 +28,8 @@ public record CompactTrace(int schemaVersion, UUID sessionId, long revision, Str
     }
     private static class Encoder {
         final Map<NodeView,Integer> nodeIndices = new LinkedHashMap<>();
-        Frame frame(HashMapSnapshot snapshot) {
+        Frame frame(Snapshot state) {
+            var snapshot = (HashMapSnapshot)state;
             return new Frame(snapshot.phase(), snapshot.size(), snapshot.capacity(), snapshot.threshold(),
                 snapshot.loadFactor(), snapshot.pendingCapacity(), buckets(snapshot.buckets()), buckets(snapshot.pendingBuckets()));
         }

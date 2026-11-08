@@ -5,8 +5,56 @@ export interface KeySpec {
   hashCodeOverride: number | null;
 }
 export type CommandType = "PUT" | "GET" | "REMOVE" | "CLEAR" | "RESET";
+export type CollectionType = "HASH_MAP" | "ARRAY_LIST";
+export type ArrayCommand =
+  | "ADD"
+  | "ADD_AT"
+  | "GET_AT"
+  | "SET_AT"
+  | "REMOVE_AT"
+  | "INDEX_OF"
+  | "ENSURE_CAPACITY"
+  | "TRIM_TO_SIZE"
+  | "CLEAR"
+  | "RESET";
+export interface Element {
+  type: "STRING" | "INTEGER" | "NULL";
+  value: string | null;
+}
+export interface Cell {
+  id: number;
+  element: Element;
+}
+export interface ArrayBuffer {
+  id: number;
+  capacity: number;
+  cells: (Cell | null)[];
+}
+export interface ArraySnapshot {
+  collection: "ARRAY_LIST";
+  phase: "WORKING" | "COMMITTED";
+  size: number;
+  capacity: number;
+  emptyMode: "DEFAULT_EMPTY" | "EXPLICIT_EMPTY" | "ALLOCATED";
+  initialCapacity: number | null;
+  buffer: ArrayBuffer;
+  pendingBuffer: ArrayBuffer | null;
+}
+export type CollectionSnapshot = Snapshot | ArraySnapshot;
+export function isArray(s: CollectionSnapshot): s is ArraySnapshot {
+  return "collection" in s && s.collection === "ARRAY_LIST";
+}
+export const elementLabel = (e: Element) =>
+  e.type === "NULL"
+    ? "null"
+    : e.type === "STRING"
+      ? JSON.stringify(e.value)
+      : (e.value ?? "");
 export interface Operation {
-  type: CommandType | "SCENARIO";
+  type: CommandType | ArrayCommand | "SCENARIO";
+  index?: number | null;
+  element?: Element | null;
+  minCapacity?: number | null;
   key: KeySpec | null;
   value: string | null;
 }
@@ -41,27 +89,31 @@ export interface Snapshot {
   buckets: Bucket[];
   pendingBuckets: Bucket[];
 }
-export interface Step {
+export interface Step<S = CollectionSnapshot> {
   index: number;
   operation: Operation;
   event: string;
   stage: string;
   message: string;
   details: Record<string, unknown>;
-  snapshot: Snapshot;
+  snapshot: S;
 }
-export interface Trace {
+export interface Trace<S = CollectionSnapshot> {
   schemaVersion: number;
   collection: string;
   operation: Operation;
   result: {
+    kind?: "ELEMENT" | "BOOLEAN" | "INT" | "VOID" | "RESET" | null;
+    element?: Element | null;
+    booleanValue?: boolean | null;
+    intValue?: number | null;
     found: boolean;
     previousValue: string | null;
     value: string | null;
   };
-  before: Snapshot;
-  steps: Step[];
-  committed: Snapshot;
+  before: S;
+  steps: Step<S>[];
+  committed: S;
 }
 export interface Session {
   schemaVersion: number;
@@ -69,7 +121,7 @@ export interface Session {
   collection: string;
   revision: number;
   expiresInSeconds: number;
-  state: Snapshot;
+  state: CollectionSnapshot;
 }
 export interface SessionTrace {
   schemaVersion: number;
@@ -90,7 +142,36 @@ export const keyLabel = (key: KeySpec): string =>
       : (key.value ?? "");
 export const valueLabel = (value: string | null): string =>
   value === null ? "null" : JSON.stringify(value);
-export const operationLabel = (op: Operation): string =>
-  op.type === "SCENARIO"
-    ? `demo / ${op.value}`
-    : `${op.type.toLowerCase()}(${op.key ? keyLabel(op.key) : ""}${op.type === "PUT" ? ", " + valueLabel(op.value) : ""})`;
+export function operationLabel(op: Operation): string {
+  const key = op.key ? keyLabel(op.key) : "";
+  const element = op.element ? elementLabel(op.element) : "";
+  const index = op.index ?? "";
+  switch (op.type) {
+    case "SCENARIO":
+      return `demo / ${op.value}`;
+    case "PUT":
+      return `put(${key}, ${valueLabel(op.value)})`;
+    case "GET":
+    case "REMOVE":
+      return `${op.type.toLowerCase()}(${key})`;
+    case "ADD":
+      return `add(${element})`;
+    case "ADD_AT":
+      return `add(${index}, ${element})`;
+    case "GET_AT":
+      return `get(${index})`;
+    case "SET_AT":
+      return `set(${index}, ${element})`;
+    case "REMOVE_AT":
+      return `remove(${index})`;
+    case "INDEX_OF":
+      return `indexOf(${element})`;
+    case "ENSURE_CAPACITY":
+      return `ensureCapacity(${op.minCapacity ?? ""})`;
+    case "TRIM_TO_SIZE":
+      return "trimToSize()";
+    case "CLEAR":
+    case "RESET":
+      return `${op.type.toLowerCase()}()`;
+  }
+}

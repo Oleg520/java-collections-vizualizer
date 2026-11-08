@@ -1,13 +1,22 @@
-import { valueLabel, type Session, type Snapshot, type Trace } from "../types";
+import {
+  elementLabel,
+  isArray,
+  valueLabel,
+  type Session,
+  type CollectionSnapshot,
+  type Trace,
+} from "../types";
 export function StateMetrics({
   snapshot,
   session,
   trace,
 }: {
-  snapshot?: Snapshot;
+  snapshot?: CollectionSnapshot;
   session: Session | null;
   trace?: Trace;
 }) {
+  const array = snapshot && isArray(snapshot);
+  const map = snapshot && !isArray(snapshot) ? snapshot : undefined;
   return (
     <>
       <div className="state-label">
@@ -41,22 +50,28 @@ export function StateMetrics({
           caption={
             snapshot?.capacity === 0
               ? "массив не выделен"
-              : "выделенных бакетов"
+              : array
+                ? "выделенных ячеек"
+                : "выделенных бакетов"
           }
         />
         <Metric
-          label="threshold"
-          value={snapshot?.threshold ?? "—"}
+          label={array ? "free" : "threshold"}
+          value={
+            array ? snapshot.capacity - snapshot.size : (map?.threshold ?? "—")
+          }
           caption={
-            snapshot?.capacity === 0 && snapshot.threshold > 0
+            map?.capacity === 0 && map.threshold > 0
               ? "целевая начальная ёмкость"
-              : "resize при size > threshold"
+              : array
+                ? "свободных позиций"
+                : "resize при size > threshold"
           }
         />
         <Metric
-          label="loadFactor"
-          value={snapshot?.loadFactor ?? ".75"}
-          caption="коэффициент загрузки"
+          label={array ? "buffer" : "loadFactor"}
+          value={array ? `#${snapshot.buffer.id}` : (map?.loadFactor ?? ".75")}
+          caption={array ? "учебная версия массива" : "коэффициент загрузки"}
         />
         <div className="metric result-metric">
           <span>РЕЗУЛЬТАТ ОПЕРАЦИИ</span>
@@ -65,10 +80,12 @@ export function StateMetrics({
           </strong>
           <small>
             {trace
-              ? trace.result.found
+              ? trace.collection === "HASH_MAP" && trace.result.found
                 ? "ключ найден в коллекции"
                 : "операция выполнена Java-движком"
-              : "начните с put или сценария"}
+              : array
+                ? "начните с add или сценария"
+                : "начните с put или сценария"}
           </small>
         </div>
       </section>
@@ -93,6 +110,13 @@ function Metric({
   );
 }
 function resultText(trace: Trace) {
+  if (trace.collection === "ARRAY_LIST") {
+    const r = trace.result;
+    if (r.kind === "ELEMENT" && r.element) return elementLabel(r.element);
+    if (r.kind === "INT") return String(r.intValue);
+    if (r.kind === "BOOLEAN") return String(r.booleanValue);
+    return r.kind === "RESET" ? "Новая коллекция" : "void";
+  }
   const type = trace.operation.type;
   if (type === "GET")
     return trace.result.found

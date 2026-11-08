@@ -1,7 +1,7 @@
 # Java Collections Visualizer
 
-Интерактивная лаборатория внутреннего устройства Java HashMap: вводите ключи,
-выполняйте операции и наблюдайте вычисления, цепочки, resize и красно-чёрное дерево.
+Интерактивная лаборатория Java HashMap и ArrayList: выполняйте операции и наблюдайте
+цепочки, деревья, внутренние массивы, сдвиги и расширение буферов.
 
 **[Открыть приложение](https://java-collections-visualizer.netlify.app)** ·
 [HTTPS API / health](https://jcv-api.135-106-208-51.sslip.io/api/v1/health) ·
@@ -9,23 +9,27 @@
 
 Это **учебная инструментированная реализация, ориентированная на OpenJDK 21**.
 Она исполняет алгоритм на Java и создаёт события непосредственно в ходе выполнения.
-Приватные объекты `java.util.HashMap` в JVM не наблюдаются и через рефлексию не читаются.
+Приватные объекты `java.util.HashMap` / `java.util.ArrayList` в JVM не наблюдаются и через рефлексию не читаются.
 
 ![HashMap: красно-чёрное дерево](docs/hashmap-tree.png)
 
 ## Возможности
 
-- Операции `put`, `get`, `remove`, `clear`, `reset`; String, Integer, null и учебные ключи с заданным hashCode.
+- ArrayList: `add`, `add(index)`, `get`, `set`, `remove(index)`, `indexOf`, `clear`, `reset`, `ensureCapacity`, `trimToSize`; String, Integer, null и девять сценариев.
+- Переключение коллекций создаёт новую изолированную сессию. Для ArrayList доступен выбор конструктора: default, explicit-zero и положительная ёмкость.
+- Операции HashMap `put`, `get`, `remove`, `clear`, `reset`; String, Integer, null и учебные ключи с заданным hashCode.
 - Коллизии, resize/split, treeification и балансировка красно-чёрного дерева; восемь готовых сценариев.
 - Пошаговое воспроизведение, перемотка, скорость и история последних 12 операций.
 - SVG-диаграмма с масштабированием и мобильным интерфейсом.
 - Изолированные сессии с TTL, revision и ограничениями нагрузки.
 
+![ArrayList: перенос ссылок между буферами](docs/arraylist-desktop.png)
+
 ## Технологии и архитектура
 
 | Каталог | Назначение |
 |---|---|
-| `core/` | Java 21: инструментированный HashMap, события и неизменяемые снимки |
+| `core/` | Java 21: инструментированные HashMap / ArrayList, события и неизменяемые снимки |
 | `backend/` | Spring Boot: REST API, сессии, compact trace и ограничения запросов |
 | `frontend/` | React, TypeScript, Vite, Tailwind CSS, Motion и SVG |
 | `deploy/` | Конфигурации и проверяемые скрипты доставки backend |
@@ -96,7 +100,9 @@ Frontend запускается отдельно. Для размещения fr
 
 ## Ограничения
 
-Только HashMap: до 128 записей и 512 учебных ID на сессию, load factor 0.75.
+HashMap: до 128 записей и 512 учебных ID на сессию, load factor 0.75.
+ArrayList: до 128 элементов, 256 выделенных ячеек, значение до 128 UTF-16 code units.
+Это учебные лимиты. Стратегия роста — деталь OpenJDK 21, не гарантия Java API.
 Сессии хранятся в памяти одного backend и теряются при перезапуске.
 Авторизации, БД и постоянной истории нет. Это учебная модель, а не отладчик JVM.
 
@@ -112,6 +118,7 @@ Frontend запускается отдельно. Для размещения fr
 ## Исходник и лицензия
 
 Алгоритмы адаптированы из [OpenJDK 21 HashMap.java](https://github.com/openjdk/jdk21u/blob/3f3a1f534b7f2f5be6d7ded9d9832fa9394e763c/src/java.base/share/classes/java/util/HashMap.java).
+ArrayList адаптирован из тега [jdk-21.0.5+11](https://github.com/openjdk/jdk21u/blob/jdk-21.0.5%2B11/src/java.base/share/classes/java/util/ArrayList.java).
 Исходные copyright/license headers сохранены. Проект GPL-2.0; участки OpenJDK
 сохраняют Classpath exception. Подробности, перечень изменений и checksum исходника:
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [LICENSE](LICENSE).

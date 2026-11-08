@@ -1,3 +1,4 @@
+import type { Snapshot } from "./types";
 import { describe, expect, it } from "vitest";
 import { decodeTrace, type CompactSessionTrace, type Frame } from "./trace";
 import type { MapNode } from "./types";
@@ -58,7 +59,9 @@ describe("compact trace decoding", () => {
     const input = response(),
       before = JSON.stringify(input),
       output = decodeTrace(input).trace;
-    const nodes = output.steps.map((s) => s.snapshot.buckets[0].nodes[0]);
+    const nodes = output.steps.map(
+      (s) => (s.snapshot as Snapshot).buckets[0].nodes[0],
+    );
     expect(nodes[0]).toBe(nodes[1]);
     expect(nodes[0]).not.toBe(nodes[2]);
     expect(nodes.map((n) => n.value)).toEqual(["before", "before", "after"]);

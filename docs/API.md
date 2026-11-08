@@ -16,8 +16,8 @@
 | Метод | Путь | Назначение |
 |---|---|---|
 | GET | `/health` | Готовность Java-сервиса |
-| GET | `/scenarios` | Восемь сценариев, названия и объяснения |
-| POST | `/sessions` | Новая изолированная сессия; `{}` либо `{"initialCapacity":64}` |
+| GET | `/scenarios` | Сценарии выбранной collection (HASH_MAP по умолчанию) |
+| POST | `/sessions` | Новая изолированная сессия; collection и initialCapacity |
 | GET | `/sessions/{id}` | Зафиксированный snapshot и revision |
 | POST | `/sessions/{id}/commands` | Операция и trace выбранного формата |
 | POST | `/sessions/{id}/scenarios/{name}` | Реальные Java-операции сценария, начиная с reset |
@@ -69,7 +69,7 @@
 Неверный запрос: **400 INVALID_REQUEST / INVALID_INPUT**. Ошибки валидации и
 конфликты не изменяют коллекцию и revision.
 
-## Снимки
+## Снимки HashMap
 
 `snapshot` содержит `phase`, `size`, фактическую `capacity`, `threshold`, `loadFactor`,
 `buckets`, `pendingCapacity`, `pendingBuckets`. Сериализуются только занятые бакеты;
@@ -177,3 +177,84 @@ split с исходным Java trace.
 KEY_COMPARED различает `identityEqual` (результат `==`) и `equalsChecked` (был ли
 реальный вызов equals с учётом short-circuit). Для совпавших null-ключей equals
 не вызывается.
+
+## ArrayList
+
+Без `collection` создание по-прежнему означает HASH_MAP. Для ArrayList:
+
+```json
+{"collection":"ARRAY_LIST"}
+```
+
+Отсутствие/null `initialCapacity` выбирает default constructor: size=capacity=0,
+первая add выделяет 10 ячеек. Явное `"initialCapacity":0` выбирает explicit-empty:
+первая add выделяет одну ячейку. Положительное 1..256 выделяет массив сразу.
+`GET /scenarios?collection=ARRAY_LIST` возвращает девять сценариев; без query
+по-прежнему восемь HashMap-сценариев. Неизвестная коллекция возвращает 400.
+
+Пример `POST /sessions/{id}/commands?encoding=compact`:
+
+```json
+{"expectedRevision":0,"operation":{"type":"ADD","element":{"type":"STRING","value":"A"}}}
+```
+
+| type | Обязательные поля | Возвращаемый result.kind |
+|---|---|---|
+| ADD | element | BOOLEAN (true) |
+| ADD_AT | index, element | VOID |
+| GET_AT | index | ELEMENT |
+| SET_AT | index, element | ELEMENT (старое значение) |
+| REMOVE_AT | index | ELEMENT (удалённое значение) |
+| INDEX_OF | element | INT (первый индекс или -1) |
+| ENSURE_CAPACITY | minCapacity | VOID |
+| TRIM_TO_SIZE | — | VOID |
+| CLEAR | — | VOID |
+| RESET | — | RESET (учебная операция) |
+
+`element = {type: STRING|INTEGER|NULL, value: string|null}`. INTEGER хранится в
+JSON как строка Java int, нормализованная сервером; STRING остаётся строкой.
+Настоящий null передаётся как `{"type":"NULL"}`; отсутствующий element не заменяет
+его для команд, требующих значение. Для GET_AT, REMOVE_AT, CLEAR, RESET,
+ENSURE_CAPACITY и TRIM_TO_SIZE поле element должно отсутствовать либо быть JSON null;
+типизированный элемент (включая `{"type":"NULL"}`) возвращает 400 до мутации. Максимум 128 UTF-16 code units, пустая строка
+и Unicode разрешены. `index` / `minCapacity` — JSON int32; дроби отклоняются.
+ADD_AT принимает 0..size, GET_AT/SET_AT/REMOVE_AT — 0..size-1. Отрицательный
+minCapacity — no-op согласно JDK. Удаление реализовано только по индексу.
+
+ArrayList result сохраняет старые nullable поля оболочки, но результат определяется
+`kind`: `element` для ELEMENT (в том числе типизированный NULL), `booleanValue`
+для BOOLEAN, `intValue` для INT. VOID и RESET не имеют возвращаемого Java-элемента.
+HashMap сохраняет семантику found/previousValue/value; новые поля там равны null.
+Операция другой коллекции, недопустимый индекс, 129-й элемент или вычисленная
+ёмкость >256 дают 400 до мутации, без изменения revision. Лимит ёмкости — ограничение
+демонстрации, не Java. Например, ensureCapacity(201) при capacity=200 отклоняется:
+OpenJDK выбрал бы 300; движок не округляет её до удобных 256.
+
+Полный ArraySnapshot: `collection`, `phase`, `size`, `capacity`, `emptyMode`,
+`initialCapacity` (конфигурация RESET сессии), `buffer`, nullable `pendingBuffer`.
+Buffer: `{id, capacity, cells}`. Длина cells равна capacity; каждый слот — либо
+JSON null (нет удерживаемого вхождения), либо `{id,element}`. Таким образом
+`{id:1,element:{type:"NULL",value:null}}` отличается от свободного слота `null`.
+Логическая занятость дополнительно задаётся `index < size`. WORKING может временно
+содержать дубликаты или ещё не включённые в size записи. COMMITTED содержит ровно
+size занятых записей и пустой хвост. Буфер с capacity=0 имеет id=0 и пустой cells;
+его маркер DEFAULT_EMPTY или EXPLICIT_EMPTY задаёт поведение первой аллокации.
+
+`encoding=compact` возвращает `encoding:"array-frames-v1"`, `cellPool` и `bufferPool`.
+Каждый bufferPool entry: `{id,capacity,cellRefs}`. cellRefs — абсолютные индексы
+cellPool или null для свободных ячеек. В кадрах вместо buffer/pendingBuffer находятся
+`bufferRef` / nullable `pendingBufferRef`, абсолютные индексы bufferPool. Это номера
+версий в данном ответе, не стабильные ID. Все остальные поля, события и результаты
+сохраняются. HashMap продолжает использовать `node-table-v1`.
+
+События: OPERATION_STARTED/COMPLETED, INDEX_CHECKED, CAPACITY_CHECKED,
+ARRAY_ALLOCATED, ARRAY_COPY_STARTED/COMPLETED, CAPACITY_GROWN/RESERVED/TRIMMED,
+ELEMENTS_SHIFTED_RIGHT/LEFT, ELEMENT_READ/WRITTEN/REPLACED, TAIL_CLEARED,
+ELEMENT_COMPARED/FOUND/NOT_FOUND, LIST_CLEARED/RESET. Детали содержат index,
+fromIndex/toIndex/length, primitive, oldCapacity/newCapacity/minimumCapacity,
+minGrowth/preferredGrowth либо result по смыслу события.
+
+Full остаётся закрытым без `ALLOW_FULL_TRACE=true` для обоих движков и сценариев.
+TTL, лимиты нагрузки, optimistic revision, одна фиксация на сценарий и восстановление
+потерянных ответов общие. Переключение UI создаёт новую сессию; поздние ответы прошлой
+сессии игнорируются. Предыдущие сессии живут до TTL и учитываются в общем лимите.

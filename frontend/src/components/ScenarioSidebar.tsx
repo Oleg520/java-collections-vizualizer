@@ -1,12 +1,16 @@
 import { BookOpen, Braces, ChevronRight, RotateCcw } from "lucide-react";
-import type { Scenario, Session, Trace } from "../types";
+import type { CollectionType, Scenario, Session, Trace } from "../types";
 export function ScenarioSidebar({
+  collection,
+  onCollection,
   scenarios,
   trace,
   busy,
   session,
   onDemo: demo,
 }: {
+  collection: CollectionType;
+  onCollection: (collection: CollectionType) => void;
   scenarios: Scenario[];
   trace?: Trace;
   busy: boolean;
@@ -22,10 +26,15 @@ export function ScenarioSidebar({
         </label>
         <div className="collection-selector">
           <Braces size={19} />
-          <select id="collection" defaultValue="HASH_MAP">
+          <select
+            id="collection"
+            value={collection}
+            onChange={(e) => onCollection(e.target.value as CollectionType)}
+          >
             <option value="HASH_MAP">HashMap</option>
+            <option value="ARRAY_LIST">ArrayList</option>
           </select>
-          <span>01</span>
+          <span>{collection === "HASH_MAP" ? "01" : "02"}</span>
         </div>
         <p className="sidebar-note">
           Java Collections Framework
