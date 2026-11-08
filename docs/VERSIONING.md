@@ -86,8 +86,10 @@ Trigger deploy → Clear cache and deploy site** для `main`, пока HEAD `m
 
 ## Выпуск новой версии владельцем
 
-1. Merge прошедшего ревью PR в `main`; дождаться успешного CI. Сверить intended SHA
-   с актуальным `origin/main`. До завершения выпуска не продвигать `main`.
+1. Дождаться успешного CI и ревью PR, затем выполнить merge в `main`.
+   `Build and verify` запускается только для pull request: push в `main` и публикация тегов
+   не запускают повторную проверку. Сверить intended SHA с актуальным `origin/main`.
+   До завершения выпуска не продвигать `main`.
 2. С отдельного разрешения владельца создать и опубликовать **один** тег `X.Y.Z`
    на этом SHA, например `0.2.0`, без `v`. Версии в POM, React и npm не менять.
 3. Вручную запустить Actions **Deploy backend manually**, Branch **main**.
