@@ -1,6 +1,15 @@
 import { api, ApiError } from "./api";
 import type { CollectionType, Session, SessionTrace } from "./types";
 
+/** Route/proxy 404s do not establish that a known session has expired. */
+function sessionNotFound(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status === 404 &&
+    error.code === "SESSION_NOT_FOUND"
+  );
+}
+
 /** One server slot per mounted tab. Even obsolete replies update the transport's
  * committed revision before the next request; only the hook selects visible state.
  */
@@ -35,8 +44,14 @@ export class SessionConnection {
           );
           return this.session;
         } catch (e) {
-          if (!(e instanceof ApiError) || e.status !== 404) {
+          if (!sessionNotFound(e)) {
             await this.recover(e);
+            if (e instanceof ApiError && e.status === 404)
+              throw new ApiError(
+                "API смены структуры недоступен. Проверьте совместимость версий frontend/backend и маршрут API. Существующая сессия сохранена.",
+                e.status,
+                e.code,
+              );
             throw e;
           }
           // A missing/expired owned slot cannot have committed the reset.
@@ -68,7 +83,7 @@ export class SessionConnection {
     });
   }
   private async recover(error: unknown) {
-    if (error instanceof ApiError && error.status === 404) {
+    if (sessionNotFound(error)) {
       this.session = null;
       return;
     }
@@ -81,7 +96,7 @@ export class SessionConnection {
     try {
       this.session = await this.transport.get(this.session.id);
     } catch (e) {
-      if (e instanceof ApiError && e.status === 404) this.session = null;
+      if (sessionNotFound(e)) this.session = null;
       // Preserve the original error, never repeat an uncertain mutation.
     }
   }
