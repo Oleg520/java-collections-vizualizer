@@ -1,8 +1,10 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.api.dto.CommandRequest;
+import dev.collectionsviz.api.session.SessionStore;
+import dev.collectionsviz.core.protocol.command.KeySpec;
 import dev.collectionsviz.core.protocol.command.Operation;
 import dev.collectionsviz.core.protocol.command.OperationType;
-import dev.collectionsviz.core.protocol.command.KeySpec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -71,7 +73,7 @@ class TracePolicyIntegrationTest {
             KeySpec.collision(String.format("%03d",i)+"\0".repeat(61),i%2==0?1:129),"\0".repeat(128)));
         String id=session.id().toString(),path="/api/v1/sessions/"+id+"/commands";
         var operation=new Operation(OperationType.PUT,KeySpec.collision("096"+"\0".repeat(61),1),"\0".repeat(128));
-        String body=json.writeValueAsString(new ApiController.CommandRequest(96L,operation));
+        String body=json.writeValueAsString(new CommandRequest(96L,operation));
         var before=state(id);
         forbidden(path+"?encoding=full",body);
         assertEquals(before,state(id));

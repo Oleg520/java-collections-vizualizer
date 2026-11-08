@@ -1,5 +1,12 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.api.session.SessionStore;
+import dev.collectionsviz.api.admission.ApiAdmission;
+import dev.collectionsviz.api.admission.ClientAddress;
+import dev.collectionsviz.api.session.SessionFixtures;
+import dev.collectionsviz.api.admission.AdmissionFixtures;
+import dev.collectionsviz.api.support.MutableClock;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +24,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureMockMvc
 class SessionProxyIntegrationTest {
     @TestConfiguration static class Config {
-        @Bean SessionStoreTest.MutableClock clock(){return new SessionStoreTest.MutableClock();}
-        @Bean @Primary ApiAdmission admission(SessionStoreTest.MutableClock c){return new ApiAdmission(60,2,120,50,2,1,c);}
-        @Bean @Primary SessionStore store(SessionStoreTest.MutableClock c){return new SessionStore(600,32,1,c);}
+        @Bean MutableClock clock(){return new MutableClock();}
+        @Bean @Primary ApiAdmission admission(MutableClock c){return AdmissionFixtures.admission(60,2,120,50,2,1,c);}
+        @Bean @Primary SessionStore store(MutableClock c){return SessionFixtures.store(600,32,1,c);}
     }
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
-    @Autowired SessionStoreTest.MutableClock clock;
+    @Autowired MutableClock clock;
     @Autowired SessionStore store;
     MockHttpServletRequestBuilder via(MockHttpServletRequestBuilder r,String ip){return r.with(q->{q.setRemoteAddr("::ffff:127.0.0.1");return q;}).header(ClientAddress.HEADER,ip);}
     String create(String ip) throws Exception {

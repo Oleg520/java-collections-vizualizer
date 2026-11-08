@@ -1,5 +1,12 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.api.session.SessionStore;
+import dev.collectionsviz.api.admission.ApiAdmission;
+import dev.collectionsviz.api.admission.ClientAddress;
+import dev.collectionsviz.api.session.SessionFixtures;
+import dev.collectionsviz.api.admission.AdmissionFixtures;
+import dev.collectionsviz.api.support.MutableClock;
+
 import java.util.UUID;
 import java.net.URI;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,15 +27,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureMockMvc
 class ApiLimitsIntegrationTest {
     @TestConfiguration static class Config {
-        @Bean SessionStoreTest.MutableClock testClock() { return new SessionStoreTest.MutableClock(); }
-        @Bean @Primary ApiAdmission testAdmission(SessionStoreTest.MutableClock clock) { return new ApiAdmission(10,3,3,20,2,1,clock); }
-        @Bean @Primary SessionStore testStore(SessionStoreTest.MutableClock clock) { return new SessionStore(60,8,2,clock); }
+        @Bean MutableClock testClock() { return new MutableClock(); }
+        @Bean @Primary ApiAdmission testAdmission(MutableClock clock) { return AdmissionFixtures.admission(10,3,3,20,2,1,clock); }
+        @Bean @Primary SessionStore testStore(MutableClock clock) { return SessionFixtures.store(60,8,2,clock); }
     }
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired SessionStore store;
     @Autowired ApiAdmission admission;
-    @Autowired SessionStoreTest.MutableClock clock;
+    @Autowired MutableClock clock;
     MockHttpServletRequestBuilder from(MockHttpServletRequestBuilder request,String ip) {
         return request.with(r -> { r.setRemoteAddr(ip); return r; });
     }
