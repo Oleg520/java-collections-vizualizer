@@ -42,6 +42,15 @@ class ArrayListApiTest {
         mvc.perform(get("/api/v1/scenarios?collection=BOGUS")).andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{\"collection\":\"BOGUS\"}")).andExpect(status().isBadRequest());
     }
+    @Test void unknownCollectionResetPreservesSessionAndErrorContract() throws Exception {
+        String id=create(""), base="/api/v1/sessions/"+id;
+        var before=sessions.get(UUID.fromString(id));
+        mvc.perform(post(base+"/reset").contentType("application/json")
+                .content("{\"expectedRevision\":0,\"collection\":\"BOGUS\"}"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("schemaVersion").value(1))
+            .andExpect(jsonPath("code").value("INVALID_REQUEST"));
+        assertEquals(before,sessions.get(UUID.fromString(id)));
+    }
     @Test void invalidInputsAndTracePolicyLeaveRevisionUnchanged() throws Exception {
         String id=create(""), base="/api/v1/sessions/"+id;
         for(String op:List.of("{\"type\":\"GET_AT\",\"index\":0}","{\"type\":\"ADD_AT\",\"index\":0.5,\"element\":{\"type\":\"NULL\"}}","{\"type\":\"GET_AT\"}","{\"type\":\"GET_AT\",\"index\":2147483648}","{\"type\":\"ADD\"}","{\"type\":\"PUT\"}","{\"type\":\"ENSURE_CAPACITY\",\"minCapacity\":257}"))
@@ -92,7 +101,7 @@ class ArrayListApiTest {
         assertTrue(json.writeValueAsBytes(search).length>json.writeValueAsBytes(compact).length*10);
     }
     CompactArrayTrace checkTrace(Trace<ArrayListSnapshot> source) {
-        var compact=CompactArrayTrace.encode(new SessionStore.SessionTrace(1,UUID.randomUUID(),1,source));
+        var compact=CompactArrayTrace.encode(new SessionStore.SessionTrace<>(1,UUID.randomUUID(),1,source));
         assertEquals(source.before(),decode(compact.trace().before(),compact));
         assertEquals(source.committed(),decode(compact.trace().committed(),compact));
         for(int i=0;i<source.steps().size();i++) {

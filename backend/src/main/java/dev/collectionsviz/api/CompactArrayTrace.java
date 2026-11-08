@@ -5,11 +5,11 @@ import dev.collectionsviz.core.Protocol.*;
 
 /** Pools immutable buffer versions and occurrences. Null cell references mean free slots. */
 public record CompactArrayTrace(int schemaVersion, UUID sessionId, long revision, String encoding,
-                                Trace<Frame> trace, List<BufferRefs> bufferPool, List<Cell> cellPool) {
+                                Trace<Frame> trace, List<BufferRefs> bufferPool, List<Cell> cellPool) implements CompactTraceResponse {
     public record BufferRefs(long id, int capacity, List<Integer> cellRefs) {}
     public record Frame(String collection, String phase, int size, int capacity, String emptyMode,
                         Integer initialCapacity, int bufferRef, Integer pendingBufferRef) {}
-    public static CompactArrayTrace encode(SessionStore.SessionTrace response) {
+    public static CompactArrayTrace encode(SessionStore.SessionTrace<ArrayListSnapshot> response) {
         var encoder = new Encoder();
         var source = response.trace();
         var before = encoder.frame(source.before());
@@ -29,8 +29,7 @@ public record CompactArrayTrace(int schemaVersion, UUID sessionId, long revision
                 return buffers.size()-1;
             });
         }
-        Frame frame(Snapshot state) {
-            var s = (ArrayListSnapshot)state;
+        Frame frame(ArrayListSnapshot s) {
             return new Frame("ARRAY_LIST",s.phase(),s.size(),s.capacity(),s.emptyMode(),s.initialCapacity(),buffer(s.buffer()),s.pendingBuffer()==null?null:buffer(s.pendingBuffer()));
         }
     }

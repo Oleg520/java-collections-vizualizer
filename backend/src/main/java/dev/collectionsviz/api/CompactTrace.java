@@ -5,17 +5,12 @@ import dev.collectionsviz.core.Protocol.*;
 
 /** Lossless transport encoding. Events and algorithm snapshots are never recomputed. */
 public record CompactTrace(int schemaVersion, UUID sessionId, long revision, String encoding,
-                           Trace<Frame> trace, List<NodeView> nodePool) {
+                           Trace<Frame> trace, List<NodeView> nodePool) implements CompactTraceResponse {
     public record BucketRefs(int index, String kind, long headId, Long rootId, List<Integer> nodeRefs) {}
     public record Frame(String phase, int size, int capacity, int threshold, float loadFactor,
                         int pendingCapacity, List<BucketRefs> buckets, List<BucketRefs> pendingBuckets) {}
 
-    public static boolean requested(String encoding) {
-        if (!encoding.equals("full") && !encoding.equals("compact"))
-            throw new IllegalArgumentException("encoding: full или compact");
-        return encoding.equals("compact");
-    }
-    public static CompactTrace encode(SessionStore.SessionTrace response) {
+    public static CompactTrace encode(SessionStore.SessionTrace<HashMapSnapshot> response) {
         var encoder = new Encoder();
         var source = response.trace();
         var before = encoder.frame(source.before());
@@ -28,8 +23,7 @@ public record CompactTrace(int schemaVersion, UUID sessionId, long revision, Str
     }
     private static class Encoder {
         final Map<NodeView,Integer> nodeIndices = new LinkedHashMap<>();
-        Frame frame(Snapshot state) {
-            var snapshot = (HashMapSnapshot)state;
+        Frame frame(HashMapSnapshot snapshot) {
             return new Frame(snapshot.phase(), snapshot.size(), snapshot.capacity(), snapshot.threshold(),
                 snapshot.loadFactor(), snapshot.pendingCapacity(), buckets(snapshot.buckets()), buckets(snapshot.pendingBuckets()));
         }

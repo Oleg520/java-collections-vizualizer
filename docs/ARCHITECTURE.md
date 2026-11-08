@@ -8,10 +8,12 @@ core/       Java 21, без Spring и JSON-зависимостей
   HashMapEngine         команды, ключи, снимки, trace, сценарии
   ArrayListEngine       Object[], типизированные элементы, буферы и события
   CollectionEngine<S>   общая граница двух движков
+  CollectionRegistry    статический каталог фабрик и сценариев
   Protocol              неизменяемые транспортные records
 backend/    Spring Boot 3.5.16, REST, сессии, optimistic revision, TTL, CORS
   CompactTrace          HashMap: общая таблица версий узлов
   CompactArrayTrace     ArrayList: пулы версий буферов и вхождений
+  CompactTraceRegistry  типизированные регистрации compact-кодировщиков
 frontend/   React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + Motion + SVG
   api.ts / types.ts     HTTP и контракт
   trace.ts              разрешение ссылок компактного trace без повторения алгоритма
@@ -27,6 +29,16 @@ frontend/   React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + Motion + SVG
 используются отдельные состояния и renderer. SessionStore хранит типизированный
 CollectionEngine<? extends Snapshot>; DTO содержит collection. HashMap не получает
 фиктивных ячеек, ArrayList — бакетов. Каждый тип использует собственный compact encoder.
+
+`CollectionDefinition<S>` связывает идентификатор, класс снимка, фабрику движка и
+каталог сценариев. `CollectionRegistry.STANDARD` регистрирует HashMap и ArrayList;
+SessionStore создаёт движки через каталог, ApiController получает из него сценарии.
+Backend связывает эти определения с compact-кодировщиками через
+`CompactTraceRegistry.Registration<S>`. Проверка класса каждого снимка на границе
+кодирования сохраняет типизацию при хранении разных движков в сессиях.
+Оба каталога неизменяемы, проверяют дубликаты и отклоняют неподдерживаемые типы.
+Такая регистрация концентрирует подключение коллекции в core и backend при
+сохранении текущих пакетов, алгоритмов и форматов trace (шаг [#30](https://github.com/Oleg520/java-collections-vizualizer/issues/30)).
 
 Каждый запрос завершается на Java до воспроизведения. Перемотка выбирает готовый
 snapshot. Следующая команда исполняется над **последним состоянием сервера**, даже
