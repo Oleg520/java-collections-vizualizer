@@ -8,9 +8,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class ApiErrors {
+    private final ApiMetrics metrics;
+    public ApiErrors(ApiMetrics metrics) { this.metrics=metrics; }
     public record Error(int schemaVersion,String code,String message) {}
     @ExceptionHandler(SessionStore.ApiException.class)
     public ResponseEntity<Error> session(SessionStore.ApiException e) {
+        metrics.rejected(e.status,e.code);
         var response=ResponseEntity.status(e.status);
         if(e.retryAfter>0) response.header("Retry-After",Integer.toString(e.retryAfter));
         return response.body(new Error(1,e.code,e.getMessage()));

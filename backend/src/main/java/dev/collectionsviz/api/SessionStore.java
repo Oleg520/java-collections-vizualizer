@@ -114,6 +114,8 @@ public class SessionStore {
     }
     private SessionState state(Session s) { return new SessionState(1,s.id,s.collection.name(),s.revision,ttlMillis/1000,s.engine.snapshot()); }
     private ApiException missing() { return new ApiException(404,"SESSION_NOT_FOUND","Сессия не найдена или истекла. Создайте новую сессию."); }
+    // Occupied slots, including expired entries until normal access/cleanup removes them.
+    int storedSessions() { return sessions.size(); }
     @Scheduled(fixedDelay=60000)
     public void cleanup() {
         sessions.forEach((id,s) -> { synchronized(s) { if(clock.millis()-s.touched>=ttlMillis) sessions.remove(id,s); } });

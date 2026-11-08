@@ -13,7 +13,8 @@ class ApiLimitFilterTest {
         for(boolean fail:new boolean[]{false,true}) {
             var admission=new ApiAdmission(60,20,20,10,1,1,new SessionStoreTest.MutableClock());
             var mapper=new ObjectMapper();
-            var filter=new ApiLimitFilter(admission,new ClientAddress(""),mapper,new String[]{"http://localhost:5173"});
+            var filter=new ApiLimitFilter(admission,new ClientAddress(""),mapper,new String[]{"http://localhost:5173"},
+                new ApiMetrics(new io.micrometer.core.instrument.simple.SimpleMeterRegistry(),new SessionStore(60,4,new SessionStoreTest.MutableClock()),admission));
             var writing=new CountDownLatch(1); var finish=new CountDownLatch(1);
             try(var executor=Executors.newSingleThreadExecutor()) {
                 var first=executor.submit(() -> {

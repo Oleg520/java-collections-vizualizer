@@ -49,3 +49,13 @@ These checks use temporary fixtures, without contacting production or SSH:
 python3 -m unittest discover -s deploy/tests -v
 bash -n deploy/upload_backend.sh
 ```
+
+
+## Private backend diagnostics
+
+Actuator uses a separate loopback listener (default `127.0.0.1:18083`, configured
+by `MANAGEMENT_PORT`). Keep this port out of public proxy upstreams and firewall
+rules. The Caddy example denies `/actuator` paths. See
+[operator access and metric meanings](../docs/OBSERVABILITY.md) for local curl and
+SSH forwarding. Applying these defaults to a running server requires the normal
+reviewed deployment; this change does not perform a deployment.

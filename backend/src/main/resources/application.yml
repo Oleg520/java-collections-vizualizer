@@ -33,3 +33,25 @@ visualizer:
     tracked-clients: ${MAX_TRACKED_CLIENTS:4096}
     concurrent-work: ${MAX_CONCURRENT_WORK:2}
     concurrent-work-per-client: ${MAX_CONCURRENT_WORK_PER_CLIENT:1}
+
+# Separate listener: never forward this port through the public proxy.
+management:
+  server:
+    address: 127.0.0.1
+    port: ${MANAGEMENT_PORT:18083}
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+      discovery:
+        enabled: false
+    jmx:
+      exposure:
+        exclude: '*'
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    distribution:
+      percentiles:
+        http.server.requests: 0.5,0.95

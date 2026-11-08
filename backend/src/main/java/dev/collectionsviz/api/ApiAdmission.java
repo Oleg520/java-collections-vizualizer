@@ -75,5 +75,6 @@ public class ApiAdmission {
             }
         }
     }
+    synchronized int activeWork() { return active; }
     synchronized int trackedClients() { return clients.size(); }
 }

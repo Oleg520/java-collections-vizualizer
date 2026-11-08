@@ -15,13 +15,14 @@ import org.springframework.web.util.UrlPathHelper;
 @Order(10)
 public class ApiLimitFilter extends OncePerRequestFilter {
     public static final String CLIENT_ATTRIBUTE=ApiLimitFilter.class.getName()+".client";
+    private final ApiMetrics metrics;
     private final ApiAdmission admission;
     private final ClientAddress address;
     private final ObjectMapper json;
     private final Set<String> origins;
     public ApiLimitFilter(ApiAdmission admission,ClientAddress address,ObjectMapper json,
-                          @Value("${visualizer.allowed-origins}") String[] origins) {
-        this.admission=admission; this.address=address; this.json=json; this.origins=Set.of(origins);
+                          @Value("${visualizer.allowed-origins}") String[] origins,ApiMetrics metrics) {
+        this.metrics=metrics; this.admission=admission; this.address=address; this.json=json; this.origins=Set.of(origins);
     }
     @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain)
         throws ServletException,IOException {
@@ -38,9 +39,13 @@ public class ApiLimitFilter extends OncePerRequestFilter {
         catch(ApiAdmission.Limited limited) {
             reject(request,response,limited.code,limited.retryAfter); return;
         }
-        try(ticket) { chain.doFilter(request,response); } // Includes encoding and response serialization.
+        try(ticket) {
+            metrics.admitted(creation);
+            chain.doFilter(request,response); // Includes encoding and response serialization.
+        }
     }
     private void reject(HttpServletRequest request,HttpServletResponse response,String code,int retryAfter) throws IOException {
+        metrics.rejected(429,code);
         response.setStatus(429);
         response.setHeader("Retry-After",Integer.toString(retryAfter));
         response.addHeader("Vary","Origin");

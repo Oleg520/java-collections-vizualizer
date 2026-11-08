@@ -114,3 +114,10 @@ proxy-заголовки не создают новые квоты. Из 8 од�
 Наличие правильного proxy-файла не доказывает, что работающий Caddy загрузил его:
 при диагностике проверяйте фактический маршрут и перезапись пользовательского
 custom-заголовка, не разрешая доверие произвольным адресам/цепочкам.
+
+
+## Private observability
+
+[Backend diagnostics and operator access](OBSERVABILITY.md) describes the separate
+loopback Actuator listener, bounded metrics and local overhead verification.
+Public API limits and Caddy upstream ports are unchanged.
