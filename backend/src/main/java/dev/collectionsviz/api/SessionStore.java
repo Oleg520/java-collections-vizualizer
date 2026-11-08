@@ -28,8 +28,8 @@ public class SessionStore {
     }
     private static class Session {
         final UUID id=UUID.randomUUID();
-        final CollectionEngine<? extends Snapshot> engine;
-        final CollectionType collection;
+        CollectionEngine<? extends Snapshot> engine;
+        CollectionType collection;
         final String owner;
         long revision, touched;
         Session(CollectionType collection,Integer capacity,long now,String owner) {
@@ -70,6 +70,19 @@ public class SessionStore {
         return state(s);
     }
     public SessionState get(UUID id) { return access(id, this::state); }
+    /** Reconfigure one tab's slot atomically, without allocating another quota entry. */
+    public SessionState reset(UUID id,long expectedRevision,CollectionType collection,Integer capacity,String owner) {
+        if(owner==null || collection==null) throw new IllegalArgumentException("Client identity and collection required");
+        return access(id,owner,s -> {
+            if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Обновите сессию.");
+            CollectionEngine<? extends Snapshot> replacement=collection==CollectionType.ARRAY_LIST
+                ? new ArrayListEngine(capacity) : new HashMapEngine(capacity==null?0:capacity);
+            s.engine=replacement;
+            s.collection=collection;
+            s.revision++;
+            return state(s);
+        });
+    }
     public SessionTrace execute(UUID id,long expectedRevision,Operation operation) {
         return mutate(id,expectedRevision,engine -> engine.execute(operation));
     }
@@ -85,9 +98,13 @@ public class SessionStore {
         });
     }
     private <T> T access(UUID id,Function<Session,T> action) {
+        return access(id,null,action);
+    }
+    private <T> T access(UUID id,String owner,Function<Session,T> action) {
         var s=sessions.get(id);
         if(s==null) throw missing();
         synchronized(s) {
+            if(owner!=null && !s.owner.equals(owner)) throw missing();
             if(sessions.get(id)!=s || clock.millis()-s.touched>=ttlMillis) {
                 sessions.remove(id,s); throw missing();
             }

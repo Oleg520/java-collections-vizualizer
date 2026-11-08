@@ -85,3 +85,12 @@ UPDATE_SCREENSHOTS=1 npm --prefix frontend run test:e2e -- arraylist.spec.ts
 
 The screenshot command updates `docs/arraylist-desktop.png` and
 `docs/arraylist-mobile.png`. No production service is involved.
+
+## Session lifecycle regression (target 0.3.1)
+
+`npm --prefix frontend run test:e2e:lifecycle` uses a separate Playwright config
+and a fresh local backend with strict 6 creations/minute, 8 live sessions/IP and
+120 work requests/minute. Stop any manually running backend/frontend on the test
+ports first; reusing the broad-suite server would hide the original failure.
+CI runs this suite after the complete collection regression suite. No production
+limits are changed. See [the investigation](verification/session-lifecycle.md).

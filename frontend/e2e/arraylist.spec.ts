@@ -238,7 +238,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
       sessionId = url.split("/sessions/")[1].split("/")[0];
       const direct = await request.post(url, {
         data: {
-          expectedRevision: 1,
+          expectedRevision: route.request().postDataJSON().expectedRevision,
           operation: {
             type: "ADD",
             element: { type: "STRING", value: "external" },
@@ -276,10 +276,11 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   await page.locator(".primary-button").click();
   await committedGate;
   await page.getByLabel("Коллекция", { exact: true }).selectOption("HASH_MAP");
+  await expect(page.locator(".primary-button")).toBeDisabled();
+  release();
   await expect(
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
-  release();
   await expect(page.getByTestId("committed-size")).toHaveText("0");
   await page.getByRole("button", { name: "Выполнить put" }).click();
   await finish(page);
@@ -287,5 +288,5 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   expect(
     (await (await request.get(`/api/v1/sessions/${sessionId}`)).json()).state
       .size,
-  ).toBe(3);
+  ).toBe(1);
 });

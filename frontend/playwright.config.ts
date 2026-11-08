@@ -6,6 +6,7 @@ const port = preview ? 4173 : 5173;
 export default defineConfig({
   globalTimeout: 180000,
   testDir: "./e2e",
+  testIgnore: "session-lifecycle.spec.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 30000,

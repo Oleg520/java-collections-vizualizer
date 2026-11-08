@@ -16,7 +16,7 @@
 ## Возможности
 
 - ArrayList: `add`, `add(index)`, `get`, `set`, `remove(index)`, `indexOf`, `clear`, `reset`, `ensureCapacity`, `trimToSize`; String, Integer, null и девять сценариев.
-- Переключение коллекций создаёт новую изолированную сессию. Для ArrayList доступен выбор конструктора: default, explicit-zero и положительная ёмкость.
+- Переключение коллекций создаёт пустую структуру в том же изолированном слоте сессии. Для ArrayList доступен выбор конструктора: default, explicit-zero и положительная ёмкость.
 - Операции HashMap `put`, `get`, `remove`, `clear`, `reset`; String, Integer, null и учебные ключи с заданным hashCode.
 - Коллизии, resize/split, treeification и балансировка красно-чёрного дерева; восемь готовых сценариев.
 - Пошаговое воспроизведение, перемотка, скорость и история последних 12 операций.

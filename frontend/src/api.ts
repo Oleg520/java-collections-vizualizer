@@ -45,6 +45,16 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
 export const api = {
   create: (collection: CollectionType = "HASH_MAP", initialCapacity?: number) =>
     request<Session>("/sessions", { collection, initialCapacity }),
+  reset: (
+    session: Session,
+    collection: CollectionType,
+    initialCapacity?: number,
+  ) =>
+    request<Session>(`/sessions/${session.id}/reset`, {
+      expectedRevision: session.revision,
+      collection,
+      initialCapacity,
+    }),
   get: (id: string) => request<Session>(`/sessions/${id}`),
   scenarios: (collection: CollectionType = "HASH_MAP") =>
     request<Scenario[]>(`/scenarios?collection=${collection}`),

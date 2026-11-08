@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError } from "../api";
+import { api } from "../api";
+import { SessionConnection } from "../sessionConnection";
 import type {
   CollectionType,
   Operation,
@@ -25,6 +26,7 @@ export function useJavaSession(playback: PlaybackActions) {
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
   const epoch = useRef(0);
+  const connection = useRef(new SessionConnection());
   const config = useRef<{ collection: CollectionType; capacity?: number }>({
     collection: "HASH_MAP",
   });
@@ -47,17 +49,23 @@ export function useJavaSession(playback: PlaybackActions) {
     setError(null);
     playback.pause();
     try {
-      const [newSession, demos] = await Promise.all([
-        api.create(next, capacity ?? undefined),
-        api.scenarios(next),
-      ]);
+      const demos = await api.scenarios(next);
+      if (generation === epoch.current) setScenarios(demos);
+      const newSession = await connection.current.change(
+        next,
+        capacity ?? undefined,
+        () => generation === epoch.current,
+      );
       if (generation !== epoch.current) return;
+      if (!newSession) return;
       setSession(newSession);
       setScenarios(demos);
       playback.reset();
     } catch (e) {
       if (generation !== epoch.current) return;
       setError(errorMessage(e));
+      if (connection.current.session?.collection === next)
+        setSession(connection.current.session);
     } finally {
       if (generation === epoch.current) {
         busyRef.current = false;
@@ -81,7 +89,9 @@ export function useJavaSession(playback: PlaybackActions) {
     return () => clearTimeout(timeout);
   }, [busy]);
 
-  const execute = async (request: () => Promise<SessionTrace>) => {
+  const execute = async (
+    request: (session: Session) => Promise<SessionTrace>,
+  ) => {
     if (busyRef.current || !session) return;
     const generation = epoch.current;
     busyRef.current = true;
@@ -89,28 +99,15 @@ export function useJavaSession(playback: PlaybackActions) {
     setError(null);
     playback.pause();
     try {
-      const response = await request();
+      const response = await connection.current.execute(request);
       if (generation !== epoch.current) return;
-      setSession({
-        ...session,
-        revision: response.revision,
-        state: response.trace.committed,
-      });
+      setSession(connection.current.session);
       playback.accept(response.trace);
     } catch (e) {
       if (generation !== epoch.current) return;
       setError(errorMessage(e));
-      // A lost response may have committed: recover state but never retry the mutation.
-      if (e instanceof ApiError && (e.status === 409 || e.status === 0)) {
-        try {
-          const recovered = await api.get(session.id);
-          if (generation !== epoch.current) return;
-          setSession(recovered);
-          playback.showCommitted();
-        } catch {
-          /* Keep the original actionable error; explicit recovery remains available. */
-        }
-      }
+      setSession(connection.current.session);
+      playback.showCommitted();
     } finally {
       if (generation === epoch.current) {
         busyRef.current = false;
@@ -119,10 +116,10 @@ export function useJavaSession(playback: PlaybackActions) {
     }
   };
   const command = (operation: Operation) => {
-    if (session) void execute(() => api.command(session, operation));
+    if (session) void execute((current) => api.command(current, operation));
   };
   const demo = (name: string) => {
-    if (session) void execute(() => api.scenario(session, name));
+    if (session) void execute((current) => api.scenario(current, name));
   };
 
   return {

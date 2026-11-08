@@ -15,6 +15,7 @@ import dev.collectionsviz.core.Protocol.*;
 @RequestMapping("/api/v1")
 public class ApiController {
     public record CreateRequest(CollectionType collection, Integer initialCapacity) {}
+    public record ResetRequest(@NotNull @PositiveOrZero Long expectedRevision, @NotNull CollectionType collection, Integer initialCapacity) {}
     public record CommandRequest(@NotNull @PositiveOrZero Long expectedRevision, @NotNull Operation operation) {}
     public record ScenarioRequest(@NotNull @PositiveOrZero Long expectedRevision) {}
     private final SessionStore sessions;
@@ -42,6 +43,11 @@ public class ApiController {
             (String)httpRequest.getAttribute(ApiLimitFilter.CLIENT_ATTRIBUTE));
     }
     @GetMapping("/sessions/{id}") public SessionStore.SessionState get(@PathVariable UUID id) { return sessions.get(id); }
+    @PostMapping("/sessions/{id}/reset")
+    public SessionStore.SessionState reset(@PathVariable UUID id,@Valid @RequestBody ResetRequest request,HttpServletRequest httpRequest) {
+        return sessions.reset(id,request.expectedRevision(),request.collection(),request.initialCapacity(),
+            (String)httpRequest.getAttribute(ApiLimitFilter.CLIENT_ATTRIBUTE));
+    }
     @PostMapping("/sessions/{id}/commands")
     public Object command(@PathVariable UUID id,@Valid @RequestBody CommandRequest request,
                           @RequestParam(defaultValue="full") String encoding) {
