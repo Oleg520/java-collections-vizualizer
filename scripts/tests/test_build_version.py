@@ -91,6 +91,25 @@ class BuildVersionTest(unittest.TestCase):
         self.git('remote', 'set-url', 'origin', str(Path(self.temp) / 'missing'))
         self.assertNotEqual(0, self.script('fetch-version-tags.sh').returncode)
 
+    def test_github_ssh_tag_fetch_uses_https_without_changing_origin(self):
+        remote = self.repo
+        self.repo = Path(self.temp) / 'netlify'
+        subprocess.run(['git', 'clone', '--depth=1', '--no-tags', remote.as_uri(), str(self.repo)],
+                       env=self.env, check=True, capture_output=True)
+        subprocess.run(['git', '-C', str(remote), 'tag', '-a', '0.2.0', '-m', 'Release'],
+                       env=self.env, check=True, capture_output=True)
+        # Redirect HTTPS to a local fixture; any SSH invocation must fail.
+        self.git('config', 'url.' + remote.as_uri() + '.insteadOf',
+                 'https://github.com/example/public.git')
+        for origin in ['git@github.com:example/public.git',
+                       'ssh://git@github.com/example/public.git']:
+            with self.subTest(origin=origin):
+                self.git('remote', 'set-url', 'origin', origin)
+                result = self.script('fetch-version-tags.sh', GIT_SSH_COMMAND='false')
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual('0.2.0', result.stdout.strip())
+                self.assertEqual(origin, self.git('config', '--get', 'remote.origin.url').stdout.strip())
+
     def test_missing_git_metadata_fails(self):
         shutil.rmtree(self.repo / '.git')
         self.assertNotEqual(0, self.script().returncode)

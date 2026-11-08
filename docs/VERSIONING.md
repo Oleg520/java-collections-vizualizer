@@ -57,7 +57,9 @@ Actions checkout получает полную историю и теги; ру�
 неизменяемый dispatch SHA. Docker также использует `.git` и те же правила:
 запускайте `docker build -t collections-viz .` из обычного клона с каталогом `.git`.
 Для Git worktree, где `.git` — ссылка-файл на внешний каталог, сначала сделайте
-отдельный обычный клон. Финальный Docker image содержит только JRE и готовый JAR.
+отдельный обычный клон. Локальные Git config, hooks и reflogs исключены из build context; объекты и refs
+сохранены для Git-based versioning. История объектов всё ещё передаётся сборщику:
+используйте доверенный builder и чистый клон. Финальный Docker image содержит только JRE и готовый JAR.
 
 Если IDE не может импортировать multi-module проект с расширением, официальный
 workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
@@ -66,7 +68,8 @@ workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
 ## Netlify
 
 `netlify.toml` перед `npm ci && npm run build` запускает
-`sh ../scripts/fetch-version-tags.sh`. Скрипт явно получает все tag refs из `origin`,
+`sh ../scripts/fetch-version-tags.sh`. Скрипт явно получает все tag refs из URL `origin` (GitHub SSH URL преобразуется
+в публичный HTTPS без изменения remote),
 в том числе annotated tags при shallow checkout, и проверяет `COMMIT_REF == HEAD`.
 Ошибка получения тегов останавливает сборку: релиз не должен незаметно становиться `dev`.
 Версия определяется по фактическому HEAD, а не по имени ветки или npm metadata.
