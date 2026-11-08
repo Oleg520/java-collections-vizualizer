@@ -1,10 +1,15 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+import dev.collectionsviz.core.protocol.command.Element;
+
 import java.util.*;
 import java.util.concurrent.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.Protocol.*;
 
 class SessionLifecycleTest {
     @Test void repeatedSwitchesAndConstructorsUseOneQuotaSlot() {

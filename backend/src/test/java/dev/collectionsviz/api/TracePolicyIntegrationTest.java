@@ -1,7 +1,10 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.collectionsviz.core.Protocol.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

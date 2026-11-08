@@ -1,9 +1,18 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.hashmap;
+
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.Scenario;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.Result;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+import dev.collectionsviz.core.protocol.command.KeyType;
+import dev.collectionsviz.core.engine.CollectionEngine;
+import dev.collectionsviz.core.collections.hashmap.InstrumentedHashMap.Node;
+import dev.collectionsviz.core.collections.hashmap.InstrumentedHashMap.TreeNode;
 
 import java.util.*;
-import dev.collectionsviz.core.Protocol.*;
-import dev.collectionsviz.core.InstrumentedHashMap.Node;
-import dev.collectionsviz.core.InstrumentedHashMap.TreeNode;
 
 /** Not thread safe: a session serializes access. Only immutable records leave this boundary. */
 public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
@@ -170,9 +179,15 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         }
         return List.copyOf(result);
     }
+    private static KeySpec keySpec(Object key) {
+        if (key == null) return new KeySpec(KeyType.NULL, null, null);
+        if (key instanceof TeachingKey k) return KeySpec.collision(k.id(), k.hashCode());
+        return new KeySpec(key instanceof Integer ? KeyType.INTEGER : KeyType.STRING, key.toString(), null);
+    }
+
     private static NodeView view(Node<Object,String> p, boolean linked) {
         TreeNode<Object,String> t = p instanceof TreeNode<Object,String> tree ? tree : null;
-        return new NodeView(p.id, KeySpec.from(p.key), p.value, Objects.hashCode(p.key), p.hash,
+        return new NodeView(p.id, keySpec(p.key), p.value, Objects.hashCode(p.key), p.hash,
             id(p.next), t==null?null:id(t.parent), t==null?null:id(t.left), t==null?null:id(t.right),
             t==null?null:id(t.prev), t==null?null:t.red, linked);
     }

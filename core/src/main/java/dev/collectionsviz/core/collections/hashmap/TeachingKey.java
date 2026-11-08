@@ -1,4 +1,4 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.hashmap;
 
 /** Immutable collision key. Registry in the engine prevents changing an ID's hash. */
 public record TeachingKey(String id, int forcedHash) implements Comparable<TeachingKey> {

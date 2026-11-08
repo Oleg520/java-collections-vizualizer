@@ -1,6 +1,7 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.engine;
 
-import dev.collectionsviz.core.Protocol.*;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
 
 /** A new collection supplies its state type and reuses commands and trace playback. */
 public interface CollectionEngine<S> {

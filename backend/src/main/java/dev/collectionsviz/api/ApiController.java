@@ -1,5 +1,10 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.Scenario;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.registry.CollectionRegistry;
+
 import java.util.*;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,8 +12,6 @@ import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.web.bind.annotation.*;
-import dev.collectionsviz.core.CollectionRegistry;
-import dev.collectionsviz.core.Protocol.*;
 
 @RestController
 @RequestMapping("/api/v1")

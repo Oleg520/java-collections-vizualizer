@@ -1,10 +1,13 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+
 import java.time.*;
 import java.util.concurrent.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.Protocol.*;
 
 class SessionStoreTest {
     static class MutableClock extends Clock {

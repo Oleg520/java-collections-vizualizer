@@ -1,10 +1,17 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.arraylist;
+
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+import dev.collectionsviz.core.protocol.command.Element;
+import dev.collectionsviz.core.collections.hashmap.HashMapEngine;
 
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.Protocol.*;
-import static dev.collectionsviz.core.Protocol.OperationType.*;
+import static dev.collectionsviz.core.protocol.command.OperationType.*;
 
 class ArrayListEngineTest {
     static Trace<ArrayListSnapshot> run(ArrayListEngine e, OperationType type, Integer index, Object value, Integer cap) {

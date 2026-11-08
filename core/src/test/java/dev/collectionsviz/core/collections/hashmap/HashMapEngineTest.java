@@ -1,9 +1,15 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.hashmap;
+
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+import dev.collectionsviz.core.protocol.command.KeyType;
 
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.Protocol.*;
 
 class HashMapEngineTest {
     static Trace<HashMapSnapshot> op(HashMapEngine engine, OperationType type, KeySpec key, String value) {

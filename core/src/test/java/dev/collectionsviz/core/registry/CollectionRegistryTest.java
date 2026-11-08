@@ -1,9 +1,16 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.registry;
+
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.Element;
+import dev.collectionsviz.core.collections.hashmap.HashMapEngine;
+import dev.collectionsviz.core.collections.arraylist.ArrayListEngine;
+import dev.collectionsviz.core.engine.CollectionDefinition;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.Protocol.*;
 
 class CollectionRegistryTest {
     @Test void registersBothFactoriesAndImmutableScenarioCatalogues() {

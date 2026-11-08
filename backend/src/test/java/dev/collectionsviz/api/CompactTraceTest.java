@@ -1,9 +1,16 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.KeySpec;
+import dev.collectionsviz.core.collections.hashmap.HashMapEngine;
+import dev.collectionsviz.core.collections.hashmap.HashMapSnapshot;
+import dev.collectionsviz.core.collections.hashmap.Bucket;
+import dev.collectionsviz.core.collections.hashmap.NodeView;
+
 import java.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.collectionsviz.core.HashMapEngine;
-import dev.collectionsviz.core.Protocol.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

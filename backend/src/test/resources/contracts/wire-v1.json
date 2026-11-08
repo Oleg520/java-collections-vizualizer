@@ -1,0 +1,1477 @@
+{
+  "create" : {
+    "collection" : "ARRAY_LIST",
+    "initialCapacity" : 0
+  },
+  "createDefault" : {
+    "collection" : null,
+    "initialCapacity" : null
+  },
+  "reset" : {
+    "expectedRevision" : 4,
+    "collection" : "HASH_MAP",
+    "initialCapacity" : 16
+  },
+  "command" : {
+    "expectedRevision" : 2,
+    "operation" : {
+      "type" : "PUT",
+      "key" : {
+        "type" : "COLLISION",
+        "value" : "key\"\\\n",
+        "hashCodeOverride" : 42
+      },
+      "value" : "value\n",
+      "index" : null,
+      "element" : null,
+      "minCapacity" : null
+    }
+  },
+  "arrayCommand" : {
+    "expectedRevision" : 3,
+    "operation" : {
+      "type" : "ADD",
+      "key" : null,
+      "value" : null,
+      "index" : null,
+      "element" : {
+        "type" : "STRING",
+        "value" : "value\"\n"
+      },
+      "minCapacity" : null
+    }
+  },
+  "scenario" : {
+    "expectedRevision" : 4
+  },
+  "error" : {
+    "schemaVersion" : 1,
+    "code" : "REVISION_CONFLICT",
+    "message" : "Состояние изменилось"
+  },
+  "mapState" : {
+    "schemaVersion" : 1,
+    "id" : "00000000-0000-0000-0000-000000000025",
+    "collection" : "HASH_MAP",
+    "revision" : 3,
+    "expiresInSeconds" : 1800,
+    "state" : {
+      "phase" : "COMMITTED",
+      "size" : 1,
+      "capacity" : 16,
+      "threshold" : 12,
+      "loadFactor" : 0.75,
+      "pendingCapacity" : 0,
+      "buckets" : [ {
+        "index" : 10,
+        "kind" : "LIST",
+        "headId" : 1,
+        "rootId" : null,
+        "nodes" : [ {
+          "id" : 1,
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "rawHashCode" : 42,
+          "hash" : 42,
+          "next" : null,
+          "parent" : null,
+          "left" : null,
+          "right" : null,
+          "prev" : null,
+          "red" : null,
+          "linked" : true
+        } ]
+      } ],
+      "pendingBuckets" : [ ]
+    }
+  },
+  "arrayState" : {
+    "schemaVersion" : 1,
+    "id" : "00000000-0000-0000-0000-000000000025",
+    "collection" : "ARRAY_LIST",
+    "revision" : 4,
+    "expiresInSeconds" : 1800,
+    "state" : {
+      "collection" : "ARRAY_LIST",
+      "phase" : "COMMITTED",
+      "size" : 1,
+      "capacity" : 1,
+      "emptyMode" : "ALLOCATED",
+      "initialCapacity" : 0,
+      "buffer" : {
+        "id" : 1,
+        "capacity" : 1,
+        "cells" : [ {
+          "id" : 1,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          }
+        } ]
+      },
+      "pendingBuffer" : null
+    }
+  },
+  "mapFull" : {
+    "schemaVersion" : 1,
+    "sessionId" : "00000000-0000-0000-0000-000000000025",
+    "revision" : 3,
+    "trace" : {
+      "schemaVersion" : 1,
+      "collection" : "HASH_MAP",
+      "operation" : {
+        "type" : "PUT",
+        "key" : {
+          "type" : "COLLISION",
+          "value" : "key\"\\\n",
+          "hashCodeOverride" : 42
+        },
+        "value" : "value\n",
+        "index" : null,
+        "element" : null,
+        "minCapacity" : null
+      },
+      "result" : {
+        "found" : false,
+        "previousValue" : null,
+        "value" : "value\n",
+        "kind" : null,
+        "element" : null,
+        "booleanValue" : null,
+        "intValue" : null
+      },
+      "before" : {
+        "phase" : "COMMITTED",
+        "size" : 0,
+        "capacity" : 0,
+        "threshold" : 0,
+        "loadFactor" : 0.75,
+        "pendingCapacity" : 0,
+        "buckets" : [ ],
+        "pendingBuckets" : [ ]
+      },
+      "steps" : [ {
+        "index" : 0,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_STARTED",
+        "stage" : "operation",
+        "message" : "Начало PUT",
+        "details" : { },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "threshold" : 0,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 1,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "HASH_CALCULATED",
+        "stage" : "hash",
+        "message" : "hash = h ^ (h >>> 16)",
+        "details" : {
+          "rawHashCode" : 42,
+          "spreadHash" : 42,
+          "formula" : "42 ^ (42 >>> 16) = 42"
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "threshold" : 0,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 2,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "TABLE_INITIALIZED",
+        "stage" : "operation",
+        "message" : "Таблица выделена при первой вставке",
+        "details" : {
+          "capacity" : 16,
+          "threshold" : 12,
+          "oldCapacity" : 0
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 3,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "BUCKET_SELECTED",
+        "stage" : "index",
+        "message" : "(capacity - 1) & hash выбирает бакет",
+        "details" : {
+          "bucketIndex" : 10,
+          "capacity" : 16,
+          "hash" : 42,
+          "formula" : "(16 - 1) & 42 = 10"
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 4,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "NODE_INSERTED",
+        "stage" : "mutation",
+        "message" : "В пустой бакет добавлен узел",
+        "details" : {
+          "nodeId" : 1,
+          "bucketIndex" : 10
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodes" : [ {
+              "id" : 1,
+              "key" : {
+                "type" : "COLLISION",
+                "value" : "key\"\\\n",
+                "hashCodeOverride" : 42
+              },
+              "value" : "value\n",
+              "rawHashCode" : 42,
+              "hash" : 42,
+              "next" : null,
+              "parent" : null,
+              "left" : null,
+              "right" : null,
+              "prev" : null,
+              "red" : null,
+              "linked" : true
+            } ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 5,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "SIZE_CHANGED",
+        "stage" : "mutation",
+        "message" : "Новый ключ увеличивает size",
+        "details" : {
+          "size" : 1,
+          "threshold" : 12
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 1,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodes" : [ {
+              "id" : 1,
+              "key" : {
+                "type" : "COLLISION",
+                "value" : "key\"\\\n",
+                "hashCodeOverride" : 42
+              },
+              "value" : "value\n",
+              "rawHashCode" : 42,
+              "hash" : 42,
+              "next" : null,
+              "parent" : null,
+              "left" : null,
+              "right" : null,
+              "prev" : null,
+              "red" : null,
+              "linked" : true
+            } ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 6,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_COMPLETED",
+        "stage" : "operation",
+        "message" : "Операция завершена; состояние зафиксировано",
+        "details" : {
+          "size" : 1
+        },
+        "snapshot" : {
+          "phase" : "COMMITTED",
+          "size" : 1,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodes" : [ {
+              "id" : 1,
+              "key" : {
+                "type" : "COLLISION",
+                "value" : "key\"\\\n",
+                "hashCodeOverride" : 42
+              },
+              "value" : "value\n",
+              "rawHashCode" : 42,
+              "hash" : 42,
+              "next" : null,
+              "parent" : null,
+              "left" : null,
+              "right" : null,
+              "prev" : null,
+              "red" : null,
+              "linked" : true
+            } ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      } ],
+      "committed" : {
+        "phase" : "COMMITTED",
+        "size" : 1,
+        "capacity" : 16,
+        "threshold" : 12,
+        "loadFactor" : 0.75,
+        "pendingCapacity" : 0,
+        "buckets" : [ {
+          "index" : 10,
+          "kind" : "LIST",
+          "headId" : 1,
+          "rootId" : null,
+          "nodes" : [ {
+            "id" : 1,
+            "key" : {
+              "type" : "COLLISION",
+              "value" : "key\"\\\n",
+              "hashCodeOverride" : 42
+            },
+            "value" : "value\n",
+            "rawHashCode" : 42,
+            "hash" : 42,
+            "next" : null,
+            "parent" : null,
+            "left" : null,
+            "right" : null,
+            "prev" : null,
+            "red" : null,
+            "linked" : true
+          } ]
+        } ],
+        "pendingBuckets" : [ ]
+      }
+    }
+  },
+  "arrayFull" : {
+    "schemaVersion" : 1,
+    "sessionId" : "00000000-0000-0000-0000-000000000025",
+    "revision" : 4,
+    "trace" : {
+      "schemaVersion" : 1,
+      "collection" : "ARRAY_LIST",
+      "operation" : {
+        "type" : "ADD",
+        "key" : null,
+        "value" : null,
+        "index" : null,
+        "element" : {
+          "type" : "STRING",
+          "value" : "value\"\n"
+        },
+        "minCapacity" : null
+      },
+      "result" : {
+        "found" : false,
+        "previousValue" : null,
+        "value" : null,
+        "kind" : "BOOLEAN",
+        "element" : null,
+        "booleanValue" : true,
+        "intValue" : null
+      },
+      "before" : {
+        "collection" : "ARRAY_LIST",
+        "phase" : "COMMITTED",
+        "size" : 0,
+        "capacity" : 0,
+        "emptyMode" : "EXPLICIT_EMPTY",
+        "initialCapacity" : 0,
+        "buffer" : {
+          "id" : 0,
+          "capacity" : 0,
+          "cells" : [ ]
+        },
+        "pendingBuffer" : null
+      },
+      "steps" : [ {
+        "index" : 0,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_STARTED",
+        "stage" : "operation",
+        "message" : "Начало ADD",
+        "details" : { },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 0,
+            "capacity" : 0,
+            "cells" : [ ]
+          },
+          "pendingBuffer" : null
+        }
+      }, {
+        "index" : 1,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "CAPACITY_CHECKED",
+        "stage" : "capacity",
+        "message" : "Проверка места для новой ссылки",
+        "details" : {
+          "minimumCapacity" : 1,
+          "capacity" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 0,
+            "capacity" : 0,
+            "cells" : [ ]
+          },
+          "pendingBuffer" : null
+        }
+      }, {
+        "index" : 2,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_ALLOCATED",
+        "stage" : "capacity",
+        "message" : "Подготовлен другой буфер elementData",
+        "details" : {
+          "oldCapacity" : 0,
+          "newCapacity" : 1,
+          "minimumCapacity" : 1,
+          "minGrowth" : 1,
+          "preferredGrowth" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 0,
+            "capacity" : 0,
+            "cells" : [ ]
+          },
+          "pendingBuffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ null ]
+          }
+        }
+      }, {
+        "index" : 3,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_COPY_STARTED",
+        "stage" : "capacity",
+        "message" : "Копируются ссылки, объекты не клонируются",
+        "details" : {
+          "length" : 0,
+          "primitive" : "Arrays.copyOf / System.arraycopy"
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 0,
+            "capacity" : 0,
+            "cells" : [ ]
+          },
+          "pendingBuffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ null ]
+          }
+        }
+      }, {
+        "index" : 4,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_COPY_COMPLETED",
+        "stage" : "capacity",
+        "message" : "Ссылки перенесены в новый буфер",
+        "details" : {
+          "length" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 0,
+            "capacity" : 0,
+            "cells" : [ ]
+          },
+          "pendingBuffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ null ]
+          }
+        }
+      }, {
+        "index" : 5,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "CAPACITY_GROWN",
+        "stage" : "capacity",
+        "message" : "elementData переключён на новый буфер",
+        "details" : {
+          "oldCapacity" : 0,
+          "newCapacity" : 1,
+          "minimumCapacity" : 1,
+          "minGrowth" : 1,
+          "preferredGrowth" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ null ]
+          },
+          "pendingBuffer" : null
+        }
+      }, {
+        "index" : 6,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ELEMENT_WRITTEN",
+        "stage" : "mutation",
+        "message" : "Новая ссылка записана",
+        "details" : {
+          "index" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ {
+              "id" : 1,
+              "element" : {
+                "type" : "STRING",
+                "value" : "value\"\n"
+              }
+            } ]
+          },
+          "pendingBuffer" : null
+        }
+      }, {
+        "index" : 7,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_COMPLETED",
+        "stage" : "operation",
+        "message" : "Операция завершена; состояние зафиксировано",
+        "details" : {
+          "result" : {
+            "found" : false,
+            "previousValue" : null,
+            "value" : null,
+            "kind" : "BOOLEAN",
+            "element" : null,
+            "booleanValue" : true,
+            "intValue" : null
+          }
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "COMMITTED",
+          "size" : 1,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "buffer" : {
+            "id" : 1,
+            "capacity" : 1,
+            "cells" : [ {
+              "id" : 1,
+              "element" : {
+                "type" : "STRING",
+                "value" : "value\"\n"
+              }
+            } ]
+          },
+          "pendingBuffer" : null
+        }
+      } ],
+      "committed" : {
+        "collection" : "ARRAY_LIST",
+        "phase" : "COMMITTED",
+        "size" : 1,
+        "capacity" : 1,
+        "emptyMode" : "ALLOCATED",
+        "initialCapacity" : 0,
+        "buffer" : {
+          "id" : 1,
+          "capacity" : 1,
+          "cells" : [ {
+            "id" : 1,
+            "element" : {
+              "type" : "STRING",
+              "value" : "value\"\n"
+            }
+          } ]
+        },
+        "pendingBuffer" : null
+      }
+    }
+  },
+  "mapCompact" : {
+    "schemaVersion" : 1,
+    "sessionId" : "00000000-0000-0000-0000-000000000025",
+    "revision" : 3,
+    "encoding" : "node-table-v1",
+    "trace" : {
+      "schemaVersion" : 1,
+      "collection" : "HASH_MAP",
+      "operation" : {
+        "type" : "PUT",
+        "key" : {
+          "type" : "COLLISION",
+          "value" : "key\"\\\n",
+          "hashCodeOverride" : 42
+        },
+        "value" : "value\n",
+        "index" : null,
+        "element" : null,
+        "minCapacity" : null
+      },
+      "result" : {
+        "found" : false,
+        "previousValue" : null,
+        "value" : "value\n",
+        "kind" : null,
+        "element" : null,
+        "booleanValue" : null,
+        "intValue" : null
+      },
+      "before" : {
+        "phase" : "COMMITTED",
+        "size" : 0,
+        "capacity" : 0,
+        "threshold" : 0,
+        "loadFactor" : 0.75,
+        "pendingCapacity" : 0,
+        "buckets" : [ ],
+        "pendingBuckets" : [ ]
+      },
+      "steps" : [ {
+        "index" : 0,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_STARTED",
+        "stage" : "operation",
+        "message" : "Начало PUT",
+        "details" : { },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "threshold" : 0,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 1,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "HASH_CALCULATED",
+        "stage" : "hash",
+        "message" : "hash = h ^ (h >>> 16)",
+        "details" : {
+          "rawHashCode" : 42,
+          "spreadHash" : 42,
+          "formula" : "42 ^ (42 >>> 16) = 42"
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "threshold" : 0,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 2,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "TABLE_INITIALIZED",
+        "stage" : "operation",
+        "message" : "Таблица выделена при первой вставке",
+        "details" : {
+          "capacity" : 16,
+          "threshold" : 12,
+          "oldCapacity" : 0
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 3,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "BUCKET_SELECTED",
+        "stage" : "index",
+        "message" : "(capacity - 1) & hash выбирает бакет",
+        "details" : {
+          "bucketIndex" : 10,
+          "capacity" : 16,
+          "hash" : 42,
+          "formula" : "(16 - 1) & 42 = 10"
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 4,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "NODE_INSERTED",
+        "stage" : "mutation",
+        "message" : "В пустой бакет добавлен узел",
+        "details" : {
+          "nodeId" : 1,
+          "bucketIndex" : 10
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodeRefs" : [ 0 ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 5,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "SIZE_CHANGED",
+        "stage" : "mutation",
+        "message" : "Новый ключ увеличивает size",
+        "details" : {
+          "size" : 1,
+          "threshold" : 12
+        },
+        "snapshot" : {
+          "phase" : "WORKING",
+          "size" : 1,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodeRefs" : [ 0 ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      }, {
+        "index" : 6,
+        "operation" : {
+          "type" : "PUT",
+          "key" : {
+            "type" : "COLLISION",
+            "value" : "key\"\\\n",
+            "hashCodeOverride" : 42
+          },
+          "value" : "value\n",
+          "index" : null,
+          "element" : null,
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_COMPLETED",
+        "stage" : "operation",
+        "message" : "Операция завершена; состояние зафиксировано",
+        "details" : {
+          "size" : 1
+        },
+        "snapshot" : {
+          "phase" : "COMMITTED",
+          "size" : 1,
+          "capacity" : 16,
+          "threshold" : 12,
+          "loadFactor" : 0.75,
+          "pendingCapacity" : 0,
+          "buckets" : [ {
+            "index" : 10,
+            "kind" : "LIST",
+            "headId" : 1,
+            "rootId" : null,
+            "nodeRefs" : [ 0 ]
+          } ],
+          "pendingBuckets" : [ ]
+        }
+      } ],
+      "committed" : {
+        "phase" : "COMMITTED",
+        "size" : 1,
+        "capacity" : 16,
+        "threshold" : 12,
+        "loadFactor" : 0.75,
+        "pendingCapacity" : 0,
+        "buckets" : [ {
+          "index" : 10,
+          "kind" : "LIST",
+          "headId" : 1,
+          "rootId" : null,
+          "nodeRefs" : [ 0 ]
+        } ],
+        "pendingBuckets" : [ ]
+      }
+    },
+    "nodePool" : [ {
+      "id" : 1,
+      "key" : {
+        "type" : "COLLISION",
+        "value" : "key\"\\\n",
+        "hashCodeOverride" : 42
+      },
+      "value" : "value\n",
+      "rawHashCode" : 42,
+      "hash" : 42,
+      "next" : null,
+      "parent" : null,
+      "left" : null,
+      "right" : null,
+      "prev" : null,
+      "red" : null,
+      "linked" : true
+    } ]
+  },
+  "arrayCompact" : {
+    "schemaVersion" : 1,
+    "sessionId" : "00000000-0000-0000-0000-000000000025",
+    "revision" : 4,
+    "encoding" : "array-frames-v1",
+    "trace" : {
+      "schemaVersion" : 1,
+      "collection" : "ARRAY_LIST",
+      "operation" : {
+        "type" : "ADD",
+        "key" : null,
+        "value" : null,
+        "index" : null,
+        "element" : {
+          "type" : "STRING",
+          "value" : "value\"\n"
+        },
+        "minCapacity" : null
+      },
+      "result" : {
+        "found" : false,
+        "previousValue" : null,
+        "value" : null,
+        "kind" : "BOOLEAN",
+        "element" : null,
+        "booleanValue" : true,
+        "intValue" : null
+      },
+      "before" : {
+        "collection" : "ARRAY_LIST",
+        "phase" : "COMMITTED",
+        "size" : 0,
+        "capacity" : 0,
+        "emptyMode" : "EXPLICIT_EMPTY",
+        "initialCapacity" : 0,
+        "bufferRef" : 0,
+        "pendingBufferRef" : null
+      },
+      "steps" : [ {
+        "index" : 0,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_STARTED",
+        "stage" : "operation",
+        "message" : "Начало ADD",
+        "details" : { },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "bufferRef" : 0,
+          "pendingBufferRef" : null
+        }
+      }, {
+        "index" : 1,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "CAPACITY_CHECKED",
+        "stage" : "capacity",
+        "message" : "Проверка места для новой ссылки",
+        "details" : {
+          "minimumCapacity" : 1,
+          "capacity" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "bufferRef" : 0,
+          "pendingBufferRef" : null
+        }
+      }, {
+        "index" : 2,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_ALLOCATED",
+        "stage" : "capacity",
+        "message" : "Подготовлен другой буфер elementData",
+        "details" : {
+          "oldCapacity" : 0,
+          "newCapacity" : 1,
+          "minimumCapacity" : 1,
+          "minGrowth" : 1,
+          "preferredGrowth" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "bufferRef" : 0,
+          "pendingBufferRef" : 1
+        }
+      }, {
+        "index" : 3,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_COPY_STARTED",
+        "stage" : "capacity",
+        "message" : "Копируются ссылки, объекты не клонируются",
+        "details" : {
+          "length" : 0,
+          "primitive" : "Arrays.copyOf / System.arraycopy"
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "bufferRef" : 0,
+          "pendingBufferRef" : 1
+        }
+      }, {
+        "index" : 4,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ARRAY_COPY_COMPLETED",
+        "stage" : "capacity",
+        "message" : "Ссылки перенесены в новый буфер",
+        "details" : {
+          "length" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 0,
+          "emptyMode" : "EXPLICIT_EMPTY",
+          "initialCapacity" : 0,
+          "bufferRef" : 0,
+          "pendingBufferRef" : 1
+        }
+      }, {
+        "index" : 5,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "CAPACITY_GROWN",
+        "stage" : "capacity",
+        "message" : "elementData переключён на новый буфер",
+        "details" : {
+          "oldCapacity" : 0,
+          "newCapacity" : 1,
+          "minimumCapacity" : 1,
+          "minGrowth" : 1,
+          "preferredGrowth" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "bufferRef" : 1,
+          "pendingBufferRef" : null
+        }
+      }, {
+        "index" : 6,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "ELEMENT_WRITTEN",
+        "stage" : "mutation",
+        "message" : "Новая ссылка записана",
+        "details" : {
+          "index" : 0
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "WORKING",
+          "size" : 0,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "bufferRef" : 2,
+          "pendingBufferRef" : null
+        }
+      }, {
+        "index" : 7,
+        "operation" : {
+          "type" : "ADD",
+          "key" : null,
+          "value" : null,
+          "index" : null,
+          "element" : {
+            "type" : "STRING",
+            "value" : "value\"\n"
+          },
+          "minCapacity" : null
+        },
+        "event" : "OPERATION_COMPLETED",
+        "stage" : "operation",
+        "message" : "Операция завершена; состояние зафиксировано",
+        "details" : {
+          "result" : {
+            "found" : false,
+            "previousValue" : null,
+            "value" : null,
+            "kind" : "BOOLEAN",
+            "element" : null,
+            "booleanValue" : true,
+            "intValue" : null
+          }
+        },
+        "snapshot" : {
+          "collection" : "ARRAY_LIST",
+          "phase" : "COMMITTED",
+          "size" : 1,
+          "capacity" : 1,
+          "emptyMode" : "ALLOCATED",
+          "initialCapacity" : 0,
+          "bufferRef" : 2,
+          "pendingBufferRef" : null
+        }
+      } ],
+      "committed" : {
+        "collection" : "ARRAY_LIST",
+        "phase" : "COMMITTED",
+        "size" : 1,
+        "capacity" : 1,
+        "emptyMode" : "ALLOCATED",
+        "initialCapacity" : 0,
+        "bufferRef" : 2,
+        "pendingBufferRef" : null
+      }
+    },
+    "bufferPool" : [ {
+      "id" : 0,
+      "capacity" : 0,
+      "cellRefs" : [ ]
+    }, {
+      "id" : 1,
+      "capacity" : 1,
+      "cellRefs" : [ null ]
+    }, {
+      "id" : 1,
+      "capacity" : 1,
+      "cellRefs" : [ 0 ]
+    } ],
+    "cellPool" : [ {
+      "id" : 1,
+      "element" : {
+        "type" : "STRING",
+        "value" : "value\"\n"
+      }
+    } ]
+  }
+}

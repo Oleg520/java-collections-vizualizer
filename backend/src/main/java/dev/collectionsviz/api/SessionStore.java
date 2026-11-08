@@ -1,5 +1,12 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.Snapshot;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.engine.CollectionEngine;
+import dev.collectionsviz.core.registry.CollectionRegistry;
+
 import java.time.Clock;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,9 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import dev.collectionsviz.core.CollectionRegistry;
-import dev.collectionsviz.core.CollectionEngine;
-import dev.collectionsviz.core.Protocol.*;
 
 @Service
 public class SessionStore {

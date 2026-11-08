@@ -25,7 +25,7 @@
 
 // Modified for Java Collections Visualizer: selected OpenJDK 21 algorithms,
 // semantic trace hooks, stable node IDs, no Map views/serialization/LinkedHashMap.
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.hashmap;
 
 import java.util.*;
 import java.lang.reflect.*;

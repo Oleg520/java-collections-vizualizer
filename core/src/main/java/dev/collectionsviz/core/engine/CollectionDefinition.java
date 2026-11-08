@@ -1,9 +1,12 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.engine;
+
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.Snapshot;
+import dev.collectionsviz.core.protocol.Scenario;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Associates a collection's factory and scenario catalogue with its snapshot type. */
 public record CollectionDefinition<S extends Snapshot>(CollectionType type, Class<S> snapshotType,

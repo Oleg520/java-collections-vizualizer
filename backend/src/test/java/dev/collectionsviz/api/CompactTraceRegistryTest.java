@@ -1,11 +1,14 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.Snapshot;
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.registry.CollectionRegistry;
+
 import java.util.*;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import dev.collectionsviz.core.CollectionRegistry;
-import dev.collectionsviz.core.Protocol.*;
 
 class CompactTraceRegistryTest {
     private final JsonMapper json = new JsonMapper();

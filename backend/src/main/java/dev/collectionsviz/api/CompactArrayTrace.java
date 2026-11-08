@@ -1,7 +1,12 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.collections.arraylist.ArrayListSnapshot;
+import dev.collectionsviz.core.collections.arraylist.Buffer;
+import dev.collectionsviz.core.collections.arraylist.Cell;
+
 import java.util.*;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Pools immutable buffer versions and occurrences. Null cell references mean free slots. */
 public record CompactArrayTrace(int schemaVersion, UUID sessionId, long revision, String encoding,

@@ -1,11 +1,18 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.Element;
+import dev.collectionsviz.core.collections.arraylist.ArrayListEngine;
+import dev.collectionsviz.core.collections.arraylist.ArrayListSnapshot;
+import dev.collectionsviz.core.collections.arraylist.Buffer;
+
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.collectionsviz.core.ArrayListEngine;
-import dev.collectionsviz.core.Protocol.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

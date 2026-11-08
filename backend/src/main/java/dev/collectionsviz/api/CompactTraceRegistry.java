@@ -1,10 +1,11 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.Snapshot;
+import dev.collectionsviz.core.engine.CollectionDefinition;
+import dev.collectionsviz.core.registry.CollectionRegistry;
+
 import java.util.*;
 import java.util.function.Function;
-import dev.collectionsviz.core.CollectionDefinition;
-import dev.collectionsviz.core.CollectionRegistry;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Backend bindings keep transport encoding separate from domain registration. */
 public final class CompactTraceRegistry {

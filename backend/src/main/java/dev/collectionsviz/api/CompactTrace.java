@@ -1,7 +1,12 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.collections.hashmap.HashMapSnapshot;
+import dev.collectionsviz.core.collections.hashmap.Bucket;
+import dev.collectionsviz.core.collections.hashmap.NodeView;
+
 import java.util.*;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Lossless transport encoding. Events and algorithm snapshots are never recomputed. */
 public record CompactTrace(int schemaVersion, UUID sessionId, long revision, String encoding,

@@ -23,10 +23,19 @@
  * questions.
  */
 
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.collections.arraylist;
+
+import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.Scenario;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.Result;
+import dev.collectionsviz.core.protocol.command.Element;
+import dev.collectionsviz.core.protocol.command.ElementType;
+import dev.collectionsviz.core.engine.CollectionEngine;
 
 import java.util.*;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Instrumented subset adapted from OpenJDK jdk-21.0.5+11 ArrayList.
  * Occurrence IDs are a parallel teaching overlay; elementData holds actual Java values.

@@ -1,7 +1,13 @@
-package dev.collectionsviz.core;
+package dev.collectionsviz.core.registry;
+
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.collections.hashmap.HashMapEngine;
+import dev.collectionsviz.core.collections.hashmap.HashMapSnapshot;
+import dev.collectionsviz.core.collections.arraylist.ArrayListEngine;
+import dev.collectionsviz.core.collections.arraylist.ArrayListSnapshot;
+import dev.collectionsviz.core.engine.CollectionDefinition;
 
 import java.util.*;
-import dev.collectionsviz.core.Protocol.*;
 
 /** Immutable, explicit registration of the built-in collection engines. */
 public final class CollectionRegistry {
