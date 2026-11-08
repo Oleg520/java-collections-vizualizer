@@ -100,3 +100,12 @@ limits are changed. See [the investigation](verification/session-lifecycle.md).
 confirmed SESSION_NOT_FOUND, including explicit user retries, switching back to
 legacy commands, actionable UI errors and exact creation counts. Unit tests also
 cover generic 404 during command and recovery GET; neither may retire a known UUID.
+
+
+## Backend observability
+
+`./mvnw clean verify` includes lifecycle/streaming metric tests and a real HTTP
+test of separate application/management listeners. Operator access, metric
+semantics and the local baseline/candidate comparison are documented in
+[backend diagnostics](OBSERVABILITY.md). No public management route or production
+load test is required.

@@ -1,0 +1,91 @@
+{
+  "baselineCommit": "49b5f3fc6e678ef1f02f8e544f3474cf58fcde87",
+  "jarSha256": {
+    "baseline": "9c3fd3bde0fea444eb333b8653d7ec64a86a1466da8d7d7a17cb5e7f4c6c707b",
+    "candidate": "b938b8ceac5c3b29d8d52b42e5c21e2125264af845255d75b4b0740ec1099ea5"
+  },
+  "javaVersion": [
+    "openjdk version \"21.0.13\" 2026-10-20 LTS",
+    "OpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)",
+    "OpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)"
+  ],
+  "cpuModel": "AMD Ryzen 7 9800X3D 8-Core Processor",
+  "measuredAt": "2026-11-08T21:47:34.048516+00:00",
+  "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "cpu": "",
+  "javaFlags": [
+    "-Xms64m",
+    "-Xmx256m",
+    "-XX:ActiveProcessorCount=1",
+    "-XX:+UseSerialGC"
+  ],
+  "method": "ABBA fresh local processes; 1000 warmup + 2000 measured mixed compact scenarios; GC before/after retained heap; one 97th-insert split and gzip check. Local rate limits raised equally for both variants.",
+  "runs": [
+    {
+      "variant": "baseline",
+      "startupMs": 1489.09,
+      "requests": 2000,
+      "wallSeconds": 3.031,
+      "cpuSeconds": 2.6,
+      "p50Ms": 1.649,
+      "p95Ms": 2.461,
+      "responseBytesMax": 133766,
+      "heapBeforeKiB": 16621,
+      "heapAfterKiB": 15085,
+      "VmHWMKiB": 193736,
+      "VmRSSKiB": 193736,
+      "largeTraceBytes": 1433743,
+      "gzipVerified": true
+    },
+    {
+      "variant": "candidate",
+      "startupMs": 1688.09,
+      "requests": 2000,
+      "wallSeconds": 2.934,
+      "cpuSeconds": 2.89,
+      "p50Ms": 1.555,
+      "p95Ms": 2.259,
+      "responseBytesMax": 133766,
+      "heapBeforeKiB": 21327,
+      "heapAfterKiB": 19152,
+      "VmHWMKiB": 219600,
+      "VmRSSKiB": 219600,
+      "largeTraceBytes": 1433743,
+      "managementLoopbackVerified": true,
+      "gzipVerified": true
+    },
+    {
+      "variant": "candidate",
+      "startupMs": 1708.49,
+      "requests": 2000,
+      "wallSeconds": 2.939,
+      "cpuSeconds": 2.79,
+      "p50Ms": 1.577,
+      "p95Ms": 2.219,
+      "responseBytesMax": 133766,
+      "heapBeforeKiB": 21335,
+      "heapAfterKiB": 19161,
+      "VmHWMKiB": 224304,
+      "VmRSSKiB": 223300,
+      "largeTraceBytes": 1433743,
+      "managementLoopbackVerified": true,
+      "gzipVerified": true
+    },
+    {
+      "variant": "baseline",
+      "startupMs": 1427.23,
+      "requests": 2000,
+      "wallSeconds": 2.81,
+      "cpuSeconds": 2.41,
+      "p50Ms": 1.516,
+      "p95Ms": 2.152,
+      "responseBytesMax": 133766,
+      "heapBeforeKiB": 16608,
+      "heapAfterKiB": 15089,
+      "VmHWMKiB": 197632,
+      "VmRSSKiB": 197632,
+      "largeTraceBytes": 1433743,
+      "gzipVerified": true
+    }
+  ]
+}
