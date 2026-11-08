@@ -94,3 +94,9 @@ and a fresh local backend with strict 6 creations/minute, 8 live sessions/IP and
 ports first; reusing the broad-suite server would hide the original failure.
 CI runs this suite after the complete collection regression suite. No production
 limits are changed. See [the investigation](verification/session-lifecycle.md).
+
+
+`session-compatibility.spec.ts` covers a missing /reset route (HTML 404) and
+confirmed SESSION_NOT_FOUND, including explicit user retries, switching back to
+legacy commands, actionable UI errors and exact creation counts. Unit tests also
+cover generic 404 during command and recovery GET; neither may retire a known UUID.

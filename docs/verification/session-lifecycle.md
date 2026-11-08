@@ -69,3 +69,38 @@ Run `./mvnw clean verify`, `npm --prefix frontend run build`,
 `npm --prefix frontend test`, `npm --prefix frontend run test:e2e` and
 `npm --prefix frontend run test:e2e:lifecycle`. The lifecycle runner starts a fresh
 local backend with strict budgets and does not reuse the broad-suite backend.
+
+## Follow-up review of 27577c4: rolling deployment compatibility
+
+Only an ApiError with HTTP 404 **and** code SESSION_NOT_FOUND proves that a known
+owned slot is unavailable. A missing /reset route on an older backend, HTML proxy
+404, or generic 404 during command/recovery GET must preserve the UUID. Such errors
+are surfaced; no replacement creation or automatic mutation retry is performed.
+The UI explains version/routing incompatibility. Switching back to the slot's
+known collection permits legacy commands while keeping the error actionable.
+
+Deploy the compatible backend before publishing the new frontend. The old frontend
+can use the new backend's legacy endpoints, but continues its old allocation
+behavior until refreshed. A new frontend against an old backend cannot switch or
+reconfigure a slot safely; it fails visibly instead of falling back to creation.
+A backend restart expires in-memory sessions; the new backend's explicit
+SESSION_NOT_FOUND then permits one replacement. Network failures/409 followed by
+an unrecognized recovery GET 404 never discard a known UUID.
+
+Read-only version/release check on 2026-11-08:
+
+- Latest published GitHub Release: 0.2.1; the 0.3.0 Release remains a draft.
+- Existing immutable tag 0.3.0 points at d73f0d9e26529dbd0ffb921055f7f25403340737.
+- Production health and the published frontend bundle both report 0.3.0.
+- Netlify's attempted production build for 27577c4 was not published because the
+  account credit quota was exhausted. This must be resolved by the owner before
+  a future frontend release can be verified; this work changes no hosting settings.
+- Next unused patch version: 0.3.1. Do not reuse or move 0.3.0 just because its
+  GitHub Release is still a draft. No tag/release/deploy is part of this fix.
+
+The repository's existing automatic Netlify builds on main can publish the frontend
+before a separately dispatched backend rollout. The owner must coordinate this
+window: the fix safely reports incompatibility, but cannot make an old backend
+implement /reset. There is intentionally no version-string-based fallback or
+create-on-error workaround. The temporary local-only Playwright configuration
+that disabled managed test servers has been removed; CI uses the isolated runners.

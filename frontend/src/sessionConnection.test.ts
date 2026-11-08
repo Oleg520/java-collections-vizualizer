@@ -143,3 +143,61 @@ it("preserves a slot on 429 and never retries a failed mutation", async () => {
   expect(t.get).not.toHaveBeenCalled();
   expect(c.session?.revision).toBe(0);
 });
+
+it.each(["HTTP_ERROR", "NOT_FOUND", "UNKNOWN"])(
+  "preserves a known UUID when reset returns generic 404 (%s)",
+  async (code) => {
+    const t = transport(),
+      c = new SessionConnection(t);
+    await c.change("HASH_MAP", undefined, () => true);
+    const original = c.session;
+    t.reset.mockRejectedValue(new ApiError("Not Found", 404, code));
+    for (let i = 0; i < 3; i++)
+      await expect(c.change("ARRAY_LIST", 0, () => true)).rejects.toThrow(
+        "совместимость версий",
+      );
+    expect(c.session).toBe(original);
+    expect(t.create).toHaveBeenCalledTimes(1);
+    expect(t.reset).toHaveBeenCalledTimes(3);
+    expect(t.get).not.toHaveBeenCalled();
+  },
+);
+it.each(["command", "recovery"])(
+  "does not retire a UUID on a generic %s 404",
+  async (source) => {
+    const t = transport(),
+      c = new SessionConnection(t);
+    await c.change("HASH_MAP", undefined, () => true);
+    const original = c.session;
+    t.get.mockRejectedValueOnce(
+      new ApiError("route missing", 404, "HTTP_ERROR"),
+    );
+    const error = new ApiError(
+      "failed",
+      source === "command" ? 404 : 0,
+      "HTTP_ERROR",
+    );
+    await expect(c.execute(() => Promise.reject(error))).rejects.toBe(error);
+    expect(c.session).toBe(original);
+    t.reset.mockRejectedValueOnce(
+      new ApiError("reset unsupported", 404, "HTTP_ERROR"),
+    );
+    await expect(c.change("ARRAY_LIST", 0, () => true)).rejects.toThrow(
+      "совместимость версий",
+    );
+    expect(t.create).toHaveBeenCalledTimes(1);
+  },
+);
+it("retires a UUID on confirmed expiry during command recovery", async () => {
+  const t = transport(),
+    c = new SessionConnection(t);
+  await c.change("HASH_MAP", undefined, () => true);
+  t.get.mockRejectedValueOnce(
+    new ApiError("expired", 404, "SESSION_NOT_FOUND"),
+  );
+  await expect(
+    c.execute(() => Promise.reject(new ApiError("lost", 0, "NETWORK_ERROR"))),
+  ).rejects.toThrow("lost");
+  expect(c.session).toBeNull();
+  expect(t.create).toHaveBeenCalledTimes(1);
+});
