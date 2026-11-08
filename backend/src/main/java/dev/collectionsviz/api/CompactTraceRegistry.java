@@ -19,15 +19,15 @@ public final class CompactTraceRegistry {
             Objects.requireNonNull(encoder);
         }
 
+        @SuppressWarnings("unchecked")
         private Object encode(SessionStore.SessionTrace<?> response) {
-            var source = response.trace();
+            var trace = response.trace();
             var snapshotType = definition.snapshotType();
-            // Check the heterogeneous transport boundary, including every intermediate frame.
-            var steps = source.steps().stream().map(step -> new Step<>(step.index(), step.operation(),
-                step.event(), step.stage(), step.message(), step.details(), snapshotType.cast(step.snapshot()))).toList();
-            var trace = new Trace<>(source.schemaVersion(), source.collection(), source.operation(), source.result(),
-                snapshotType.cast(source.before()), steps, snapshotType.cast(source.committed()));
-            return encoder.apply(new SessionStore.SessionTrace<>(response.schemaVersion(), response.sessionId(), response.revision(), trace));
+            // Validate the heterogeneous boundary before passing through the original trace.
+            snapshotType.cast(trace.before());
+            for (var step : trace.steps()) snapshotType.cast(step.snapshot());
+            snapshotType.cast(trace.committed());
+            return encoder.apply((SessionStore.SessionTrace<S>) response);
         }
     }
 
