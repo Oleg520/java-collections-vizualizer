@@ -1,6 +1,11 @@
+import { elementLabel } from "../../features/arraylist/presentation";
 import { expect, it } from "vitest";
-import { decodeTrace, type ArrayFrame, type CompactArrayTrace } from "./trace";
-import { isArray, elementLabel, type ArraySnapshot } from "./types";
+import {
+  decodeTrace,
+  type ArrayFrame,
+  type CompactArrayTrace,
+} from "./decodeTrace";
+import { isArray, type ArraySnapshot } from "../types/index";
 const frame = (ref: number): ArrayFrame => ({
   collection: "ARRAY_LIST",
   phase: "WORKING",

@@ -3,42 +3,57 @@
 ## Модули
 
 ```text
-core/       Java 21, без Spring и JSON-зависимостей
-  InstrumentedHashMap   алгоритмы OpenJDK + семантические точки наблюдения
-  HashMapEngine         команды, ключи, снимки, trace, сценарии
-  ArrayListEngine       Object[], типизированные элементы, буферы и события
-  CollectionEngine<S>   общая граница двух движков
-  CollectionRegistry    статический каталог фабрик и сценариев
-  Protocol              неизменяемые транспортные records
-backend/    Spring Boot 3.5.16, REST, сессии, optimistic revision, TTL, CORS
-  CompactTrace          HashMap: общая таблица версий узлов
-  CompactArrayTrace     ArrayList: пулы версий буферов и вхождений
-  CompactTraceRegistry  типизированные регистрации compact-кодировщиков
-frontend/   React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + Motion + SVG
-  api.ts / types.ts     HTTP и контракт
-  trace.ts              разрешение ссылок компактного trace без повторения алгоритма
-  App.tsx               композиция UI, связь hooks и выбор отображаемого снимка
-  hooks/useJavaSession  сессия Java, последовательные запросы и восстановление состояния
-  hooks/useTracePlayback история trace, курсор, скорость и локальное воспроизведение
-  layout.ts             только размещение по ссылкам из Java
-  Diagram.tsx           HashMap: SVG и анимации по стабильным ID
-  ArrayDiagram.tsx      ArrayList: адаптивные ячейки, старый/новый буфер
+core/       Java 21
+  engine/                 CollectionEngine<S>, CollectionDefinition<S>
+  protocol/               Snapshot, Step<S>, Trace<S>, Scenario, CollectionType
+  protocol/command/       совместимые Operation/Result и модели аргументов
+  registry/               статический каталог фабрик и сценариев
+  collections/hashmap/    движок, инструментированный алгоритм, ключи и снимки
+  collections/arraylist/  движок, снимки, буферы и вхождения
+backend/    Spring Boot
+  web/                    маршруты, обработка ошибок, фильтр допуска
+  dto/                    запросы, ответы и метаданные compact trace
+  session/                SessionStore: блокировки, revision, TTL и квоты
+  admission/              бюджеты запросов и определение адреса клиента
+  error/                  ApiException
+  trace/                  registry и кодировщики hashmap/arraylist
+  observability/          счётчики и измерение записанного ответа
+  config/                 CORS и ограничения JSON
+frontend/   React + TypeScript
+  app/                    композиция UI и статическая таблица представлений
+  api/types/              общие envelopes и модели hashmap/arraylist
+  api/trace/              диспетчер и декодеры compact-форматов
+  session/                очередь запросов и восстановление сессии
+  playback/               история trace и локальное воспроизведение
+  features/hashmap/       диаграмма, layout, команды, детали узла и подписи
+  features/arraylist/     диаграмма, команды и подписи
+  components/             общие панели сценариев, метрик и событий
+  presentation/           форматирование общей Operation
 ```
 
-`CollectionEngine<S>` и `Trace<S>` не зависят от HashMap-схемы. Для новой коллекции
-используются отдельные состояния и renderer. SessionStore хранит типизированный
-CollectionEngine<? extends Snapshot>; DTO содержит collection. HashMap не получает
-фиктивных ячеек, ArrayList — бакетов. Каждый тип использует собственный compact encoder.
+В core зависимости направлены от registry к реализациям коллекций, от реализаций
+к engine/protocol. `CollectionDefinition<S>` связывает тип, класс снимка, фабрику
+и сценарии. `CollectionRegistry.STANDARD` подключает HashMap и ArrayList.
+`protocol/command` сохраняет текущий объединённый JSON-контракт аргументов и результатов;
+преобразование учебного ключа принадлежит HashMapEngine.
 
-`CollectionDefinition<S>` связывает идентификатор, класс снимка, фабрику движка и
-каталог сценариев. `CollectionRegistry.STANDARD` регистрирует HashMap и ArrayList;
-SessionStore создаёт движки через каталог, ApiController получает из него сценарии.
-Backend связывает эти определения с compact-кодировщиками через
-`CompactTraceRegistry.Registration<S>`. Проверка класса каждого снимка на границе
-кодирования сохраняет типизацию при хранении разных движков в сессиях.
-Оба каталога неизменяемы, проверяют дубликаты и отклоняют неподдерживаемые типы.
-Такая регистрация концентрирует подключение коллекции в core и backend при
-сохранении текущих пакетов, алгоритмов и форматов trace (шаг [#30](https://github.com/Oleg520/java-collections-vizualizer/issues/30)).
+Backend использует registry для создания движков и получения сценариев.
+`CompactTraceRegistry.Registration<S>` связывает определения с кодировщиками,
+проверяет тип каждого снимка и передаёт исходный trace. Кодировщики используют
+DTO `SessionTrace<S>`; внутренние Frame/Refs и Encoder принадлежат своему формату.
+Общие метрики читают счётчики session/admission, HTTP-фильтр управляет допуском
+до завершения записи ответа. `Application` остаётся корнем Spring component scan.
+
+Frontend выбирает controls, renderer и учебные метаданные через `collectionViews`.
+Коллекционные presentation-функции готовят показатели и подписи; общие панели
+отображают переданные данные. Декодеры восстанавливают ссылки готовых снимков Java.
+Java unit-тесты следуют пакетам реализации, Spring integration-тесты проверяют
+границы приложения, Vitest-тесты располагаются рядом с проверяемыми модулями.
+
+Подключение коллекции: собственные engine/snapshot и сценарии → регистрация в core →
+backend encoder → транспортные типы/декодер и frontend-представление → проверки JDK,
+инвариантов, API и E2E. Список типов, команды и ограниченные метки ApiMetrics
+обновляются вместе с контрактом новой коллекции.
 
 Каждый запрос завершается на Java до воспроизведения. Перемотка выбирает готовый
 snapshot. Следующая команда исполняется над **последним состоянием сервера**, даже

@@ -1,5 +1,6 @@
+import { operationLabel } from "./operationLabel";
 import { expect, it } from "vitest";
-import { operationLabel, type Operation } from "./types";
+import { type Operation } from "../api/types/index";
 
 const operation = (
   type: Operation["type"],

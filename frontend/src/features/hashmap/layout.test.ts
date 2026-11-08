@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { layoutSnapshot } from "./layout";
-import type { MapNode, Snapshot } from "./types";
+import type { MapNode, Snapshot } from "../../api/types/index";
 const node = (id: number, extra: Partial<MapNode> = {}): MapNode => ({
   id,
   key: { type: "COLLISION", value: `K${id}`, hashCodeOverride: 42 },

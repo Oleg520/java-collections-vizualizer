@@ -1,4 +1,4 @@
-import type { Bucket, MapNode, Snapshot } from "./types";
+import type { Bucket, MapNode, Snapshot } from "../../api/types/index";
 export interface PlacedNode {
   node: MapNode;
   x: number;
@@ -49,9 +49,10 @@ export function layoutSnapshot(state: Snapshot): Diagram {
       const n = byId.get(id)!;
       const left = walk(n.left, level + 1);
       const right = walk(n.right, level + 1);
-      const x = left !== undefined && right !== undefined
-        ? (left + right) / 2
-        : left ?? right ?? (170 + rank++ * 150);
+      const x =
+        left !== undefined && right !== undefined
+          ? (left + right) / 2
+          : (left ?? right ?? 170 + rank++ * 150);
       local.set(id, { x, y: top + level * 103 });
       depth = Math.max(depth, level);
       return x;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Trace } from "../types";
+import type { Trace } from "../api/types/index";
 
 /** Owns immutable operation history and local playback; navigation never calls the API. */
 export function useTracePlayback() {

@@ -1,7 +1,11 @@
-import type { Snapshot } from "./types";
+import type { Snapshot } from "../types/index";
 import { describe, expect, it } from "vitest";
-import { decodeTrace, type CompactSessionTrace, type Frame } from "./trace";
-import type { MapNode } from "./types";
+import {
+  decodeTrace,
+  type CompactSessionTrace,
+  type Frame,
+} from "./decodeTrace";
+import type { MapNode } from "../types/index";
 
 const original: MapNode = {
   id: 7,

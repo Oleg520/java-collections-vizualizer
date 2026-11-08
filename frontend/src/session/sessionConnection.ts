@@ -1,5 +1,5 @@
-import { api, ApiError } from "./api";
-import type { CollectionType, Session, SessionTrace } from "./types";
+import { api, ApiError } from "../api/api";
+import type { CollectionType, Session, SessionTrace } from "../api/types/index";
 
 /** Route/proxy 404s do not establish that a known session has expired. */
 function sessionNotFound(error: unknown): error is ApiError {

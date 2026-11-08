@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
-import type { CompactArrayTrace } from "../src/trace";
-import type { Operation } from "../src/types";
+import type { CompactArrayTrace } from "../src/api/trace/decodeTrace";
+import type { Operation } from "../src/api/types/index";
 async function ready(page: Page) {
   await page.goto("/");
   await expect(

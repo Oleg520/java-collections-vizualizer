@@ -1,3 +1,4 @@
+import { operationLabel } from "../presentation/operationLabel";
 import {
   ArrowRight,
   Check,
@@ -9,8 +10,8 @@ import {
   StepBack,
   StepForward,
 } from "lucide-react";
-import { operationLabel, type Step } from "../types";
-import type { useTracePlayback } from "../hooks/useTracePlayback";
+import { type Step } from "../api/types/index";
+import type { useTracePlayback } from "./useTracePlayback";
 export function PlaybackPanel({
   playback,
   step,

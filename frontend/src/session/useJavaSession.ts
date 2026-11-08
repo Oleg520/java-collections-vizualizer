@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { api } from "../api";
-import { SessionConnection } from "../sessionConnection";
+import { api } from "../api/api";
+import { SessionConnection } from "./sessionConnection";
 import type {
   CollectionType,
   Operation,
@@ -8,7 +8,7 @@ import type {
   Session,
   SessionTrace,
   Trace,
-} from "../types";
+} from "../api/types/index";
 
 interface PlaybackActions {
   pause: () => void;

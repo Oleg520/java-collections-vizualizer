@@ -1,6 +1,8 @@
-import { ArrayCommandPanel } from "./components/ArrayCommandPanel";
-import { ArrayDiagram } from "./components/ArrayDiagram";
-import { isArray } from "./types";
+import {
+  collectionViews,
+  collectionOptions,
+  statePresentation,
+} from "./collectionViews";
 import { useState } from "react";
 import {
   ArrowUpRight,
@@ -13,14 +15,12 @@ import {
   Network,
   X,
 } from "lucide-react";
-import { Diagram } from "./Diagram";
-import { CommandPanel } from "./components/CommandPanel";
-import { PlaybackPanel } from "./components/PlaybackPanel";
-import { ScenarioSidebar } from "./components/ScenarioSidebar";
-import { StateMetrics } from "./components/StateMetrics";
-import { TraceInspector } from "./components/TraceInspector";
-import { useJavaSession } from "./hooks/useJavaSession";
-import { useTracePlayback } from "./hooks/useTracePlayback";
+import { PlaybackPanel } from "../playback/PlaybackPanel";
+import { ScenarioSidebar } from "../components/ScenarioSidebar";
+import { StateMetrics } from "../components/StateMetrics";
+import { TraceInspector } from "../components/TraceInspector";
+import { useJavaSession } from "../session/useJavaSession";
+import { useTracePlayback } from "../playback/useTracePlayback";
 
 export default function App() {
   const playback = useTracePlayback();
@@ -51,12 +51,10 @@ export default function App() {
   });
   const { trace, step, cursor, historyIndex, playing, navigate } = playback;
   const snapshot = step?.snapshot ?? session?.state;
-  const selectedNode =
-    snapshot && !isArray(snapshot)
-      ? [...snapshot.buckets, ...snapshot.pendingBuckets]
-          .flatMap((b) => b.nodes)
-          .find((n) => n.id === selectedNodeId)
-      : undefined;
+  const view = collectionViews[collection];
+  const details = view.selectedDetails(snapshot, selectedNodeId, () =>
+    setSelectedNodeId(undefined),
+  );
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -90,11 +88,7 @@ export default function App() {
             <span>GitHub</span>
             <ArrowUpRight size={14} />
           </a>
-          <a
-            href={`https://github.com/openjdk/jdk21u/blob/${collection === "ARRAY_LIST" ? "jdk-21.0.5%2B11" : "3f3a1f534b7f2f5be6d7ded9d9832fa9394e763c"}/src/java.base/share/classes/java/util/${collection === "ARRAY_LIST" ? "ArrayList" : "HashMap"}.java`}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={view.sourceUrl} target="_blank" rel="noreferrer">
             OpenJDK 21 <ArrowUpRight size={14} />
           </a>
         </div>
@@ -102,6 +96,7 @@ export default function App() {
       <div className="workspace">
         <ScenarioSidebar
           collection={collection}
+          collections={collectionOptions}
           onCollection={switchCollection}
           scenarios={scenarios}
           trace={trace}
@@ -113,21 +108,13 @@ export default function App() {
           <div className="page-heading">
             <div>
               <div className="breadcrumbs">
-                Collections <ChevronRight size={12} />{" "}
-                {collection === "ARRAY_LIST" ? "List" : "Map"}{" "}
-                <ChevronRight size={12} />{" "}
-                <span>
-                  {collection === "ARRAY_LIST" ? "ArrayList" : "HashMap"}
-                </span>
+                Collections <ChevronRight size={12} /> {view.family}{" "}
+                <ChevronRight size={12} /> <span>{view.name}</span>
               </div>
               <h1>
                 Понять, что внутри<span>.</span>
               </h1>
-              <p>
-                {collection === "ARRAY_LIST"
-                  ? "Добавляйте элементы. Следите за индексами, сдвигами и ростом массива."
-                  : "Добавляйте ключи. Следите за связями. Исследуйте алгоритм."}
-              </p>
+              <p>{view.description}</p>
             </div>
             <div className="model-badge">
               <GitBranch size={16} />
@@ -158,42 +145,29 @@ export default function App() {
               При холодном запуске это может занять до минуты.
             </div>
           )}
-          {collection === "ARRAY_LIST" ? (
-            <ArrayCommandPanel
-              busy={busy}
-              session={session}
-              onCommand={command}
-              onError={setError}
-              onCreate={(capacity) =>
-                void startSession("ARRAY_LIST", capacity ?? null)
-              }
-            />
-          ) : (
-            <CommandPanel
-              busy={busy}
-              session={session}
-              onCommand={command}
-              onError={setError}
-            />
-          )}
-          <StateMetrics snapshot={snapshot} session={session} trace={trace} />
+          <view.Commands
+            busy={busy}
+            session={session}
+            onCommand={command}
+            onError={setError}
+            onCreate={(capacity) =>
+              void startSession(collection, capacity ?? null)
+            }
+          />
+          <StateMetrics
+            snapshot={snapshot}
+            session={session}
+            {...statePresentation(snapshot, trace)}
+          />
           <div className="lab-grid">
             <div className="canvas-column">
               {snapshot ? (
-                isArray(snapshot) ? (
-                  <ArrayDiagram state={snapshot} step={step} />
-                ) : (
-                  <Diagram
-                    state={snapshot}
-                    step={step}
-                    selectedId={selectedNodeId}
-                    onSelect={(n) =>
-                      setSelectedNodeId(
-                        n.id === selectedNodeId ? undefined : n.id,
-                      )
-                    }
-                  />
-                )
+                <view.Diagram
+                  snapshot={snapshot}
+                  step={step}
+                  selectedId={selectedNodeId}
+                  onSelect={setSelectedNodeId}
+                />
               ) : (
                 <div className="panel connecting">
                   <LoaderCircle className="spin" />
@@ -211,14 +185,14 @@ export default function App() {
               />
             </div>
             <TraceInspector
-              collection={collection}
+              algorithm={view.algorithm}
+              sourceUrl={view.sourceUrl}
               trace={trace}
               step={step}
               cursor={cursor}
               historyIndex={historyIndex}
               playing={playing}
-              selectedNode={selectedNode}
-              onCloseNode={() => setSelectedNodeId(undefined)}
+              selectedDetails={details}
               navigate={navigate}
             />
           </div>

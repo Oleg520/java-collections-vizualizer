@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from "react";
-import type { ArrayCommand, Element, Operation, Session } from "../types";
+import type {
+  ArrayCommand,
+  Element,
+  Operation,
+  Session,
+} from "../../api/types/index";
 
 const commands: [ArrayCommand, string][] = [
   ["ADD", "add(E)"],

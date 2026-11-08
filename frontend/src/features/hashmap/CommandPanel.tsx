@@ -6,7 +6,7 @@ import type {
   KeyType,
   Operation,
   Session,
-} from "../types";
+} from "../../api/types/index";
 export function CommandPanel({
   busy,
   session,

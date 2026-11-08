@@ -1,14 +1,10 @@
+import { keyLabel } from "./presentation";
+import { valueLabel } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Boxes, Maximize, Minus, Plus, ScanLine } from "lucide-react";
 import { layoutSnapshot } from "./layout";
-import {
-  keyLabel,
-  valueLabel,
-  type MapNode,
-  type Snapshot,
-  type Step,
-} from "./types";
+import { type MapNode, type Snapshot, type Step } from "../../api/types/index";
 
 export function Diagram({
   state,

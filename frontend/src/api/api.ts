@@ -2,8 +2,13 @@ import {
   decodeTrace,
   type CompactArrayTrace,
   type CompactSessionTrace,
-} from "./trace";
-import type { CollectionType, Operation, Scenario, Session } from "./types";
+} from "./trace/decodeTrace";
+import type {
+  CollectionType,
+  Operation,
+  Scenario,
+  Session,
+} from "./types/index";
 const base = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 export class ApiError extends Error {
   constructor(

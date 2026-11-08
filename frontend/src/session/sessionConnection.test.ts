@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vitest";
 import { SessionConnection } from "./sessionConnection";
-import { ApiError } from "./api";
-import type { CollectionType, Session, SessionTrace } from "./types";
+import { ApiError } from "../api/api";
+import type { CollectionType, Session, SessionTrace } from "../api/types/index";
 const session = (
   collection: CollectionType = "HASH_MAP",
   revision = 0,

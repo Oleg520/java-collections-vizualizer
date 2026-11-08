@@ -1,11 +1,11 @@
+import { elementLabel } from "./presentation";
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
-  elementLabel,
   type ArrayBuffer,
   type ArraySnapshot,
   type Step,
-} from "../types";
+} from "../../api/types/index";
 
 export function ArrayDiagram({
   state,
