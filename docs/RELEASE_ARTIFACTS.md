@@ -46,6 +46,11 @@ the destination environment and JAR/marker version against the selected tag.
 Production credentials must never execute downloaded source, npm hooks or shell
 scripts. Build and delivery run with separate privileges.
 
+Before changing delivery authority, the operator verifies that the currently
+running backend source SHA, canonical frontend SHA and unique release tag agree.
+Changes to runtime configuration/helper policy require a fresh verified off-host
+recovery copy after the changes, while retaining the pre-change rollback copy.
+
 The operator publishes backend, checks exact version/health, then frontend,
 checks the release pair and records a receipt. Keep the preceding frontend
 compatible during backend rollout and already-open tabs. Restarts discard
