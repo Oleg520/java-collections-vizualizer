@@ -12,6 +12,7 @@
 **/*.tsbuildinfo
 **/__pycache__/
 **/.netlify/
+**/.wrangler/
 **/.git-versioned-pom.xml
 
 # Local credentials and operator material (examples remain tracked)

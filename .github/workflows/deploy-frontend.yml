@@ -1,0 +1,141 @@
+name: Deploy frontend manually
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: java-collections-visualizer-frontend-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      api_url: ${{ steps.config.outputs.api_url }}
+      frontend_url: ${{ steps.config.outputs.frontend_url }}
+    steps:
+      - name: Require main dispatch
+        env:
+          DISPATCH_REF: ${{ github.ref }}
+        run: test "$DISPATCH_REF" = refs/heads/main
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate public build configuration
+        id: config
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: |
+          python3 - <<'PYCONFIG'
+          import os
+          from urllib.parse import urlsplit
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for name, key in [('VITE_API_URL', 'api_url'), ('FRONTEND_URL', 'frontend_url')]:
+                  value = os.environ[name]
+                  url = urlsplit(value)
+                  assert (url.scheme == 'https' and url.hostname and
+                          not url.username and not url.password and
+                          not url.path and not url.query and not url.fragment and
+                          not any(c.isspace() or ord(c) < 32 for c in value)), name + ' must be an HTTPS origin without a trailing slash'
+                  output.write(f'{key}={value}\n')
+          PYCONFIG
+      - name: Require unique release tag at dispatch SHA
+        id: release
+        run: |
+          version=$(sh scripts/require-frontend-release.sh)
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'Frontend commit: `%s`\n\nVersion: `%s`\n' "$GITHUB_SHA" "$version" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Verify version fixtures and build local test backend
+        run: |
+          python3 -m unittest discover -s scripts/tests -v
+          ./mvnw -B clean verify
+      - name: Build and test frontend against local backend
+        working-directory: frontend
+        env:
+          VITE_API_URL: ''
+          E2E_PREVIEW: '1'
+        run: |
+          npm ci
+          npm run build
+          npm test
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+          npm run test:e2e:lifecycle
+      - name: Build production assets
+        env:
+          VITE_API_URL: ${{ steps.config.outputs.api_url }}
+        run: |
+          npm --prefix frontend run build
+          test -f frontend/dist/index.html
+          cmp frontend/public/_headers frontend/dist/_headers
+          test ! -e frontend/dist/404.html
+          test ! -e frontend/dist/_redirects
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: frontend/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Owner must restrict this environment to main and confirm Pages auto-production is off.
+    environment:
+      name: frontend-production
+      url: ${{ needs.verify.outputs.frontend_url }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: frontend/dist
+      - name: Require compatible deployed backend
+        env:
+          RELEASE_VERSION: ${{ needs.verify.outputs.version }}
+          BACKEND_API_URL: ${{ needs.verify.outputs.api_url }}
+        run: |
+          curl --fail --silent --show-error --max-time 20 \
+            "$BACKEND_API_URL/api/v1/health" -o /tmp/jcv-health.json
+          python3 - <<'PY'
+          import json, os
+          with open('/tmp/jcv-health.json') as health:
+              actual = json.load(health)
+          assert actual == {'status': 'UP', 'java': '21', 'version': os.environ['RELEASE_VERSION']}, actual
+          PY
+      - name: Publish verified assets to existing Pages project
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_PAGES_PROJECT"
+          npx --yes wrangler@4.158.0 pages deploy frontend/dist \
+            --project-name="$CLOUDFLARE_PAGES_PROJECT" --branch=main \
+            --commit-hash="$GITHUB_SHA" --commit-dirty=false
+          printf 'Published verified assets for `%s` to Cloudflare Pages.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
