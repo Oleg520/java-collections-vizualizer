@@ -32,3 +32,5 @@ id_ecdsa*
 .netrc
 .git-credentials
 *.tfstate*
+
+release-bundle/
