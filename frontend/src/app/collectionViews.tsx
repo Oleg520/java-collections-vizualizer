@@ -35,6 +35,12 @@ interface CollectionView {
   description: string;
   sourceUrl: string;
   algorithm: string[][];
+  metrics: (
+    snapshot?: CollectionSnapshot,
+  ) => { label: string; value: string | number; caption: string }[] | undefined;
+  resultText: (trace: Trace) => string;
+  resultCaption: (trace: Trace) => string;
+  idleCaption: string;
   Commands: ComponentType<CommandsProps>;
   Diagram: ComponentType<DiagramProps>;
   selectedDetails: (
@@ -52,6 +58,18 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
     sourceUrl:
       "https://github.com/openjdk/jdk21u/blob/3f3a1f534b7f2f5be6d7ded9d9832fa9394e763c/src/java.base/share/classes/java/util/HashMap.java",
     algorithm: hashmap.algorithm,
+    // HashMap owns the existing loading placeholders and its untagged wire snapshot.
+    metrics: (snapshot) =>
+      snapshot === undefined ||
+      (!("collection" in snapshot) && "buckets" in snapshot)
+        ? hashmap.metrics(snapshot)
+        : undefined,
+    resultText: hashmap.resultText,
+    resultCaption: (trace) =>
+      trace.result.found
+        ? "ключ найден в коллекции"
+        : "операция выполнена Java-движком",
+    idleCaption: "начните с put или сценария",
     Commands: CommandPanel,
     Diagram: ({ snapshot, step, selectedId, onSelect }) =>
       isArray(snapshot) ? null : (
@@ -74,6 +92,11 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
     sourceUrl:
       "https://github.com/openjdk/jdk21u/blob/jdk-21.0.5%2B11/src/java.base/share/classes/java/util/ArrayList.java",
     algorithm: arraylist.algorithm,
+    metrics: (snapshot) =>
+      snapshot && isArray(snapshot) ? arraylist.metrics(snapshot) : undefined,
+    resultText: arraylist.resultText,
+    resultCaption: () => "операция выполнена Java-движком",
+    idleCaption: "начните с add или сценария",
     Commands: ArrayCommandPanel,
     Diagram: ({ snapshot, step }) =>
       isArray(snapshot) ? <ArrayDiagram state={snapshot} step={step} /> : null,
@@ -94,20 +117,20 @@ export function statePresentation(
   snapshot?: CollectionSnapshot,
   trace?: Trace,
 ) {
-  const array = snapshot && isArray(snapshot);
-  return {
-    metrics: array ? arraylist.metrics(snapshot) : hashmap.metrics(snapshot),
-    result: trace
-      ? trace.collection === "ARRAY_LIST"
-        ? arraylist.resultText(trace)
-        : hashmap.resultText(trace)
-      : "Готов к работе",
-    resultCaption: trace
-      ? trace.collection === "HASH_MAP" && trace.result.found
-        ? "ключ найден в коллекции"
-        : "операция выполнена Java-движком"
-      : array
-        ? "начните с add или сценария"
-        : "начните с put или сценария",
-  };
+  const state = Object.values(collectionViews)
+    .map((view) => ({ view, metrics: view.metrics(snapshot) }))
+    .find(({ metrics }) => metrics !== undefined);
+  if (!state || !state.metrics) throw new Error("Неизвестный тип снимка");
+
+  let result = "Готов к работе";
+  let resultCaption = state.view.idleCaption;
+  if (trace) {
+    const view = Object.entries(collectionViews).find(
+      ([id]) => id === trace.collection,
+    )?.[1];
+    if (!view) throw new Error("Неизвестная коллекция trace");
+    result = view.resultText(trace);
+    resultCaption = view.resultCaption(trace);
+  }
+  return { metrics: state.metrics, result, resultCaption };
 }
