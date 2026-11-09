@@ -10,18 +10,17 @@ the private operations repository. backend.env.example is illustrative app
 configuration, never a production replacement. Preserve exact approved CORS
 origins and necessary legacy origins.
 
-## Cutover-sensitive merge
+## Delivery ownership
 
-This PR removes old direct-production workflows and instance/helper files from
-the public tree. Current main and production are unchanged until merge.
-**Merge only during the owner-approved handoff**, after draining/disabling old
-runs and preparing private recovery/delivery. Review with its companion operations
-PR; do not enable two independent coordinators. No merge, disable, infrastructure
-or credential change is performed by opening this PR.
+Public workflows test the application and build verified release artifacts.
+Production release and rollback run only through the private operations
+coordinator. Legacy direct-production entrypoints must be disabled and drained
+before that coordinator is activated; concurrency cannot lock across repositories.
+Production credentials belong only to the private protected environment.
 
-The original imported deployment files/tests are preserved privately; application
-CI retains all generic version/build/unit/E2E checks. Deletion does not erase
-Git history, logs, forks or artifacts. Tag/Release 0.3.2 stay unchanged.
+Original deployment references/tests are preserved privately and in Git history;
+application CI retains generic version/build/unit/E2E checks. Deletion does not
+erase history, logs, forks or artifacts. Tag/Release 0.3.2 stay unchanged.
 
 ## Static serving and previews
 

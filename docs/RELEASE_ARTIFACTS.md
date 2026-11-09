@@ -62,14 +62,12 @@ attach these same three files. Keep known-good bytes and recovery receipts beyon
 Actions retention. Expired artifacts are not permission to move a tag or replace
 an immutable server artifact; prepare a new reviewed release when necessary.
 
-## Transition
+## Delivery ownership
 
-This PR proposes removing the old production workflows/instance files from the
-public tree; their tested implementation and successor are maintained privately.
-The current main remains unchanged until merge. **Merge this PR only in the
-owner-approved cutover window**: drain/disable legacy entrypoints before merging,
-then activate the reviewed private coordinator. Do not merge as an ordinary
-preparatory docs/build update. Actions concurrency cannot lock repositories.
+The public tree provides the artifact contract and no direct production
+entrypoints. The operator owns the tested delivery implementation, successor
+helper and recovery material privately. Retire and drain any legacy entrypoints
+before activating a replacement; Actions concurrency cannot lock repositories.
 
 Git-based frontend previews and existing Root/Build/Output are preserved.
 Generic app env examples remain public. Removing files does not erase history;
