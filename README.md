@@ -4,8 +4,8 @@
 цепочки, деревья, внутренние массивы, сдвиги и расширение буферов.
 
 **[Открыть приложение](https://java-collections-vizualizer.pages.dev)** ·
-[HTTPS API / health](https://jcv-api.135-106-208-51.sslip.io/api/v1/health) ·
-[Развёртывание и обслуживание](deploy/README.md)
+[Контракт API](docs/API.md) ·
+[Сборка и доставка](deploy/README.md)
 
 Это **учебная инструментированная реализация, ориентированная на OpenJDK 21**.
 Она исполняет алгоритм на Java и создаёт события непосредственно в ходе выполнения.
@@ -95,7 +95,7 @@ Frontend запускается отдельно. Для размещения fr
 (HTTPS origin backend без `/api/v1`) до сборки и точный `ALLOWED_ORIGINS` у backend.
 Пример локального окружения: [frontend/.env.example](frontend/.env.example).
 
-Публичный frontend работает на Cloudflare Pages, backend — отдельный Java-процесс.
+Frontend размещается на hosting для статических файлов, backend — отдельный Java-процесс.
 [Описание доставки](deploy/README.md) · [Версии и релизы](docs/VERSIONING.md).
 
 ## Ограничения

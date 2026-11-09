@@ -65,14 +65,14 @@ Actions checkout получает полную историю и теги; ру�
 workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
 Обычные сборки выполняйте с включённым расширением.
 
-## Cloudflare Pages
+## Frontend deployment
 
-Production frontend: https://java-collections-vizualizer.pages.dev.
+Production frontend задаётся переменной `FRONTEND_URL`; API origin — `VITE_API_URL`.
 Ручной workflow **Deploy frontend manually** работает только с `main`:
 собирает точный dispatch SHA и требует единственный релизный тег на нём.
 Checkout получает полную историю и теги; прежний тег на предке не подходит.
 Публикуется проверенный артефакт `frontend/dist` через Wrangler в существующий
-Pages-проект `java-collections-vizualizer`, production branch `main`.
+hosting-проект из `CLOUDFLARE_PAGES_PROJECT`, production branch `main`.
 
 Автоматические production-сборки Pages из `main` владелец должен отключить,
 сохранив GitHub integration и PR previews. Это **не считается выполненным** без
@@ -100,7 +100,7 @@ Preview-сборки используют `sh ../scripts/fetch-version-tags.sh` 
    Workflow проверяет health backend и совпадение версии перед публикацией.
 5. Проверить `X.Y.Z` в интерфейсе, health (`UP`, Java 21, `X.Y.Z`), CORS preflight
    с Cloudflare origin, создание сессии, операции коллекций и SPA reload.
-   Проверить desktop/mobile и сохранение доступа со старого Netlify origin.
+   Проверить desktop/mobile и сохранение доступа с необходимого legacy frontend origin.
 6. Только после этих проверок опубликовать GitHub Release, выбрав **тот же
    существующий тег** `X.Y.Z`.
 

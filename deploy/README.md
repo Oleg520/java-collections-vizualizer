@@ -1,6 +1,6 @@
 # Deployment overview
 
-The public demo uses a static Cloudflare Pages frontend and a Java 21 backend behind an
+The application uses a static frontend hosting service and a Java 21 backend behind an
 HTTPS reverse proxy. The backend stores sessions in memory; restarting it loses
 sessions. Public API URLs are configuration, not credentials.
 
@@ -8,7 +8,7 @@ sessions. Public API URLs are configuration, not credentials.
 
 - `backend.env.example`: non-secret configuration example; use exact CORS origins.
 - `java-collections-visualizer.service` and `java-collections-visualizer.caddy`:
-  service and proxy configuration used by this project.
+  existing service and reverse-proxy configuration, pending a separate operations migration.
 - `backend_deploy.py`: validates the artifact, atomically switches the release,
   checks local/public health, and rolls back on failure.
 - `upload_backend.sh`: uploads the verified artifact with pinned SSH host identity.
@@ -30,17 +30,23 @@ A failed health check triggers rollback and fails the workflow. Process terminat
 or failed rollback can require owner intervention. Host provisioning, access,
 recovery and backup procedures belong in an access-controlled operator runbook.
 
-## Frontend: Cloudflare Pages
+## Frontend hosting
 
-Production: https://java-collections-vizualizer.pages.dev. The existing Git-integrated
-Pages project is `java-collections-vizualizer`, production branch `main`.
-The Java 21 backend on Selectel remains https://jcv-api.135-106-208-51.sslip.io.
-Production 0.3.2 and its published GitHub Release are already verified; this
-migration PR does not redeploy them or move the tag.
+The current CI/CD adapter targets an existing Git-integrated Pages project,
+production branch `main`. Project/account identifiers and environment addresses
+are supplied through GitHub Variables; credentials use Secrets. Production 0.3.2
+and its published Release remain unchanged by this PR.
+
+Application source, architecture, development/testing and general CI/CD contracts
+belong in this public repository. Actual environment inventories, service/proxy
+configuration, access procedures and recovery runbooks belong in the private
+operations repository. Existing backend deployment files remain in place until
+a separately reviewed migration preserves delivery and recovery. Removing a file
+from the current tree does not remove it from Git history.
 
 ### Owner setup before merge (not performed by this PR)
 
-1. Cloudflare dashboard → **Workers & Pages** → **java-collections-vizualizer** →
+1. Cloudflare dashboard → **Workers & Pages** → **the existing frontend project** →
    **Settings → Builds & deployments → Configure Production deployments**.
    Keep production branch **main**, **uncheck Enable automatic production branch
    deployments**, and **Save**. Reopen the setting and confirm it is disabled.
@@ -49,14 +55,16 @@ migration PR does not redeploy them or move the tag.
    (or custom rules including PR branches); do not select **None**.
    Confirm a PR update produces a preview without changing the production deployment.
    Disable any legacy Netlify automatic production publishing separately if still active.
-3. Configure Pages Git preview builds: root directory `frontend`, build command
-   `sh ../scripts/fetch-version-tags.sh && npm ci && npm run build`, output
-   directory `dist`, environment variable `NODE_VERSION=22`. For preview builds,
+3. Keep the already working Pages Git build settings; no reconfiguration is
+   required: root directory `/`, build command
+   `sh scripts/fetch-version-tags.sh && npm --prefix frontend ci && npm --prefix frontend run build`,
+   output directory `frontend/dist`. Verify the existing Node version satisfies
+   `frontend/package.json` (`NODE_VERSION=22` is supported). For preview builds,
    `VITE_API_URL` is the chosen backend HTTPS origin (without `/api/v1`);
    this value is public and is embedded by Vite. Do not put API tokens in Vite variables.
    Preview origins are **not** allowed by production backend CORS. A working
    preview API needs a separately approved exact origin or a staging backend;
-   this PR neither adds preview origins nor changes the VDS.
+   this PR neither adds preview origins nor changes the production backend.
 4. GitHub repository **Settings → Environments → New environment**:
    create `frontend-production`. Under **Deployment branches and tags** choose
    **Selected branches and tags** and allow the branch `main` only (no tag rule).
@@ -65,10 +73,18 @@ migration PR does not redeploy them or move the tag.
    Edit**, resources **Include → Specific account → the account owning this project**.
    No DNS, Workers, zone or account-wide administrator permissions are required.
    Pages token scope is account-level; use a dedicated token and rotate it per policy.
-   In the GitHub `frontend-production` environment, add secrets
-   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` for that account.
-   No Cloudflare credentials are needed for PR CI or the verify job.
-6. Record confirmation of steps 1–5 in the PR before merge. These external settings
+   In the GitHub `frontend-production` environment, add the Secret
+   `CLOUDFLARE_API_TOKEN` and Variables `CLOUDFLARE_ACCOUNT_ID` and
+   `CLOUDFLARE_PAGES_PROJECT` for the existing account/project.
+   No hosting credentials are needed for PR CI or the verify job.
+   In repository **Settings → Secrets and variables → Actions → Variables**, add
+   `VITE_API_URL` (backend HTTPS origin) and `FRONTEND_URL` (frontend HTTPS origin),
+   both without a trailing slash. These non-secret public build values must be
+   repository Variables because verification has no production environment access.
+   Do not shadow these two names with different environment-level values; the
+   workflow validates and passes their resolved values to subsequent jobs.
+6. Record confirmation of steps 1, 2, 4 and 5 and verification of the existing
+   settings in step 3 in the PR before merge. These external settings
    cannot be inferred from repository files and are **pending owner confirmation**.
 
 The [branch controls](https://developers.cloudflare.com/pages/configuration/branch-build-controls/)
@@ -76,7 +92,7 @@ and [CI upload guide](https://developers.cloudflare.com/pages/how-to/use-direct-
 describe these settings. Wrangler can upload to the existing Git-integrated
 project; do not create a second project or convert/disconnect Git integration.
 
-### Manual production delivery
+### Manual frontend delivery
 
 Run Actions **Deploy frontend manually → Run workflow → Branch: main** only
 after tagging and successfully deploying the backend from the same SHA.
@@ -89,9 +105,10 @@ Verification runs TypeScript/Vite, unit tests, exact-tag regression fixtures,
 Maven verification and both Playwright suites against an isolated local backend.
 It then rebuilds with the production `VITE_API_URL` and uploads `frontend/dist`
 as an Actions artifact. The environment-protected job downloads that artifact,
-requires public backend health `UP`, Java `21`, and the same release version,
+requires backend health at the same validated API origin used by the build:
+`UP`, Java `21`, and the same release version,
 then publishes via pinned Wrangler to the existing project with `--branch=main`
-and `--commit-hash=<dispatch SHA>`. Only this step receives Cloudflare secrets.
+and `--commit-hash=<dispatch SHA>`. Only the upload step receives the hosting API token.
 GitHub permissions are `contents: read`; the workflow concurrency group serializes
 frontend production runs without cancelling an in-flight upload. GitHub may
 replace an older pending run; dispatch and review only the intended release.
@@ -99,7 +116,7 @@ Cloudflare Git builds and dashboard actions are outside this lock, so disabling
 automatic production builds is mandatory. Backend and frontend workflows have
 separate locks: the owner must avoid overlapping release sequences or stale reruns.
 
-### Static serving and recovery
+### Static serving and verification
 
 `frontend/public/_headers` carries only the immutable one-year cache policy for
 Vite's content-hashed `/assets/*`. Pages already provides
@@ -112,15 +129,15 @@ and [headers syntax](https://developers.cloudflare.com/pages/configuration/heade
 
 After publishing check the production deployment SHA, visible version, direct
 navigation/reload on a nested path, headers, health, CORS preflight, session
-creation and a collection operation. Keep the legacy Netlify origin in
-`ALLOWED_ORIGINS` during transition; the example includes both exact origins.
-Removing it is a separate approved production change.
+creation and a collection operation. Preserve required legacy frontend origins in
+`ALLOWED_ORIGINS` during a hosting transition; the template uses illustrative
+`.example.org` origins and must not replace the actual production configuration.
+Removing a required legacy origin is a separate approved production change.
 
-For a failed frontend rollout, the owner can use Pages **Deployments → previous
-known-good production deployment → Rollback** after checking compatibility with
-the running backend. Do not rebuild or retag an old release, or blindly rerun an
-older workflow against a newer backend. Rollback and production checks are manual
-owner operations, not performed by opening this PR.
+Environment-specific recovery steps, access details and the choice of a known-good
+deployment belong in the private operations runbook. Recovery must check frontend/
+backend compatibility and preserve immutable release tags; it is an explicit owner
+operation, not part of opening this PR.
 
 See [versioning and release procedure](../docs/VERSIONING.md),
 [API limits and proxy trust](../docs/API_SECURITY.md), and
