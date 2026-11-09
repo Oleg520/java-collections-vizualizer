@@ -3,7 +3,7 @@
 Интерактивная лаборатория Java HashMap и ArrayList: выполняйте операции и наблюдайте
 цепочки, деревья, внутренние массивы, сдвиги и расширение буферов.
 
-**[Открыть приложение](https://java-collections-visualizer.netlify.app)** ·
+**[Открыть приложение](https://java-collections-vizualizer.pages.dev)** ·
 [HTTPS API / health](https://jcv-api.135-106-208-51.sslip.io/api/v1/health) ·
 [Развёртывание и обслуживание](deploy/README.md)
 
@@ -95,7 +95,7 @@ Frontend запускается отдельно. Для размещения fr
 (HTTPS origin backend без `/api/v1`) до сборки и точный `ALLOWED_ORIGINS` у backend.
 Пример локального окружения: [frontend/.env.example](frontend/.env.example).
 
-Публичный frontend работает на Netlify, backend — отдельный Java-процесс.
+Публичный frontend работает на Cloudflare Pages, backend — отдельный Java-процесс.
 [Описание доставки](deploy/README.md) · [Версии и релизы](docs/VERSIONING.md).
 
 ## Ограничения

@@ -18,7 +18,7 @@ class BuildVersionTest(unittest.TestCase):
         self.repo.mkdir()
         shutil.copytree(ROOT / 'scripts', self.repo / 'scripts', ignore=shutil.ignore_patterns('__pycache__'))
         self.env = {k: v for k, v in os.environ.items()
-                    if not k.startswith(('GITHUB_', 'VERSIONING_', 'GIT_')) and k != 'COMMIT_REF'}
+                    if not k.startswith(('GITHUB_', 'VERSIONING_', 'GIT_')) and k not in ('COMMIT_REF', 'CF_PAGES_COMMIT_SHA')}
         self.env.update(GIT_AUTHOR_NAME='Version Test', GIT_COMMITTER_NAME='Version Test',
                         GIT_AUTHOR_EMAIL='test@example.invalid', GIT_COMMITTER_EMAIL='test@example.invalid')
         self.git('init', '-b', 'main')
@@ -70,22 +70,43 @@ class BuildVersionTest(unittest.TestCase):
         self.assertIn('Multiple release tags', result.stderr)
 
     def test_ci_commit_and_maven_must_match_git(self):
-        for var in ['COMMIT_REF', 'GITHUB_SHA']:
+        for var in ['COMMIT_REF', 'CF_PAGES_COMMIT_SHA', 'GITHUB_SHA']:
             self.assertNotEqual(0, self.script(**{var: 'a' * 40}).returncode)
         self.assertEqual(0, self.script('git-version.sh', '--check-maven',
                          '0.0.0-' + self.sha + '-SNAPSHOT').returncode)
         self.assertNotEqual(0, self.script('git-version.sh', '--check-maven', '0.2.0').returncode)
         self.assertNotEqual(0, self.script(GITHUB_REF='refs/tags/0.2.0').returncode)
 
-    def test_netlify_fetches_tags_in_shallow_checkout_and_fails_on_fetch_error(self):
+    def test_frontend_dispatch_requires_main_sha_and_unique_exact_release(self):
+        def dispatch(**overrides):
+            env = dict(GITHUB_REF='refs/heads/main', GITHUB_SHA=self.sha)
+            env.update(overrides)
+            return self.script('require-frontend-release.sh', **env)
+
+        self.assertNotEqual(0, dispatch().returncode)
+        self.git('tag', '-a', '0.4.0', '-m', 'Fixture release')
+        result = dispatch()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual('0.4.0', result.stdout.strip())
+        for override in [dict(GITHUB_REF='refs/heads/feature'),
+                         dict(GITHUB_REF='refs/tags/0.4.0'),
+                         dict(GITHUB_SHA='a' * 40), dict(GITHUB_SHA='')]:
+            self.assertNotEqual(0, dispatch(**override).returncode)
+        self.git('tag', '0.4.1')
+        self.assertNotEqual(0, dispatch().returncode)
+        self.git('tag', '-d', '0.4.1')
+        self.git('commit', '--allow-empty', '-m', 'After release')
+        self.assertNotEqual(0, dispatch(GITHUB_SHA=self.git('rev-parse', 'HEAD').stdout.strip()).returncode)
+
+    def test_pages_fetches_tags_in_shallow_checkout_and_fails_on_fetch_error(self):
         remote = self.repo
-        self.repo = Path(self.temp) / 'netlify'
+        self.repo = Path(self.temp) / 'pages'
         subprocess.run(['git', 'clone', '--depth=1', '--no-tags', remote.as_uri(), str(self.repo)],
                        env=self.env, check=True, capture_output=True)
         subprocess.run(['git', '-C', str(remote), 'tag', '-a', '0.2.0', '-m', 'Created after clone'],
                        env=self.env, check=True, capture_output=True)
         self.version('dev')
-        result = self.script('fetch-version-tags.sh', NETLIFY='true', COMMIT_REF=self.sha)
+        result = self.script('fetch-version-tags.sh', CF_PAGES='1', CF_PAGES_COMMIT_SHA=self.sha)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual('0.2.0', result.stdout.strip())
         self.git('remote', 'set-url', 'origin', str(Path(self.temp) / 'missing'))
@@ -93,7 +114,7 @@ class BuildVersionTest(unittest.TestCase):
 
     def test_github_ssh_tag_fetch_uses_https_without_changing_origin(self):
         remote = self.repo
-        self.repo = Path(self.temp) / 'netlify'
+        self.repo = Path(self.temp) / 'pages'
         subprocess.run(['git', 'clone', '--depth=1', '--no-tags', remote.as_uri(), str(self.repo)],
                        env=self.env, check=True, capture_output=True)
         subprocess.run(['git', '-C', str(remote), 'tag', '-a', '0.2.0', '-m', 'Release'],

@@ -1,12 +1,12 @@
 #!/bin/sh
-# Shared exact-commit release rule for Maven validation and Vite (also on Netlify).
+# Shared exact-commit release rule for Maven validation and Vite (including Cloudflare Pages).
 set -efu
 cd "$(dirname "$0")/.."
 fail() { echo "Build version: $*" >&2; exit 1; }
 head=$(git rev-parse --verify HEAD) || fail 'Git checkout required (including .git and tags)'
 
 # These identify the immutable commit selected by each build service.
-for expected in "${COMMIT_REF:-}" "${GITHUB_SHA:-}"; do
+for expected in "${COMMIT_REF:-}" "${CF_PAGES_COMMIT_SHA:-}" "${GITHUB_SHA:-}"; do
   [ -z "$expected" ] || [ "$expected" = "$head" ] || fail "CI commit $expected differs from HEAD $head"
 done
 
