@@ -1,11 +1,25 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.api.dto.CommandRequest;
+import dev.collectionsviz.api.dto.SessionTrace;
+import dev.collectionsviz.api.session.SessionStore;
+import dev.collectionsviz.api.error.ApiException;
+import dev.collectionsviz.api.trace.arraylist.CompactArrayTrace;
+import dev.collectionsviz.api.session.SessionFixtures;
+import dev.collectionsviz.api.support.MutableClock;
+import dev.collectionsviz.core.protocol.CollectionType;
+import dev.collectionsviz.core.protocol.Trace;
+import dev.collectionsviz.core.protocol.command.Operation;
+import dev.collectionsviz.core.protocol.command.OperationType;
+import dev.collectionsviz.core.protocol.command.Element;
+import dev.collectionsviz.core.collections.arraylist.Buffer;
+import dev.collectionsviz.core.collections.arraylist.ArrayListSnapshot;
+import dev.collectionsviz.core.collections.arraylist.ArrayListEngine;
+
 import java.time.Clock;
 import java.util.*;
 import java.util.concurrent.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.collectionsviz.core.ArrayListEngine;
-import dev.collectionsviz.core.Protocol.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -73,7 +87,7 @@ class ArrayListApiTest {
             for(var element:List.of(Element.of(null),Element.of("unexpected"))) {
                 var operation=Operation.array(type,index,element,capacity);
                 mvc.perform(post("/api/v1/sessions/"+session.id()+"/commands?encoding=compact")
-                    .contentType("application/json").content(json.writeValueAsString(new ApiController.CommandRequest(1L,operation))))
+                    .contentType("application/json").content(json.writeValueAsString(new CommandRequest(1L,operation))))
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("code").value("INVALID_INPUT"))
                     .andExpect(jsonPath("message").value("Эта операция не принимает element"));
                 assertEquals(before,sessions.get(session.id()));
@@ -101,7 +115,7 @@ class ArrayListApiTest {
         assertTrue(json.writeValueAsBytes(search).length>json.writeValueAsBytes(compact).length*10);
     }
     CompactArrayTrace checkTrace(Trace<ArrayListSnapshot> source) {
-        var compact=CompactArrayTrace.encode(new SessionStore.SessionTrace<>(1,UUID.randomUUID(),1,source));
+        var compact=CompactArrayTrace.encode(new SessionTrace<>(1,UUID.randomUUID(),1,source));
         assertEquals(source.before(),decode(compact.trace().before(),compact));
         assertEquals(source.committed(),decode(compact.trace().committed(),compact));
         for(int i=0;i<source.steps().size();i++) {
@@ -113,15 +127,15 @@ class ArrayListApiTest {
         return compact;
     }
     @Test void collectionIsolationConcurrencyAndExpiry() throws Exception {
-        var clock=new SessionStoreTest.MutableClock(); var store=new SessionStore(10,20,20,clock);
+        var clock=new MutableClock(); var store=SessionFixtures.store(10,20,20,clock);
         var a=store.create(CollectionType.ARRAY_LIST,null,"test"); var b=store.create(0);
         var latch=new CountDownLatch(1);
         try(var pool=Executors.newFixedThreadPool(2)) {
-            Callable<Integer> call=()->{ latch.await(); try { store.execute(a.id(),0,Operation.array(OperationType.ADD,null,Element.of("A"),null)); return 200; } catch(SessionStore.ApiException e) { return e.status; } };
+            Callable<Integer> call=()->{ latch.await(); try { store.execute(a.id(),0,Operation.array(OperationType.ADD,null,Element.of("A"),null)); return 200; } catch(ApiException e) { return e.status; } };
             var one=pool.submit(call); var two=pool.submit(call); latch.countDown();
             assertEquals(Set.of(200,409),Set.of(one.get(5,TimeUnit.SECONDS),two.get(5,TimeUnit.SECONDS)));
         }
         assertEquals(0,store.get(b.id()).state().size()); assertEquals(1,store.get(a.id()).state().size());
-        clock.millis=10000; store.cleanup(); assertThrows(SessionStore.ApiException.class,()->store.get(a.id()));
+        clock.millis=10000; store.cleanup(); assertThrows(ApiException.class,()->store.get(a.id()));
     }
 }

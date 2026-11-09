@@ -1,5 +1,7 @@
 package dev.collectionsviz.api;
 
+import dev.collectionsviz.api.admission.ApiAdmission;
+
 import java.net.URI;
 import java.net.http.*;
 import java.util.Set;

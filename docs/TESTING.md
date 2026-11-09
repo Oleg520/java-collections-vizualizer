@@ -2,7 +2,7 @@
 
 ```bash
 ./mvnw verify                         # core + API + исполняемый JAR
-npm --prefix frontend test            # Vitest: renderer layout
+npm --prefix frontend test            # Vitest: transport, layout, presentation, session
 npm --prefix frontend run build       # strict TypeScript + Vite production
 cd frontend
 npx playwright install --with-deps chromium
@@ -109,3 +109,10 @@ test of separate application/management listeners. Operator access, metric
 semantics and the local baseline/candidate comparison are documented in
 [backend diagnostics](OBSERVABILITY.md). No public management route or production
 load test is required.
+
+## Совместимость сериализации
+
+`dto/SerializationContractTest` сравнивает фиксированные запросы, ошибки, состояния
+и full/compact trace обеих коллекций с `backend/src/test/resources/contracts/wire-v1.json`.
+Эталон получен на main после PR #38 (`350b653`) и проверен до и после переноса типов.
+Сравнение JSON учитывает значения, null и порядок массивов; порядок полей объектов свободный.
