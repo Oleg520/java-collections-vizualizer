@@ -65,65 +65,33 @@ Actions checkout получает полную историю и теги; ру�
 workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
 Обычные сборки выполняйте с включённым расширением.
 
-## Frontend deployment
+## Release artifacts and delivery
 
-Production frontend задаётся переменной `FRONTEND_URL`; API origin — `VITE_API_URL`.
-Ручной workflow **Deploy frontend manually** работает только с `main`:
-собирает точный dispatch SHA и требует единственный релизный тег на нём.
-Checkout получает полную историю и теги; прежний тег на предке не подходит.
-Публикуется проверенный артефакт `frontend/dist` через Wrangler в существующий
-hosting-проект из `CLOUDFLARE_PAGES_PROJECT`, production branch `main`.
+[Build release artifacts](RELEASE_ARTIFACTS.md) is a manual, credential-free
+main-only build. It requires the unique exact tag, runs the complete application
+checks and publishes a versioned backend/frontend bundle with a manifest.
+The API origin is a public build input; environment ownership and production
+delivery remain outside application build logic.
 
-Автоматические production-сборки Pages из `main` владелец должен отключить,
-сохранив GitHub integration и PR previews. Это **не считается выполненным** без
-подтверждения владельца. Точные действия, secrets и GitHub environment описаны
-в [инструкции доставки](../deploy/README.md#owner-setup-before-merge-not-performed-by-this-pr).
-Preview-сборки используют `sh ../scripts/fetch-version-tags.sh` перед npm-командами:
-скрипт получает annotated/lightweight tags даже в shallow checkout и проверяет
-`CF_PAGES_COMMIT_SHA == HEAD`; ошибка fetch
-останавливает сборку. Неотмеченный тегом preview показывает `dev`.
-Добавление тега само по себе не запускает production deployment.
+Release order remains **PR → merge → tag → verified build → backend deploy →
+frontend deploy → checks → GitHub Release**. The private coordinator consumes
+the same bundle after validating successful CI, SHA/tag, hashes and environment
+compatibility. Publish the Release only after delivery checks; never mutate
+the existing 0.3.2 tag or Release.
 
-## Выпуск новой версии владельцем
+Backend rollout must remain compatible with the preceding frontend and open
+tabs. Version equality alone does not prove API compatibility. Restart loses
+in-memory sessions. The same deployed source SHA cannot acquire different JAR
+bytes: tag before the first deployment, retain immutable bytes and use a new
+reviewed source commit for a new release.
 
-1. После успешного CI и ревью PR выполнить merge в `main`. Сверить intended SHA
-   с актуальным `origin/main` и использовать его для выпуска.
-2. С отдельного разрешения владельца создать и опубликовать **один** тег `X.Y.Z`
-   на этом SHA, например следующую свободную patch-версию, без `v`. Версии в POM, React и npm не менять.
-3. Вручную запустить Actions **Deploy backend manually**, Branch **main**.
-   Проверить dispatch SHA, имя JAR и SHA-256 в summary. Проверить
-   `/api/v1/health`: `status=UP`, `java=21`, `version=X.Y.Z`.
-4. Вручную запустить **Deploy frontend manually**, Branch **main**, пока dispatch
-   SHA совпадает с тем же релизным SHA. Если `main` продвинулся, остановить выпуск:
-   подготовить новый reviewed релиз на актуальном `main`, не перемещая старые теги.
-   Проверить SHA и версию в summary, затем production deployment SHA в Pages.
-   Workflow проверяет health backend и совпадение версии перед публикацией.
-5. Проверить `X.Y.Z` в интерфейсе, health (`UP`, Java 21, `X.Y.Z`), CORS preflight
-   с Cloudflare origin, создание сессии, операции коллекций и SPA reload.
-   Проверить desktop/mobile и сохранение доступа с необходимого legacy frontend origin.
-6. Только после этих проверок опубликовать GitHub Release, выбрав **тот же
-   существующий тег** `X.Y.Z`.
+The legacy direct-deployment workflows are removed by this PR when merged in the
+approved handoff described in [deployment overview](../deploy/README.md).
+Do not activate two production coordinators simultaneously. No push/PR/tag
+automatically deploys production. Git-based frontend previews still fetch tags
+with scripts/fetch-version-tags.sh and show dev without an exact release tag.
+Keep their existing Root/Build/Output configuration.
 
-Порядок: **PR → merge → tag → backend deploy → frontend deploy → проверки →
-GitHub Release**. Публичный production `0.3.2` и его GitHub Release уже опубликованы;
-не пересоздавайте их для этой миграции.
-
-Оба компонента выпускаются с одного SHA и одной версией. При обновлении backend
-старый frontend остаётся активен до ручной публикации нового: изменения API должны
-сохранять совместимость в этом окне (включая уже открытые вкладки). Проверка версии
-в workflow не доказывает совместимость контрактов. Несовместимое изменение требует
-отдельного согласованного плана; не обходите проверку health. Перезапуск backend
-сбрасывает сессии в памяти. Не запускайте одновременно последовательности разных
-релизов; frontend concurrency не блокирует backend workflow и действия в Pages.
-
-Production backend по-прежнему разрешён только из `main`, с тайм-аутом deploy job
-10 минут. SSH restrictions, SHA-256, rollback и immutable файлы
-`releases/<полный SHA>.jar` сохранены. Важно: добавление тега меняет байты JAR.
-Если этот SHA уже развёрнут как dev/SNAPSHOT, helper отклонит новый hash для того же
-SHA. Поэтому ставьте релизный тег **до первого backend deployment этого SHA**;
-для уже доставленного SHA используйте новый reviewed коммит `main`, а не удаление
-или перезапись серверного релиза.
-
-Проверки тегов проводятся только во временных клонах/репозиториях без публикации
-тегов. Разработка и открытие PR не включают merge, выпуск тега, GitHub Release,
-production deploy или изменение VDS.
+All tag tests run in temporary repositories, without publishing tags. Local
+development, PR creation and builds do not authorize merge, release creation,
+production access or cutover.

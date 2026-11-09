@@ -96,7 +96,7 @@ Frontend запускается отдельно. Для размещения fr
 Пример локального окружения: [frontend/.env.example](frontend/.env.example).
 
 Frontend размещается на hosting для статических файлов, backend — отдельный Java-процесс.
-[Описание доставки](deploy/README.md) · [Версии и релизы](docs/VERSIONING.md).
+[Релизные артефакты](docs/RELEASE_ARTIFACTS.md) · [Описание доставки](deploy/README.md) · [Версии и релизы](docs/VERSIONING.md).
 
 ## Ограничения
 

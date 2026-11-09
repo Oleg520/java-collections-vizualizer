@@ -46,12 +46,10 @@ JDK. Проба вызывает GC только при явном указан�
 Результаты и границы измерений: [ресурсные измерения](verification/README.md).
 
 
-Проверки сборки и доставки без доступа к серверу:
+Проверки версии и упаковки релизных артефактов без доступа к серверу:
 
 ```bash
 python3 -m unittest discover -s scripts/tests -v
-python3 -m unittest discover -s deploy/tests -v
-bash -n deploy/upload_backend.sh
 ```
 
 Команды выполняются из корня репозитория, кроме явно отмеченных команд frontend.

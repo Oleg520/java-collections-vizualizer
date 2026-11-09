@@ -11,7 +11,7 @@ Diagnostics listen on **127.0.0.1:18083**, separately from the API port.
 `MANAGEMENT_PORT` may select another unused port; keep it separate from `PORT`
 and retain the loopback address. Only `/actuator/health` and `/actuator/metrics`
 are exposed. Health details, JMX exposure, env, heap dumps and loggers are not
-exposed. The Caddy example explicitly returns 404 for `/actuator` and its children
+exposed. The generic proxy example in [API security](API_SECURITY.md#адрес-клиента-за-caddy) explicitly returns 404 for `/actuator` and its children
 and proxies only the API listener. No management port is published in Compose.
 Do not add the diagnostic port to Caddy, Docker published ports or a public
 firewall rule. These are repository defaults, not a claim about a running VDS.
@@ -124,7 +124,8 @@ production SLA, long-term leak test, OS CPU quota or VDS capacity measurement.
 No production deployment, Caddy reload or shared-host load test is part of this work.
 
 
-The Caddy example passed `caddy adapt --validate` locally with Caddy 2.11.9.
+The former environment-specific Caddy example passed local validation with Caddy
+2.11.9; that is historical evidence, not validation of a current production file.
 The existing deployment helper tests (15) and build/version script tests (10)
 passed. Frontend/browser suites were not run because the UI and API payload
 contracts were unchanged. Public routing on a live server has not been tested.
