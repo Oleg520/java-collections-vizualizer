@@ -20,4 +20,29 @@
       </configuration>
     </execution></executions>
   </plugin></plugins></build>
+  <profiles>
+    <!-- Explicit tooling profile: ordinary builds do not need an IDE installation. -->
+    <profile>
+      <id>java-format</id>
+      <activation><property><name>java.format</name></property></activation>
+      <build><plugins><plugin>
+        <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId>
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <id>check-java-formatting</id>
+            <phase>validate</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>python3</executable>
+              <arguments>
+                <argument>${maven.multiModuleProjectDirectory}/scripts/java-format.py</argument>
+                <argument>${java.format}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin></plugins></build>
+    </profile>
+  </profiles>
 </project>

@@ -1,0 +1,12 @@
+<code_scheme name="Java Collections Visualizer" version="173">
+  <!-- IntelliJ Java defaults, with long Java constructs wrapped as needed. -->
+  <codeStyleSettings language="JAVA">
+    <option name="RIGHT_MARGIN" value="120" />
+    <option name="CALL_PARAMETERS_WRAP" value="1" />
+    <option name="METHOD_PARAMETERS_WRAP" value="1" />
+    <option name="METHOD_CALL_CHAIN_WRAP" value="1" />
+    <option name="BINARY_OPERATION_WRAP" value="1" />
+    <option name="TERNARY_OPERATION_WRAP" value="1" />
+    <option name="ENUM_CONSTANTS_WRAP" value="1" />
+  </codeStyleSettings>
+</code_scheme>
