@@ -9,6 +9,7 @@ import type { MapNode } from "../types/index";
 
 const original: MapNode = {
   id: 7,
+  objectId: 7,
   key: { type: "STRING", value: "A", hashCodeOverride: null },
   value: "before",
   rawHashCode: 65,
@@ -34,13 +35,13 @@ const frame = (index: number): Frame => ({
   ],
 });
 const response = (): CompactSessionTrace => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   sessionId: "session",
   revision: 2,
-  encoding: "node-table-v1",
+  encoding: "node-table-v2",
   nodePool: [original, { ...original, value: "after" }],
   trace: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     collection: "HASH_MAP",
     operation: { type: "PUT", key: original.key, value: "after" },
     result: { found: true, previousValue: "before", value: "after" },
@@ -80,4 +81,31 @@ describe("compact trace decoding", () => {
     input.trace.before.buckets[0].nodeRefs = [99];
     expect(() => decodeTrace(input)).toThrow("Повреждённая ссылка");
   });
+});
+
+it("preserves simultaneous physical versions of one logical entry and rejects ambiguous addresses", () => {
+  const input = response();
+  const old = { ...original, objectId: 17, red: false, left: 7, linked: false };
+  input.nodePool.push(old);
+  input.trace.before.buckets.push({
+    index: 2,
+    kind: "TREE",
+    headId: 17,
+    rootId: 17,
+    nodeRefs: [2],
+  });
+  const decoded = decodeTrace(input).trace.before as Snapshot;
+  expect(
+    decoded.buckets.flatMap((b) => b.nodes).map((n) => [n.id, n.objectId]),
+  ).toEqual([
+    [7, 7],
+    [7, 17],
+  ]);
+  input.nodePool[2] = { ...old, objectId: 7 };
+  expect(() => decodeTrace(input)).toThrow(/objectId/);
+});
+
+it("rejects the retired format rather than inventing physical identity", () => {
+  const input = { ...response(), encoding: "node-table-v1" };
+  expect(() => decodeTrace(input as never)).toThrow("Неизвестный формат");
 });

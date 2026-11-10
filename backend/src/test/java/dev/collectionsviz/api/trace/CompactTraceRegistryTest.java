@@ -18,13 +18,13 @@ class CompactTraceRegistryTest {
 
     @Test void registeredEncodersPreserveJsonForEveryScenario() throws Exception {
         for (var scenario : CollectionRegistry.HASH_MAP.scenarios()) {
-            var source = new SessionTrace<>(1, UUID.randomUUID(), 7,
+            var source = new SessionTrace<>(2, UUID.randomUUID(), 7,
                 CollectionRegistry.HASH_MAP.create(null).scenario(scenario.id()));
             var expected = CompactTrace.encode(source);
             var actual = CompactTraceRegistry.STANDARD.encode(source);
             assertEquals(expected, actual);
             assertEquals(json.writeValueAsString(expected), json.writeValueAsString(actual));
-            assertEquals("node-table-v1", ((CompactTrace)actual).encoding());
+            assertEquals("node-table-v2", ((CompactTrace)actual).encoding());
         }
         for (var scenario : CollectionRegistry.ARRAY_LIST.scenarios()) {
             var source = new SessionTrace<>(1, UUID.randomUUID(), 7,
@@ -38,7 +38,7 @@ class CompactTraceRegistryTest {
     }
 
     @Test void passesValidatedTraceDirectlyToEncoder() {
-        var source = new SessionTrace<>(1, UUID.randomUUID(), 7,
+        var source = new SessionTrace<>(2, UUID.randomUUID(), 7,
             CollectionRegistry.HASH_MAP.create(null).scenario("treeify"));
         var registry = new CompactTraceRegistry(List.of(
             new CompactTraceRegistry.Registration<>(CollectionRegistry.HASH_MAP, response -> {

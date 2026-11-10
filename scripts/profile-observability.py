@@ -39,6 +39,8 @@ def main():
             process = subprocess.Popen([str(java), *flags, '-jar', str(jar)], env=env, stdout=log, stderr=subprocess.STDOUT)
             connection = http.client.HTTPConnection('127.0.0.1', 18090, timeout=30)
             def request(path, body=None, compressed=False):
+                if path.startswith('/sessions'):
+                    path += ('&' if '?' in path else '?') + 'snapshotVersion=2'
                 data = None if body is None else json.dumps(body).encode()
                 headers = {'Content-Type': 'application/json'}
                 if compressed:

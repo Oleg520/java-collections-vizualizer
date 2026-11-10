@@ -127,7 +127,10 @@ export class SessionConnection {
   private async read() {
     if (!this.session) return;
     try {
-      this.session = await this.transport.get(this.session.id);
+      this.session = await this.transport.get(
+        this.session.id,
+        this.session.collection,
+      );
       this.needsRefresh = false;
     } catch (e) {
       this.recordLimit(e);

@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
   title: Java Collections Visualizer
-  version: 1.0.0
-  description: Transport contract v1. Java owns state; traces are immutable. SCENARIO is a response-only operation;
-    use the scenarios endpoint.
+  version: 2.0.0
+  description: HashMap physical snapshot contract v2 only; ArrayList representation unchanged. Java owns state and
+    immutable traces. Health advertises hashMapSnapshotVersion before writes. Routes retain /api/v1.
 servers:
 - url: http://localhost:8080/api/v1
   description: Local development
@@ -76,12 +76,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '426':
+          description: 'API_VERSION_MISMATCH: reload frontend after backend upgrade; no mutation or revision change.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: false
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateRequest'
+      parameters:
+      - in: query
+        name: snapshotVersion
+        description: Required value 2 for HashMap, including reset FROM HashMap. No HashMap V1 support. Validate
+          before mutation. ArrayList accepts 0/1/2 with unchanged representation.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          default: 0
   /sessions/{id}:
     get:
       operationId: getSession
@@ -118,6 +136,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '426':
+          description: 'API_VERSION_MISMATCH: reload frontend after backend upgrade; no mutation or revision change.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       parameters:
       - in: path
         name: id
@@ -125,6 +149,17 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: snapshotVersion
+        description: Required value 2 for HashMap, including reset FROM HashMap. No HashMap V1 support. Validate
+          before mutation. ArrayList accepts 0/1/2 with unchanged representation.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          default: 0
   /sessions/{id}/commands:
     post:
       operationId: executeCommand
@@ -174,6 +209,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '426':
+          description: 'API_VERSION_MISMATCH: reload frontend after backend upgrade; no mutation or revision change.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
       requestBody:
         required: true
         content:
@@ -200,6 +241,17 @@ paths:
           full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true (visualizer.allow-full-trace);
           disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED before executing the command or checking
           revision. Unknown encoding returns 400 INVALID_INPUT.
+      - in: query
+        name: snapshotVersion
+        description: Required value 2 for HashMap, including reset FROM HashMap. No HashMap V1 support. Validate
+          before mutation. ArrayList accepts 0/1/2 with unchanged representation.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          default: 0
   /sessions/{id}/scenarios/{name}:
     post:
       operationId: executeScenario
@@ -245,6 +297,12 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '426':
+          description: 'API_VERSION_MISMATCH: reload frontend after backend upgrade; no mutation or revision change.'
           content:
             application/json:
               schema:
@@ -298,6 +356,17 @@ paths:
           allowed. full (also selected when encoding is omitted) requires ALLOW_FULL_TRACE=true (visualizer.allow-full-trace);
           disabled by default. Otherwise returns 403 FULL_TRACE_DISABLED before executing the scenario or checking
           revision. Unknown encoding returns 400 INVALID_INPUT.
+      - in: query
+        name: snapshotVersion
+        description: Required value 2 for HashMap, including reset FROM HashMap. No HashMap V1 support. Validate
+          before mutation. ArrayList accepts 0/1/2 with unchanged representation.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          default: 0
   /sessions/{id}/reset:
     post:
       operationId: resetSession
@@ -311,6 +380,17 @@ paths:
         schema:
           type: string
           format: uuid
+      - in: query
+        name: snapshotVersion
+        description: Required value 2 for HashMap, including reset FROM HashMap. No HashMap V1 support. Validate
+          before mutation. ArrayList accepts 0/1/2 with unchanged representation.
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          default: 0
       requestBody:
         required: true
         content:
@@ -346,6 +426,12 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           description: Session limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '426':
+          description: 'API_VERSION_MISMATCH: reload frontend after backend upgrade; no mutation or revision change.'
           content:
             application/json:
               schema:
@@ -484,6 +570,7 @@ components:
         id:
           type: integer
           format: int64
+          description: Logical entry ID, stable across Node/TreeNode replacement.
         key:
           $ref: '#/components/schemas/Key'
         value:
@@ -499,29 +586,40 @@ components:
           type: integer
           format: int64
           nullable: true
+          description: Target objectId (not logical id).
         parent:
           type: integer
           format: int64
           nullable: true
+          description: Target objectId (not logical id).
         left:
           type: integer
           format: int64
           nullable: true
+          description: Target objectId (not logical id).
         right:
           type: integer
           format: int64
           nullable: true
+          description: Target objectId (not logical id).
         prev:
           type: integer
           format: int64
           nullable: true
+          description: Target objectId (not logical id).
         red:
           type: boolean
           nullable: true
         linked:
           type: boolean
+        objectId:
+          type: integer
+          format: int64
+          description: Synthetic physical Java object ID, stable across frames, new on replacement; not a memory
+            address.
       required:
       - id
+      - objectId
       - key
       - value
       - rawHashCode
@@ -549,10 +647,12 @@ components:
         headId:
           type: integer
           format: int64
+          description: Physical objectId; target may be placed in another temporary area in WORKING.
         rootId:
           type: integer
           format: int64
           nullable: true
+          description: Physical objectId; target may be placed in another temporary area in WORKING.
         nodes:
           type: array
           items:
@@ -638,7 +738,7 @@ components:
         schemaVersion:
           type: integer
           enum:
-          - 1
+          - 2
         collection:
           type: string
           enum:
@@ -678,7 +778,10 @@ components:
       properties:
         schemaVersion:
           type: integer
-          format: int32
+          enum:
+          - 1
+          - 2
+          description: 2 for HashMap, 1 for ArrayList.
         sessionId:
           type: string
           format: uuid
@@ -775,10 +878,15 @@ components:
           type: string
         java:
           type: string
+        hashMapSnapshotVersion:
+          type: string
+          enum:
+          - '2'
       required:
       - status
       - version
       - java
+      - hashMapSnapshotVersion
     BucketRefs:
       type: object
       additionalProperties: false
@@ -795,10 +903,12 @@ components:
         headId:
           type: integer
           format: int64
+          description: Physical objectId; target may be placed in another temporary area in WORKING.
         rootId:
           type: integer
           format: int64
           nullable: true
+          description: Physical objectId; target may be placed in another temporary area in WORKING.
         nodeRefs:
           type: array
           items:
@@ -886,7 +996,7 @@ components:
         schemaVersion:
           type: integer
           enum:
-          - 1
+          - 2
         collection:
           type: string
           enum:
@@ -917,7 +1027,8 @@ components:
       properties:
         schemaVersion:
           type: integer
-          format: int32
+          enum:
+          - 2
         sessionId:
           type: string
           format: uuid
@@ -929,7 +1040,7 @@ components:
         encoding:
           type: string
           enum:
-          - node-table-v1
+          - node-table-v2
         nodePool:
           type: array
           items:
@@ -1266,7 +1377,8 @@ components:
       properties:
         schemaVersion:
           type: integer
-          format: int32
+          enum:
+          - 2
         id:
           type: string
           format: uuid

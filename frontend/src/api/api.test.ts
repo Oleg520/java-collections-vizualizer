@@ -91,3 +91,19 @@ it("retains HTTP rejection and Retry-After when reading the error body fails", a
   expect(error.status).toBe(429);
   expect(error.retryAt).toBeGreaterThanOrEqual(now + 60000);
 });
+
+it("checks backend capability before any create or mutation and never falls back to an old protocol", async () => {
+  const fetch = vi
+    .fn()
+    .mockResolvedValue(
+      new Response(JSON.stringify({ status: "UP", version: "old" })),
+    );
+  vi.stubGlobal("fetch", fetch);
+  await expect(api.create()).rejects.toMatchObject({
+    status: 426,
+    code: "API_VERSION_MISMATCH",
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch.mock.calls[0][0]).toContain("/health");
+  expect(fetch.mock.calls[0][1].method).toBe("GET");
+});

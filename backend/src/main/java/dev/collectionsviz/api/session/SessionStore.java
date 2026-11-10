@@ -1,6 +1,7 @@
 package dev.collectionsviz.api.session;
 
 import dev.collectionsviz.api.dto.SessionState;
+import dev.collectionsviz.api.dto.SnapshotProtocol;
 import dev.collectionsviz.api.dto.SessionTrace;
 import dev.collectionsviz.api.error.ApiException;
 import dev.collectionsviz.core.engine.CollectionEngine;
@@ -64,11 +65,17 @@ public class SessionStore {
         sessions.put(s.id,s);
         return state(s);
     }
-    public SessionState get(UUID id) { return access(id, this::state); }
+    public SessionState get(UUID id) { return access(id,this::state); }
+    public SessionState get(UUID id,int version) { return access(id,s -> { SnapshotProtocol.require(version,s.collection.name()); return state(s); }); }
     /** Reconfigure one tab's slot atomically, without allocating another quota entry. */
     public SessionState reset(UUID id,long expectedRevision,CollectionType collection,Integer capacity,String owner) {
+        return reset(id,expectedRevision,collection,capacity,owner,2);
+    }
+    public SessionState reset(UUID id,long expectedRevision,CollectionType collection,Integer capacity,String owner,int version) {
         if(owner==null || collection==null) throw new IllegalArgumentException("Client identity and collection required");
         return access(id,owner,s -> {
+            SnapshotProtocol.require(version,s.collection.name());
+            SnapshotProtocol.require(version,collection.name());
             if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Обновите сессию.");
             CollectionEngine<? extends Snapshot> replacement=CollectionRegistry.STANDARD.require(collection).create(capacity);
             s.engine=replacement;
@@ -78,17 +85,24 @@ public class SessionStore {
         });
     }
     public SessionTrace<?> execute(UUID id,long expectedRevision,Operation operation) {
-        return mutate(id,expectedRevision,engine -> engine.execute(operation));
+        return execute(id,expectedRevision,operation,2);
     }
     public SessionTrace<?> scenario(UUID id,long expectedRevision,String name) {
-        return mutate(id,expectedRevision,engine -> engine.scenario(name));
+        return scenario(id,expectedRevision,name,2);
     }
-    private SessionTrace<?> mutate(UUID id,long expectedRevision,Function<CollectionEngine<? extends Snapshot>,Trace<? extends Snapshot>> action) {
+    public SessionTrace<?> execute(UUID id,long revision,Operation operation,int version) {
+        return mutate(id,revision,version,engine -> engine.execute(operation));
+    }
+    public SessionTrace<?> scenario(UUID id,long revision,String name,int version) {
+        return mutate(id,revision,version,engine -> engine.scenario(name));
+    }
+    private SessionTrace<?> mutate(UUID id,long expectedRevision,int version,Function<CollectionEngine<? extends Snapshot>,Trace<? extends Snapshot>> action) {
         return access(id,s -> {
+            SnapshotProtocol.require(version,s.collection.name());
             if(s.revision!=expectedRevision) throw new ApiException(409,"REVISION_CONFLICT","Состояние изменилось. Текущая версия: " + s.revision + ". Обновите сессию.");
             var trace=action.apply(s.engine);
             s.revision++;
-            return new SessionTrace<>(1,id,s.revision,trace);
+            return new SessionTrace<>(s.collection==CollectionType.HASH_MAP?2:1,id,s.revision,trace);
         });
     }
     private <T> T access(UUID id,Function<Session,T> action) {
@@ -106,7 +120,7 @@ public class SessionStore {
             return action.apply(s);
         }
     }
-    private SessionState state(Session s) { return new SessionState(1,s.id,s.collection.name(),s.revision,ttlMillis/1000,s.engine.snapshot()); }
+    private SessionState state(Session s) { return new SessionState(s.collection==CollectionType.HASH_MAP?2:1,s.id,s.collection.name(),s.revision,ttlMillis/1000,s.engine.snapshot()); }
     private ApiException missing() { return new ApiException(404,"SESSION_NOT_FOUND","Сессия не найдена или истекла. Создайте новую сессию."); }
     // Occupied slots, including expired entries until normal access/cleanup removes them.
     public int storedSessions() { return sessions.size(); }

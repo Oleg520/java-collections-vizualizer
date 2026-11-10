@@ -1,3 +1,5 @@
+import { validatePhysicalSnapshot } from "./trace/hashmap";
+import { isArray } from "./types";
 import {
   decodeTrace,
   type CompactArrayTrace,
@@ -51,6 +53,17 @@ function apiMessage(status: number, code: string, message: unknown): string {
 
 async function request<T>(path: string, data?: unknown): Promise<T> {
   try {
+    if (data !== undefined && path.includes("snapshotVersion=2")) {
+      const health = await request<{ hashMapSnapshotVersion?: string }>(
+        "/health",
+      );
+      if (health.hashMapSnapshotVersion !== "2")
+        throw new ApiError(
+          "Несовместимый backend. Обновите backend и страницу; команда не отправлена.",
+          426,
+          "API_VERSION_MISMATCH",
+        );
+    }
     const response = await fetch(`${base}/api/v1${path}`, {
       method: data === undefined ? "GET" : "POST",
       headers:
@@ -106,35 +119,75 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
     );
   }
 }
+const versionQuery = (collection: string) =>
+  collection === "HASH_MAP" ? "snapshotVersion=2" : "snapshotVersion=1";
+function checkedSession(session: Session): Session {
+  if (session.collection === "HASH_MAP" && session.schemaVersion !== 2)
+    throw new ApiError(
+      "Несовместимая версия HashMap API; обновите backend. Операция не повторяется.",
+      0,
+      "INCOMPATIBLE_RESPONSE",
+    );
+  if (!isArray(session.state)) validatePhysicalSnapshot(session.state);
+  return session;
+}
 export const api = {
   create: (collection: CollectionType = "HASH_MAP", initialCapacity?: number) =>
-    request<Session>("/sessions", { collection, initialCapacity }),
+    request<Session>(`/sessions?${versionQuery(collection)}`, {
+      collection,
+      initialCapacity,
+    }).then(checkedSession),
   reset: (
     session: Session,
     collection: CollectionType,
     initialCapacity?: number,
   ) =>
-    request<Session>(`/sessions/${session.id}/reset`, {
+    request<Session>(`/sessions/${session.id}/reset?snapshotVersion=2`, {
       expectedRevision: session.revision,
       collection,
       initialCapacity,
-    }),
-  get: (id: string) => request<Session>(`/sessions/${id}`),
+    }).then(checkedSession),
+  get: (id: string, collection: string = "HASH_MAP") =>
+    request<Session>(`/sessions/${id}?${versionQuery(collection)}`).then(
+      checkedSession,
+    ),
   scenarios: (collection: CollectionType = "HASH_MAP") =>
     request<Scenario[]>(`/scenarios?collection=${collection}`),
   command: (session: Session, operation: Operation) =>
     request<CompactSessionTrace | CompactArrayTrace>(
-      `/sessions/${session.id}/commands?encoding=compact`,
+      `/sessions/${session.id}/commands?encoding=compact&${versionQuery(session.collection)}`,
       {
         expectedRevision: session.revision,
         operation,
       },
-    ).then(decodeTrace),
+    ).then((response) => {
+      if (
+        session.collection === "HASH_MAP" &&
+        response.encoding !== "node-table-v2"
+      )
+        throw new ApiError(
+          "Несовместимая версия HashMap trace; обновите состояние. Команда не повторяется.",
+          0,
+          "INCOMPATIBLE_RESPONSE",
+        );
+      return decodeTrace(response);
+    }),
   scenario: (session: Session, name: string) =>
     request<CompactSessionTrace | CompactArrayTrace>(
-      `/sessions/${session.id}/scenarios/${name}?encoding=compact`,
+      `/sessions/${session.id}/scenarios/${name}?encoding=compact&${versionQuery(session.collection)}`,
       {
         expectedRevision: session.revision,
       },
-    ).then(decodeTrace),
+    ).then((response) => {
+      if (
+        session.collection === "HASH_MAP" &&
+        response.encoding !== "node-table-v2"
+      )
+        throw new ApiError(
+          "Несовместимая версия HashMap trace; обновите состояние. Команда не повторяется.",
+          0,
+          "INCOMPATIBLE_RESPONSE",
+        );
+      return decodeTrace(response);
+    }),
 };

@@ -10,7 +10,6 @@ import dev.collectionsviz.core.protocol.command.KeySpec;
 import dev.collectionsviz.core.protocol.command.KeyType;
 import dev.collectionsviz.core.engine.CollectionEngine;
 import dev.collectionsviz.core.collections.hashmap.InstrumentedHashMap.Node;
-import dev.collectionsviz.core.collections.hashmap.InstrumentedHashMap.TreeNode;
 
 import java.util.*;
 
@@ -20,7 +19,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
     private final int initialCapacity;
     private final Map<String,Integer> collisionHashes = new HashMap<>();
     private InstrumentedHashMap<Object,String> map;
-    private long nextId = 1;
+    private long nextId = 1, nextObjectId = 1;
     private List<Step<HashMapSnapshot>> recording;
     private Operation current;
 
@@ -32,7 +31,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         fresh(initialCapacity);
     }
     private void fresh(int capacity) {
-        map = new InstrumentedHashMap<>(capacity, () -> nextId++, this::record);
+        map = new InstrumentedHashMap<>(capacity, () -> nextId++, () -> nextObjectId++, this::record);
         collisionHashes.clear();
     }
     private void record(String event, String message, Map<String,Object> details) {
@@ -136,61 +135,19 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                 default -> throw new IllegalArgumentException("Неизвестная операция");
             }
             map.emit("OPERATION_COMPLETED", "Операция завершена; состояние зафиксировано", "size", map.size);
-            return new Trace<>(1, "HASH_MAP", operation, result, before, List.copyOf(recording), snapshot());
+            return new Trace<>(2, "HASH_MAP", operation, result, before, List.copyOf(recording), snapshot());
         } finally { recording = null; current = null; }
     }
     @Override public HashMapSnapshot snapshot() { return snapshot("COMMITTED"); }
     private HashMapSnapshot snapshot(String phase) {
-        var currentBuckets = buckets(map.table);
-        var pending = new ArrayList<>(buckets(map.pendingTable));
-        if (!map.inFlight.isEmpty()) {
-            Set<Long> visible = new HashSet<>();
-            currentBuckets.forEach(b -> b.nodes().forEach(n -> visible.add(n.id())));
-            pending.forEach(b -> b.nodes().forEach(n -> visible.add(n.id())));
-            var transit = map.inFlight.stream().filter(n -> !visible.contains(n.id)).map(n -> view(n, false)).toList();
-            if (!transit.isEmpty()) pending.add(new Bucket(map.inFlightIndex, "TRANSFER", transit.getFirst().id(), null, transit));
-        }
-        return new HashMapSnapshot(phase, map.size, map.table == null ? 0 : map.table.length, map.threshold,
-            map.loadFactor, map.pendingTable == null ? 0 : map.pendingTable.length, currentBuckets, List.copyOf(pending));
+        return HashMapSnapshotAssembler.capture(map, phase);
     }
-    private static Long id(Node<?,?> node) { return node == null ? null : node.id; }
-    private static List<Bucket> buckets(Node<Object,String>[] table) {
-        if (table == null) return List.of();
-        var result = new ArrayList<Bucket>();
-        for (int i=0;i<table.length;i++) {
-            Node<Object,String> head=table[i];
-            if (head==null) continue;
-            var linked = Collections.newSetFromMap(new IdentityHashMap<Node<Object,String>,Boolean>());
-            var nodes = new ArrayList<Node<Object,String>>();
-            for (var p=head;p!=null && linked.add(p);p=p.next) nodes.add(p);
-            var seen = Collections.newSetFromMap(new IdentityHashMap<Node<Object,String>,Boolean>());
-            seen.addAll(nodes);
-            // Deletion may temporarily use a node already unlinked from the bucket list.
-            // Preserve that working tree too, so every pointer has a target in the snapshot.
-            for (int j=0;j<nodes.size();j++) if (nodes.get(j) instanceof TreeNode<Object,String> t) {
-                for (var p : Arrays.asList(t.parent,t.left,t.right)) if (p != null && seen.add(p)) nodes.add(p);
-            }
-            var views = new ArrayList<NodeView>();
-            for (var p:nodes) {
-                views.add(view(p, linked.contains(p)));
-            }
-            result.add(new Bucket(i, head instanceof TreeNode ? "TREE" : "LIST", head.id,
-                head instanceof TreeNode<Object,String> t ? t.root().id : null, List.copyOf(views)));
-        }
-        return List.copyOf(result);
-    }
-    private static KeySpec keySpec(Object key) {
+    static KeySpec keySpec(Object key) {
         if (key == null) return new KeySpec(KeyType.NULL, null, null);
         if (key instanceof TeachingKey k) return KeySpec.collision(k.id(), k.hashCode());
         return new KeySpec(key instanceof Integer ? KeyType.INTEGER : KeyType.STRING, key.toString(), null);
     }
 
-    private static NodeView view(Node<Object,String> p, boolean linked) {
-        TreeNode<Object,String> t = p instanceof TreeNode<Object,String> tree ? tree : null;
-        return new NodeView(p.id, keySpec(p.key), p.value, Objects.hashCode(p.key), p.hash,
-            id(p.next), t==null?null:id(t.parent), t==null?null:id(t.left), t==null?null:id(t.right),
-            t==null?null:id(t.prev), t==null?null:t.red, linked);
-    }
     public static final List<Scenario> SCENARIOS = List.of(
         new Scenario("insert", "Обычная вставка", "hashCode → spread → индекс → новый узел"),
         new Scenario("collision", "Коллизия", "Три разных ID, один hashCode, одна цепочка"),
@@ -235,7 +192,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         }
         var indexed = new ArrayList<Step<HashMapSnapshot>>();
         for (var s:steps) indexed.add(new Step<>(indexed.size(),s.operation(),s.event(),s.stage(),s.message(),s.details(),s.snapshot()));
-        return new Trace<>(1,"HASH_MAP",new Operation(OperationType.SCENARIO,null,name),last.result(),before,List.copyOf(indexed),snapshot());
+        return new Trace<>(2,"HASH_MAP",new Operation(OperationType.SCENARIO,null,name),last.result(),before,List.copyOf(indexed),snapshot());
     }
     private Trace<HashMapSnapshot> put(KeySpec key, String value) { return execute(new Operation(OperationType.PUT,key,value)); }
     private static Trace<HashMapSnapshot> append(List<Step<HashMapSnapshot>> steps, Trace<HashMapSnapshot> trace) {

@@ -40,22 +40,22 @@ class ApiLimitsIntegrationTest {
         return request.with(r -> { r.setRemoteAddr(ip); return r; });
     }
     UUID create(String ip,String path) throws Exception {
-        var body=mvc.perform(from(post(URI.create(path)).contentType("application/json").content("{}"),ip))
+        var body=mvc.perform(from(post(URI.create(path)).param("snapshotVersion","2").contentType("application/json").content("{}"),ip))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return UUID.fromString(json.readTree(body).get("id").asText());
     }
     @Test void creationRateCannotBeBypassedWithProxyHeadersOrRoutingAliasesAndLiveCapPersists() throws Exception {
         String ip="198.51.100.11";
-        mvc.perform(from(post("/api/v1/sessions").contentType("application/json").content("{\"initialCapacity\":1000000}"),ip))
+        mvc.perform(from(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{\"initialCapacity\":1000000}"),ip))
             .andExpect(status().isBadRequest());
         UUID a=create(ip,"/api/v1/%73essions"),b=create(ip,"/api/v1/sessions;v=1");
-        mvc.perform(from(post("/api/v1/sessions").contentType("application/json").content("{}")
+        mvc.perform(from(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{}")
             .header("X-Forwarded-For","203.0.113.9").header("Forwarded","for=203.0.113.10")
             .header(ClientAddress.HEADER,"203.0.113.11"),ip))
             .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("RATE_LIMITED"))
             .andExpect(header().string("Retry-After","10"));
         clock.millis+=10000;
-        mvc.perform(from(post("/api/v1/sessions").contentType("application/json").content("{}")
+        mvc.perform(from(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{}")
             .header("Origin","http://localhost:5173"),ip))
             .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("CLIENT_SESSION_LIMIT"))
             .andExpect(header().string("Retry-After","60"))
@@ -68,14 +68,14 @@ class ApiLimitsIntegrationTest {
     @Test void rejectedCommandsDoNotMutateAndWindowRecoveryUsesOriginalRevision() throws Exception {
         String ip="198.51.100.21"; UUID id=create(ip,"/api/v1/sessions");
         String base="/api/v1/sessions/"+id;
-        mvc.perform(from(post(base+"/commands?encoding=compact").contentType("application/json").content(ApiIntegrationTest.command(0,"PUT","A","null")),ip))
+        mvc.perform(from(post(base+"/commands?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(0,"PUT","A","null")),ip))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1));
-        mvc.perform(from(post(base+"/scenarios/treeify?encoding=compact").contentType("application/json").content("{\"expectedRevision\":1}"),ip))
+        mvc.perform(from(post(base+"/scenarios/treeify?encoding=compact").param("snapshotVersion","2").contentType("application/json").content("{\"expectedRevision\":1}"),ip))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(2));
-        mvc.perform(from(get(base),ip)).andExpect(status().isOk());
+        mvc.perform(from(get(base).param("snapshotVersion","2"),ip)).andExpect(status().isOk());
         var before=store.get(id);
         for(String suffix:new String[]{"/commands","/%63ommands","/commands;v=1"}) {
-            mvc.perform(from(post(URI.create(base+suffix+"?encoding=compact")).contentType("application/json").content(ApiIntegrationTest.command(2,"CLEAR","A","null"))
+            mvc.perform(from(post(URI.create(base+suffix+"?encoding=compact")).param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(2,"CLEAR","A","null"))
                 .header("Origin","http://localhost:5173"),ip))
                 .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("RATE_LIMITED"))
                 .andExpect(header().string("Retry-After","10"))
@@ -84,21 +84,21 @@ class ApiLimitsIntegrationTest {
             assertEquals(before,store.get(id));
         }
         clock.millis+=10000;
-        mvc.perform(from(post(base+"/commands?encoding=compact").contentType("application/json").content(ApiIntegrationTest.command(2,"CLEAR","A","null")),ip))
+        mvc.perform(from(post(base+"/commands?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(2,"CLEAR","A","null")),ip))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(3)).andExpect(jsonPath("trace.committed.size").value(0));
     }
     @Test void busyWorkDoesNotQueueOrBlockHealthAndDoesNotConsumeRevision() throws Exception {
         String ip="198.51.100.31"; UUID id=create(ip,"/api/v1/sessions");
         var before=store.get(id);
         try(var held=admission.enter(ip,false); var other=admission.enter("198.51.100.32",false)) {
-            mvc.perform(from(post("/api/v1/sessions/"+id+"/commands?encoding=compact").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")),ip))
+            mvc.perform(from(post("/api/v1/sessions/"+id+"/commands?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")),ip))
                 .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("WORK_LIMIT"));
-            mvc.perform(get("/api/v1/health")).andExpect(status().isOk());
+            mvc.perform(get("/api/v1/health").param("snapshotVersion","2")).andExpect(status().isOk());
             mvc.perform(options("/api/v1/sessions").header("Origin","http://localhost:5173").header("Access-Control-Request-Method","POST"))
                 .andExpect(status().isOk());
             assertEquals(before,store.get(id));
         }
-        mvc.perform(from(post("/api/v1/sessions/"+id+"/commands?encoding=compact").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")),ip))
+        mvc.perform(from(post("/api/v1/sessions/"+id+"/commands?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")),ip))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1));
     }
 }

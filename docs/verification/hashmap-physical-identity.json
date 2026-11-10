@@ -1,0 +1,219 @@
+{
+  "baseline": {
+    "javaMedian": {
+      "steps": 990,
+      "compactBytes": 3155533,
+      "nodePool": 830,
+      "lastExecuteMs": 18.056275,
+      "lastEncodeMs": 2.969277,
+      "maxPhysicalViews": 97,
+      "retainedHistoryHeapBytes": 14007416
+    },
+    "frontendMedian": {
+      "history": 12,
+      "frames": 1315,
+      "nodes": 125353,
+      "decodeMs": 4.140689000000002,
+      "layoutAllFramesMs": 44.562462000000004,
+      "retainedHistoryHeapBytes": 3586120
+    },
+    "javaSamples": [
+      {
+        "steps": 990,
+        "compactBytes": 3155533,
+        "nodePool": 830,
+        "lastExecuteMs": 19.689864,
+        "lastEncodeMs": 2.969277,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14007192
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3155533,
+        "nodePool": 830,
+        "lastExecuteMs": 17.842804,
+        "lastEncodeMs": 2.861042,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 13991320
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3155533,
+        "nodePool": 830,
+        "lastExecuteMs": 5.202998,
+        "lastEncodeMs": 13.961437,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14008456
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3155533,
+        "nodePool": 830,
+        "lastExecuteMs": 19.410193,
+        "lastEncodeMs": 2.825774,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14008064
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3155533,
+        "nodePool": 830,
+        "lastExecuteMs": 18.056275,
+        "lastEncodeMs": 3.198817,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14007416
+      }
+    ],
+    "frontendSamples": [
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 4.339333000000003,
+        "layoutAllFramesMs": 50.34241900000001,
+        "retainedHistoryHeapBytes": 3586120
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 7.6078839999999985,
+        "layoutAllFramesMs": 47.609369,
+        "retainedHistoryHeapBytes": 3586120
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 4.067798999999994,
+        "layoutAllFramesMs": 44.562462000000004,
+        "retainedHistoryHeapBytes": 3586120
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 4.016235999999999,
+        "layoutAllFramesMs": 38.915405,
+        "retainedHistoryHeapBytes": 3586120
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 4.140689000000002,
+        "layoutAllFramesMs": 40.653462999999995,
+        "retainedHistoryHeapBytes": 3586144
+      }
+    ]
+  },
+  "current": {
+    "javaMedian": {
+      "steps": 990,
+      "compactBytes": 3193440,
+      "nodePool": 830,
+      "lastExecuteMs": 15.533526,
+      "lastEncodeMs": 3.175117,
+      "maxPhysicalViews": 97,
+      "retainedHistoryHeapBytes": 14975776
+    },
+    "frontendMedian": {
+      "history": 12,
+      "frames": 1315,
+      "nodes": 125353,
+      "decodeMs": 20.700686999999995,
+      "layoutAllFramesMs": 45.79729699999999,
+      "retainedHistoryHeapBytes": 3652184
+    },
+    "javaSamples": [
+      {
+        "steps": 990,
+        "compactBytes": 3193440,
+        "nodePool": 830,
+        "lastExecuteMs": 11.966598,
+        "lastEncodeMs": 2.930235,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14975776
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3193440,
+        "nodePool": 830,
+        "lastExecuteMs": 14.532126,
+        "lastEncodeMs": 3.801102,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14975712
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3193440,
+        "nodePool": 830,
+        "lastExecuteMs": 15.533526,
+        "lastEncodeMs": 3.077747,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14976096
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3193440,
+        "nodePool": 830,
+        "lastExecuteMs": 16.575378,
+        "lastEncodeMs": 3.175117,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14975608
+      },
+      {
+        "steps": 990,
+        "compactBytes": 3193440,
+        "nodePool": 830,
+        "lastExecuteMs": 15.95886,
+        "lastEncodeMs": 3.180988,
+        "maxPhysicalViews": 97,
+        "retainedHistoryHeapBytes": 14975896
+      }
+    ],
+    "frontendSamples": [
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 20.101025999999997,
+        "layoutAllFramesMs": 47.222792,
+        "retainedHistoryHeapBytes": 3652184
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 20.514133,
+        "layoutAllFramesMs": 45.79729699999999,
+        "retainedHistoryHeapBytes": 3652184
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 23.153311000000002,
+        "layoutAllFramesMs": 43.40112499999999,
+        "retainedHistoryHeapBytes": 3652184
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 24.399592999999996,
+        "layoutAllFramesMs": 45.436519999999994,
+        "retainedHistoryHeapBytes": 3652184
+      },
+      {
+        "history": 12,
+        "frames": 1315,
+        "nodes": 125353,
+        "decodeMs": 20.700686999999995,
+        "layoutAllFramesMs": 46.888774000000005,
+        "retainedHistoryHeapBytes": 3652184
+      }
+    ]
+  },
+  "method": "5 isolated JVM/Node samples, each JVM warmed with two 97-entry runs; Temurin 21.0.13, -Xmx256m -XX:+UseSerialGC; Node 24.21.0 --expose-gc. Last operation is 128->256 split, escaped maximum-length keys/values. History contains last 12 operations. Single local machine, not SLA. Baseline f3e8459, current Issue #55."
+}

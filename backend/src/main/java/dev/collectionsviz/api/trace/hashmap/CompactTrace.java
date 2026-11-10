@@ -25,7 +25,7 @@ public record CompactTrace(int schemaVersion, UUID sessionId, long revision, Str
             s.stage(), s.message(), s.details(), encoder.frame(s.snapshot()))).toList();
         var trace = new Trace<>(source.schemaVersion(), source.collection(), source.operation(), source.result(),
             before, steps, encoder.frame(source.committed()));
-        return new CompactTrace(1, response.sessionId(), response.revision(), "node-table-v1", trace,
+        return new CompactTrace(2, response.sessionId(), response.revision(), "node-table-v2", trace,
             List.copyOf(encoder.nodeIndices.keySet()));
     }
     private static class Encoder {

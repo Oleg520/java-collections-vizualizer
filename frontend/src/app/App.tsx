@@ -1,3 +1,4 @@
+import type { NodeSelection } from "../features/hashmap/identity";
 import {
   collectionViews,
   collectionOptions,
@@ -24,7 +25,7 @@ import { useTracePlayback } from "../playback/useTracePlayback";
 
 export default function App() {
   const playback = useTracePlayback();
-  const [selectedNodeId, setSelectedNodeId] = useState<number>();
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
     collection,
     lastKnownSession,

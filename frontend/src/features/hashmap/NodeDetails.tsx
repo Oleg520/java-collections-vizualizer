@@ -1,3 +1,4 @@
+import { objectId, resolveSelection, type NodeSelection } from "./identity";
 import { isArray, type CollectionSnapshot } from "../../api/types";
 import { X } from "lucide-react";
 import type { MapNode } from "../../api/types";
@@ -24,10 +25,12 @@ export function NodeDetails({
       </div>
       <dl>
         {Object.entries({
+          objectId: objectId(node),
           type: node.key.type,
           hashCode: node.rawHashCode,
           hash: node.hash,
           next: node.next,
+          prev: node.prev,
           parent: node.parent,
           left: node.left,
           right: node.right,
@@ -52,15 +55,11 @@ export function NodeDetails({
 
 export function selectedDetails(
   snapshot: CollectionSnapshot | undefined,
-  id: number | undefined,
+  id: NodeSelection | undefined,
   close: () => void,
 ) {
   const node =
-    snapshot && !isArray(snapshot)
-      ? [...snapshot.buckets, ...snapshot.pendingBuckets]
-          .flatMap((bucket) => bucket.nodes)
-          .find((node) => node.id === id)
-      : undefined;
+    snapshot && !isArray(snapshot) ? resolveSelection(snapshot, id) : undefined;
   return node
     ? {
         title: `NODE #${node.id}`,

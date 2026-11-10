@@ -1,3 +1,4 @@
+import { objectId, type NodeSelection } from "../features/hashmap/identity";
 import type { ComponentType, ReactNode } from "react";
 import {
   isArray,
@@ -27,8 +28,8 @@ type CommandsProps = {
 type DiagramProps = {
   snapshot: CollectionSnapshot;
   step?: Step;
-  selectedId?: number;
-  onSelect: (id: number | undefined) => void;
+  selectedId?: NodeSelection;
+  onSelect: (id: NodeSelection | undefined) => void;
 };
 interface CollectionView {
   name: string;
@@ -46,7 +47,7 @@ interface CollectionView {
   Diagram: ComponentType<DiagramProps>;
   selectedDetails: (
     snapshot: CollectionSnapshot | undefined,
-    id: number | undefined,
+    id: NodeSelection | undefined,
     close: () => void,
   ) => { title: string; content: ReactNode } | undefined;
 }
@@ -79,7 +80,11 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
           step={step}
           selectedId={selectedId}
           onSelect={(node) =>
-            onSelect(node.id === selectedId ? undefined : node.id)
+            onSelect(
+              objectId(node) === selectedId?.preferredObjectId
+                ? undefined
+                : { logicalId: node.id, preferredObjectId: objectId(node) },
+            )
           }
         />
       ),

@@ -63,7 +63,7 @@ jobs:
           with open('/tmp/health.json') as response:
               health = json.load(response)
           assert health == {
-              'status': 'UP', 'java': '21',
+              'status': 'UP', 'java': '21', 'hashMapSnapshotVersion': '2',
               'version': '0.0.0-' + os.environ['GITHUB_SHA'] + '-SNAPSHOT',
           }, health
           PYHEALTH
