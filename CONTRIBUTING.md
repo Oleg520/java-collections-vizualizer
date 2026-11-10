@@ -113,6 +113,8 @@ IDEA formatting. Spotless's IDEA adapter also starts the IDE separately per file
 we use IDEA's official batch CLI through Maven's existing exec plugin instead.
 This avoids recurring differences between Ctrl+Alt+L and CI. Formatting alone
 does not simplify complex expressions; structural changes need a separate task.
+See the [JetBrains CLI formatter documentation](https://www.jetbrains.com/help/idea/command-line-formatter.html)
+and [Spotless IDEA adapter limitations](https://github.com/diffplug/spotless/tree/main/plugin-maven#intellij-idea).
 
 Frontend retains its existing `npm --prefix frontend run format` command using
 Prettier. It currently has no `format:check` script or CI formatting check; adding
