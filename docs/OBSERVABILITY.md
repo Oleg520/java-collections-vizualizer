@@ -5,16 +5,14 @@ There is no metrics service, exporter, database or new request logging. Collecti
 algorithms and API limits are unchanged. The existing `/api/v1/health` remains
 public and independent of admission limits.
 
-## Private access
+## Local access
 
 Diagnostics listen on **127.0.0.1:18083**, separately from the API port.
 `MANAGEMENT_PORT` may select another unused port; keep it separate from `PORT`
 and retain the loopback address. Only `/actuator/health` and `/actuator/metrics`
-are exposed. Health details, JMX exposure, env, heap dumps and loggers are not
-exposed. The generic proxy example in [API security](API_SECURITY.md#адрес-клиента-за-caddy) explicitly returns 404 for `/actuator` and its children
-and proxies only the API listener. No management port is published in Compose.
-Do not add the diagnostic port to Caddy, Docker published ports or a public
-firewall rule. These are repository defaults, not a claim about a running VDS.
+are exposed. Health details, JMX, env, heap dumps and loggers are not exposed.
+No management port is published in Compose. Keep diagnostics outside
+public reverse-proxy routes and published container ports.
 
 On the machine running Java:
 
@@ -22,13 +20,6 @@ On the machine running Java:
 curl --fail http://127.0.0.1:18083/actuator/health
 curl --fail http://127.0.0.1:18083/actuator/metrics
 curl --fail http://127.0.0.1:18083/actuator/metrics/visualizer.sessions.active
-```
-
-For an authorized remote operator, forward the loopback listener over SSH:
-
-```bash
-ssh -N -L 127.0.0.1:18084:127.0.0.1:18083 USER@HOST
-curl --fail http://127.0.0.1:18084/actuator/metrics/visualizer.work.active
 ```
 
 In Compose the listener is inside the container's network namespace. Use a
@@ -88,8 +79,8 @@ Reproduce the comparison against a baseline JAR from unmodified main:
 
 ```bash
 python3 scripts/profile-observability.py \
-  --baseline /tmp/jcv-baseline/backend/target/backend-0.3.1.jar \
-  --candidate backend/target/backend-0.3.1.jar \
+  --baseline /tmp/jcv-baseline.jar \
+  --candidate "$(sh scripts/backend-jar.sh)" \
   --java-home "$JAVA_HOME"
 ```
 
@@ -118,17 +109,8 @@ latency improvement. Both builds produced identical response byte counts,
 including a 1,433,743-byte split trace, and passed gzip checks. Candidate runs
 also verified the management socket's loopback binding via the Linux socket table.
 No additional response buffer or trace traversal is introduced by measurement.
-Short local
-measurements include JIT, host scheduling and JVM attach noise; they are not a
-production SLA, long-term leak test, OS CPU quota or VDS capacity measurement.
-No production deployment, Caddy reload or shared-host load test is part of this work.
-
-
-The former environment-specific Caddy example passed local validation with Caddy
-2.11.9; that is historical evidence, not validation of a current production file.
-The existing deployment helper tests (15) and build/version script tests (10)
-passed. Frontend/browser suites were not run because the UI and API payload
-contracts were unchanged. Public routing on a live server has not been tested.
+Short local measurements include JIT, host scheduling and JVM attach noise;
+they do not establish an SLA, long-term absence of leaks or hosting capacity.
 
 References: [Spring Boot metrics](https://docs.spring.io/spring-boot/3.5/reference/actuator/metrics.html),
 [management listener configuration](https://docs.spring.io/spring-boot/3.5/how-to/actuator.html).

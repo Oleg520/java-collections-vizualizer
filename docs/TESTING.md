@@ -1,7 +1,10 @@
 # Проверки и измерения
 
+Начните с `make setup` из [быстрого запуска](../README.md#быстрый-запуск).
+Для тестов также нужны Python 3 и Chromium (устанавливается Playwright).
+
 ```bash
-./mvnw verify                         # core + API + исполняемый JAR
+./mvnw clean verify                   # core + API + исполняемый JAR
 npm --prefix frontend test            # Vitest: transport, layout, presentation, session
 npm --prefix frontend run build       # strict TypeScript + Vite production
 cd frontend
@@ -24,7 +27,9 @@ Playwright также может использовать уже запущен�
 стабильность ID, сохранность предыдущих снимков и результат trace.
 
 GitHub Actions запускает `Build and verify` только при pull request.
-Все восемь сценариев проверяются при initialCapacity 0/16/32/64. E2E также
+Отдельный job собирает Docker image, запускает Compose и проверяет health и
+Git-версию backend с настройками приложения по умолчанию.
+Все восемь сценариев HashMap проверяются при initialCapacity 0/16/32/64. E2E также
 проверяет большой split на 97-й вставке, конфликт revision и offline-воспроизведение.
 Обычный прогон не меняет скриншоты документации; для их обновления:
 `UPDATE_SCREENSHOTS=1 npm run test:e2e` (из frontend).
@@ -84,7 +89,7 @@ UPDATE_SCREENSHOTS=1 npm --prefix frontend run test:e2e -- arraylist.spec.ts
 The screenshot command updates `docs/arraylist-desktop.png` and
 `docs/arraylist-mobile.png`. No production service is involved.
 
-## Session lifecycle regression (target 0.3.1)
+## Session lifecycle regression
 
 `npm --prefix frontend run test:e2e:lifecycle` uses a separate Playwright config
 and a fresh local backend with strict 6 creations/minute, 8 live sessions/IP and
@@ -103,7 +108,7 @@ cover generic 404 during command and recovery GET; neither may retire a known UU
 ## Backend observability
 
 `./mvnw clean verify` includes lifecycle/streaming metric tests and a real HTTP
-test of separate application/management listeners. Operator access, metric
+test of separate application/management listeners. Local access, metric
 semantics and the local baseline/candidate comparison are documented in
 [backend diagnostics](OBSERVABILITY.md). No public management route or production
 load test is required.

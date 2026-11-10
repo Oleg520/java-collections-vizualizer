@@ -46,29 +46,36 @@ the destination environment and JAR/marker version against the selected tag.
 Production credentials must never execute downloaded source, npm hooks or shell
 scripts. Build and delivery run with separate privileges.
 
-Before changing delivery authority, the operator verifies that the currently
-running backend source SHA, canonical frontend SHA and unique release tag agree.
-Changes to runtime configuration/helper policy require a fresh verified off-host
-recovery copy after the changes, while retaining the pre-change rollback copy.
+Consumers must keep the preceding frontend and already-open tabs compatible
+with a backend update. Version equality alone does not prove API compatibility.
+Restarts discard in-memory sessions. Preserve known-good bundle bytes beyond
+Actions retention; prepare a new reviewed release when a bundle has expired.
+When publishing a GitHub Release for an existing tag, attach the same verified
+`backend.jar`, `frontend.tar` and `release.json`. Production delivery is outside
+this repository.
 
-The operator publishes backend, checks exact version/health, then frontend,
-checks the release pair and records a receipt. Keep the preceding frontend
-compatible during backend rollout and already-open tabs. Restarts discard
-in-memory sessions. A failed or ambiguous publication needs bounded recovery,
-not an automatic rerun.
+## Static hosting and previews
 
-After delivery verification, publish the GitHub Release for the existing tag and
-attach these same three files. Keep known-good bytes and recovery receipts beyond
-Actions retention. Expired artifacts are not permission to move a tag or replace
-an immutable server artifact; prepare a new reviewed release when necessary.
+The frontend is static output from Vite. `frontend/public/_headers` provides
+caching for content-hashed assets. Serve `index.html` for SPA navigation; do not
+add a top-level `404.html`, catch-all redirect, Pages worker or functions.
 
-## Delivery ownership
+Cloudflare Pages Git previews use these repository-relative settings:
 
-The public tree provides the artifact contract and no direct production
-entrypoints. The operator owns the tested delivery implementation, successor
-helper and recovery material privately. Retire and drain any legacy entrypoints
-before activating a replacement; Actions concurrency cannot lock repositories.
+| Setting | Value |
+| --- | --- |
+| Root directory | `frontend` |
+| Build command | `sh ../scripts/fetch-version-tags.sh && npm ci && npm run build` |
+| Output directory | `dist` |
+| Node version | Match `frontend/package.json` (22.12+ on 22, or 24+) |
 
-Git-based frontend previews and existing Root/Build/Output are preserved.
-Generic app env examples remain public. Removing files does not erase history;
-no tag, Release or history is rewritten.
+Keep existing Git integration and preview settings when editing build scripts.
+Preview builds do not implicitly grant API access. For an interactive hosted
+preview set `VITE_API_URL` to a compatible API origin before building and allow
+the exact preview origin in that backend's `ALLOWED_ORIGINS`. Wildcard CORS is
+not supported. Without an API origin, static hosting needs its own `/api` proxy;
+Vite's development proxy is not included in `dist`.
+
+Local builds need no hosting account, credentials or environment file.
+See [local startup](../README.md#быстрый-запуск), [API security](API_SECURITY.md)
+and [diagnostics](OBSERVABILITY.md).
