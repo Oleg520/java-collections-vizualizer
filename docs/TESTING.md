@@ -95,6 +95,30 @@ UPDATE_SCREENSHOTS=1 npm --prefix frontend run test:e2e -- arraylist.spec.ts
 The screenshot command updates `docs/arraylist-desktop.png` and
 `docs/arraylist-mobile.png`. No production service is involved.
 
+## Постоянное управление воспроизведением
+
+`playback-dock.spec.ts` проверяет плавающую карточку на desktop/mobile, при росте
+дерева, переносе между буферами ArrayList, прокрутке страницы и смене ориентации.
+Проверяются доступность истории и последних технических деталей над панелью,
+клавиатурный переход к плееру, кнопки, timeline, touch, длинное пояснение на коротком
+экране и оба режима `prefers-reduced-motion`. Отдельно проверяются центрирование
+по `.canvas-column` при изменении рабочей области, сворачивание без сброса
+trace/cursor/playing, компенсация прокрутки и доступ к полю под карточкой.
+На конце страницы sidebar не оставляет разрыва, история находится в инспекторе,
+footer отсутствует. Обычные collection-тесты сохраняют проверки перемотки истории.
+Короткие ArrayList и пустой trace проверяются отдельно: Events не растягивается
+сверх содержимого, после desktop-колонок нет общего резерва высотой с плеер.
+Проверка доступности учитывает фактическое пересечение карточки и элемента,
+поэтому правый инспектор может доходить до конца viewport рядом с Dock.
+Проверки используют настоящий backend. [Скриншоты desktop/mobile](verification/playback-dock/)
+показывают раскрытое и свёрнутое состояние.
+Общий бюджет desktop/mobile-набора — 5 минут для одного worker, включая реальные
+15-секундные recovery-проверки; индивидуальные тайм-ауты тестов не увеличены.
+
+```bash
+E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- playback-dock.spec.ts
+```
+
 ## Session lifecycle regression
 
 `npm --prefix frontend run test:e2e:lifecycle` uses a separate Playwright config

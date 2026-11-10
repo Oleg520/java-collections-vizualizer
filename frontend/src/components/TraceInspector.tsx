@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, ChevronRight, Code2, Terminal } from "lucide-react";
 import { type Step, type Trace } from "../api/types/index";
 export function TraceInspector({
+  history,
   algorithm,
   sourceUrl,
   trace,
@@ -14,6 +15,7 @@ export function TraceInspector({
   selectedDetails,
   navigate,
 }: {
+  history: ReactNode;
   algorithm: string[][];
   sourceUrl: string;
   trace?: Trace;
@@ -52,6 +54,7 @@ export function TraceInspector({
           <Code2 size={14} /> Algorithm
         </button>
       </div>
+      <div className="inspector-history">{history}</div>
       <div className="inspector-title">
         <span className="eyebrow">
           {tab === "events" ? "EXECUTION TRACE" : "СЕМАНТИЧЕСКИЕ ЭТАПЫ"}

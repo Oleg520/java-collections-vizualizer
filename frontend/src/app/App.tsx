@@ -5,10 +5,9 @@ import {
   collectionOptions,
   statePresentation,
 } from "./collectionViews";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowUpRight,
-  Braces,
   ChevronRight,
   GitBranch,
   Github,
@@ -17,7 +16,7 @@ import {
   Network,
   X,
 } from "lucide-react";
-import { PlaybackPanel } from "../playback/PlaybackPanel";
+import { OperationHistory, PlaybackPanel } from "../playback/PlaybackPanel";
 import { ScenarioSidebar } from "../components/ScenarioSidebar";
 import { StateMetrics } from "../components/StateMetrics";
 import { TraceInspector } from "../components/TraceInspector";
@@ -28,6 +27,7 @@ export default function App({
   localSplits,
 }: { localSplits?: LocalSplits } = {}) {
   const playback = useTracePlayback();
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
     collection,
@@ -78,6 +78,9 @@ export default function App({
   );
   return (
     <div className="app-shell">
+      <a className="skip-playback" href="#playback">
+        К управлению воспроизведением
+      </a>
       <header className="app-header">
         <a className="brand" href="/" aria-label="Java Collections Visualizer">
           <span className="brand-mark">
@@ -193,7 +196,7 @@ export default function App({
             {...statePresentation(snapshot, trace)}
           />
           <div className="lab-grid">
-            <div className="canvas-column">
+            <div className="canvas-column" ref={canvasRef}>
               {snapshot ? (
                 <view.Diagram
                   snapshot={snapshot}
@@ -225,16 +228,17 @@ export default function App({
                     {localSplits.jumpLabel}
                   </button>
                 )}
-              <PlaybackPanel
-                playback={playback}
-                step={step}
-                onSelectHistory={(index) => {
-                  playback.selectHistory(index);
-                  setSelectedNodeId(undefined);
-                }}
-              />
             </div>
             <TraceInspector
+              history={
+                <OperationHistory
+                  playback={playback}
+                  onSelectHistory={(index) => {
+                    playback.selectHistory(index);
+                    setSelectedNodeId(undefined);
+                  }}
+                />
+              }
               algorithm={view.algorithm}
               sourceUrl={view.sourceUrl}
               trace={trace}
@@ -246,15 +250,9 @@ export default function App({
               navigate={navigate}
             />
           </div>
-          <footer className="page-footer">
-            <span>
-              <Braces size={13} /> Java — источник истины. React —
-              представление.
-            </span>
-            <span>128 элементов / сессия · шаги доступны без соединения</span>
-          </footer>
         </main>
       </div>
+      <PlaybackPanel playback={playback} step={step} canvasRef={canvasRef} />
     </div>
   );
 }
