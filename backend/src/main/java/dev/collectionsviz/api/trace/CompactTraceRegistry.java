@@ -10,14 +10,16 @@ import dev.collectionsviz.core.protocol.Snapshot;
 import java.util.*;
 import java.util.function.Function;
 
-/** Backend bindings keep transport encoding separate from domain registration. */
+/**
+ * Backend bindings keep transport encoding separate from domain registration.
+ */
 public final class CompactTraceRegistry {
     public static final CompactTraceRegistry STANDARD = new CompactTraceRegistry(List.of(
-        new Registration<>(CollectionRegistry.HASH_MAP, CompactTrace::encode),
-        new Registration<>(CollectionRegistry.ARRAY_LIST, CompactArrayTrace::encode)));
+            new Registration<>(CollectionRegistry.HASH_MAP, CompactTrace::encode),
+            new Registration<>(CollectionRegistry.ARRAY_LIST, CompactArrayTrace::encode)));
 
     public record Registration<S extends Snapshot>(CollectionDefinition<S> definition,
-            Function<SessionTrace<S>, ?> encoder) {
+                                                   Function<SessionTrace<S>, ?> encoder) {
         public Registration {
             Objects.requireNonNull(definition);
             Objects.requireNonNull(encoder);
@@ -52,6 +54,7 @@ public final class CompactTraceRegistry {
             throw new IllegalArgumentException("encoding: full или compact");
         return encoding.equals("compact");
     }
+
     public Object encode(SessionTrace<?> response) {
         var id = response.trace().collection();
         var registration = registrations.get(id);

@@ -1,3 +1,9 @@
 package dev.collectionsviz.core.protocol;
 
-public interface Snapshot { String phase(); int size(); int capacity(); }
+public interface Snapshot {
+    String phase();
+
+    int size();
+
+    int capacity();
+}

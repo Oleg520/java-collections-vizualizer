@@ -9,11 +9,14 @@ import dev.collectionsviz.core.collections.arraylist.ArrayListEngine;
 import dev.collectionsviz.core.engine.CollectionDefinition;
 
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CollectionRegistryTest {
-    @Test void registersBothFactoriesAndImmutableScenarioCatalogues() {
+    @Test
+    void registersBothFactoriesAndImmutableScenarioCatalogues() {
         var registry = CollectionRegistry.STANDARD;
         assertSame(CollectionRegistry.HASH_MAP, registry.require(CollectionType.HASH_MAP));
         assertSame(CollectionRegistry.ARRAY_LIST, registry.require(CollectionType.ARRAY_LIST));
@@ -32,7 +35,8 @@ class CollectionRegistryTest {
         }
     }
 
-    @Test void preservesConstructorSemanticsAndIndependentEngines() {
+    @Test
+    void preservesConstructorSemanticsAndIndependentEngines() {
         var maps = CollectionRegistry.HASH_MAP;
         assertEquals(new HashMapEngine().snapshot(), maps.create(null).snapshot());
         for (int capacity : List.of(0, 16, 32, 64))
@@ -50,16 +54,17 @@ class CollectionRegistryTest {
         assertEquals(0, second.snapshot().size());
     }
 
-    @Test void rejectsDuplicateAndUnsupportedTypesAndCopiesRegistration() {
+    @Test
+    void rejectsDuplicateAndUnsupportedTypesAndCopiesRegistration() {
         assertThrows(IllegalArgumentException.class, () -> new CollectionRegistry(
-            List.of(CollectionRegistry.HASH_MAP, CollectionRegistry.HASH_MAP)));
+                List.of(CollectionRegistry.HASH_MAP, CollectionRegistry.HASH_MAP)));
         var entries = new java.util.ArrayList<CollectionDefinition<?>>();
         entries.add(CollectionRegistry.HASH_MAP);
         var registry = new CollectionRegistry(entries);
         entries.clear();
         assertNotNull(registry.require(CollectionType.HASH_MAP));
         assertEquals("Unsupported collection: ARRAY_LIST", assertThrows(IllegalArgumentException.class,
-            () -> registry.require(CollectionType.ARRAY_LIST)).getMessage());
+                () -> registry.require(CollectionType.ARRAY_LIST)).getMessage());
         assertThrows(IllegalArgumentException.class, () -> registry.require(null));
     }
 }

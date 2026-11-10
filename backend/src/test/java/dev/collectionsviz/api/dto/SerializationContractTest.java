@@ -13,23 +13,29 @@ import dev.collectionsviz.core.collections.hashmap.HashMapEngine;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Fixed current wire examples, intentionally migrated with HashMap V2. */
+/**
+ * Fixed current wire examples, intentionally migrated with HashMap V2.
+ */
 class SerializationContractTest {
     private final JsonMapper json = new JsonMapper();
 
-    @Test void fixedRequestsStatesAndFullAndCompactTracesPreserveWireContract() throws Exception {
+    @Test
+    void fixedRequestsStatesAndFullAndCompactTracesPreserveWireContract() throws Exception {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000025");
         var map = new HashMapEngine();
         var array = new ArrayListEngine(0);
         var mapOperation = new Operation(OperationType.PUT, KeySpec.collision("key\"\\\n", 42), "value\n");
-        var arrayOperation = Operation.array(OperationType.ADD, null, new Element(ElementType.STRING, "value\"\n"), null);
+        var arrayOperation = Operation.array(OperationType.ADD, null, new Element(ElementType.STRING, "value\"\n"),
+                null);
         var mapTrace = new SessionTrace<>(2, id, 3, map.execute(mapOperation));
         var arrayTrace = new SessionTrace<>(1, id, 4, array.execute(arrayOperation));
-        Map<String,Object> examples = new LinkedHashMap<>();
+        Map<String, Object> examples = new LinkedHashMap<>();
         examples.put("create", new CreateRequest(CollectionType.ARRAY_LIST, 0));
         examples.put("createDefault", new CreateRequest(null, null));
         examples.put("reset", new ResetRequest(4L, CollectionType.HASH_MAP, 16));

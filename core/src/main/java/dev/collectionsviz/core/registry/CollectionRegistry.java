@@ -9,13 +9,15 @@ import dev.collectionsviz.core.engine.CollectionDefinition;
 
 import java.util.*;
 
-/** Immutable, explicit registration of the built-in collection engines. */
+/**
+ * Immutable, explicit registration of the built-in collection engines.
+ */
 public final class CollectionRegistry {
     public static final CollectionDefinition<HashMapSnapshot> HASH_MAP = new CollectionDefinition<>(
-        CollectionType.HASH_MAP, HashMapSnapshot.class,
-        capacity -> new HashMapEngine(capacity == null ? 0 : capacity), HashMapEngine.SCENARIOS);
+            CollectionType.HASH_MAP, HashMapSnapshot.class,
+            capacity -> new HashMapEngine(capacity == null ? 0 : capacity), HashMapEngine.SCENARIOS);
     public static final CollectionDefinition<ArrayListSnapshot> ARRAY_LIST = new CollectionDefinition<>(
-        CollectionType.ARRAY_LIST, ArrayListSnapshot.class, ArrayListEngine::new, ArrayListEngine.SCENARIOS);
+            CollectionType.ARRAY_LIST, ArrayListSnapshot.class, ArrayListEngine::new, ArrayListEngine.SCENARIOS);
     public static final CollectionRegistry STANDARD = new CollectionRegistry(List.of(HASH_MAP, ARRAY_LIST));
 
     private final Map<CollectionType, CollectionDefinition<?>> definitions;
