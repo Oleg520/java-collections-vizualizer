@@ -95,6 +95,18 @@ UPDATE_SCREENSHOTS=1 npm --prefix frontend run test:e2e -- arraylist.spec.ts
 The screenshot command updates `docs/arraylist-desktop.png` and
 `docs/arraylist-mobile.png`. No production service is involved.
 
+## Постоянное управление воспроизведением
+
+`playback-dock.spec.ts` проверяет нижнюю панель на desktop/mobile, при росте
+дерева, переносе между буферами ArrayList, прокрутке страницы и смене ориентации.
+Проверяются доступность истории, технических деталей и footer над панелью,
+клавиатурный переход к плееру, кнопки, timeline, touch, длинное пояснение на коротком
+экране и оба режима `prefers-reduced-motion`. Проверки используют настоящий backend.
+
+```bash
+E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- playback-dock.spec.ts
+```
+
 ## Session lifecycle regression
 
 `npm --prefix frontend run test:e2e:lifecycle` uses a separate Playwright config
