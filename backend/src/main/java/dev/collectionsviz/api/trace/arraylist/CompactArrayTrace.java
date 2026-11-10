@@ -30,9 +30,11 @@ public record CompactArrayTrace(int schemaVersion, UUID sessionId, long revision
         var steps = source.steps().stream()
                 .map(s -> new Step<>(s.index(), s.operation(), s.event(), s.stage(), s.message(), s.details(),
                         encoder.frame(s.snapshot()))).toList();
-        var trace = new Trace<>(1, "ARRAY_LIST", source.operation(), source.result(), before, steps,
+        var trace = new Trace<>(ArrayListSnapshot.SCHEMA_VERSION, "ARRAY_LIST", source.operation(), source.result(),
+                before, steps,
                 encoder.frame(source.committed()));
-        return new CompactArrayTrace(1, response.sessionId(), response.revision(), "array-frames-v1", trace,
+        return new CompactArrayTrace(ArrayListSnapshot.SCHEMA_VERSION, response.sessionId(), response.revision(),
+                "array-frames-v1", trace,
                 List.copyOf(encoder.buffers), List.copyOf(encoder.cells.keySet()));
     }
 

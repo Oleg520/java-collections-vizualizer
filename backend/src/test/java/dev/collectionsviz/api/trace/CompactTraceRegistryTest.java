@@ -19,6 +19,14 @@ class CompactTraceRegistryTest {
     private final JsonMapper json = new JsonMapper();
 
     @Test
+    void requestEncodingSelectorsAreExactAndDistinctFromWireEncodingNames() {
+        assertFalse(CompactTraceRegistry.requested("full"));
+        assertTrue(CompactTraceRegistry.requested("compact"));
+        for (String invalid : List.of("", "FULL", " compact", "node-table-v2", "array-frames-v1"))
+            assertThrows(IllegalArgumentException.class, () -> CompactTraceRegistry.requested(invalid));
+    }
+
+    @Test
     void registeredEncodersPreserveJsonForEveryScenario() throws Exception {
         for (var scenario : CollectionRegistry.HASH_MAP.scenarios()) {
             var source = new SessionTrace<>(2, UUID.randomUUID(), 7,

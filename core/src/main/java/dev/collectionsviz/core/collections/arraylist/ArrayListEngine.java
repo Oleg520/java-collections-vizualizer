@@ -43,7 +43,11 @@ import java.util.*;
  * Session locking serializes access. Validation precedes all mutation and ID allocation.
  */
 public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot> {
+    // OpenJDK allocation rule; independent of the teaching resource limits below.
+    private static final int DEFAULT_CAPACITY = 10;
+    // Teaching limits, not java.util.ArrayList constraints.
     public static final int MAX_SIZE = 128, MAX_CAPACITY = 256;
+    private static final int MAX_VALUE_LENGTH = 128;
     private final Integer initialCapacity;
     private Object[] elementData;
     private long[] ids;
@@ -62,7 +66,8 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
 
     public ArrayListEngine(Integer capacity) {
         if (capacity != null && (capacity < 0 || capacity > MAX_CAPACITY))
-            throw new IllegalArgumentException("Начальная ёмкость: 0..256; отсутствие — default constructor");
+            throw new IllegalArgumentException(
+                    "Начальная ёмкость: 0.." + MAX_CAPACITY + "; отсутствие — default constructor");
         initialCapacity = capacity;
         fresh(capacity);
     }
@@ -71,6 +76,7 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
         defaultEmpty = capacity == null;
         elementData = new Object[capacity == null ? 0 : capacity];
         ids = new long[elementData.length];
+        // Zero denotes an empty buffer without a physical allocation. Allocated IDs start at one.
         bufferId = elementData.length == 0 ? 0 : nextBufferId++;
         size = 0;
     }
@@ -82,8 +88,8 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
             if (element.value() != null) throw new IllegalArgumentException("NULL не имеет значения");
             return null;
         }
-        if (element.value() == null || element.value().length() > 128)
-            throw new IllegalArgumentException("Значение: до 128 символов");
+        if (element.value() == null || element.value().length() > MAX_VALUE_LENGTH)
+            throw new IllegalArgumentException("Значение: до " + MAX_VALUE_LENGTH + " символов");
         if (element.type() == ElementType.STRING) return element.value();
         try {
             return Integer.valueOf(element.value());
@@ -94,10 +100,11 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
 
     private int grownCapacity(int minimum) {
         // Within the demo bounds this is ArraysSupport.newLength's non-overflow branch.
-        long length = defaultEmpty ? Math.max(10, minimum)
+        long length = defaultEmpty ? Math.max(DEFAULT_CAPACITY, minimum)
                 : (long) elementData.length + Math.max(minimum - elementData.length, elementData.length >> 1);
         if (length > MAX_CAPACITY)
-            throw new IllegalArgumentException("Учебный лимит capacity: 256; вычисленный рост: " + length);
+            throw new IllegalArgumentException(
+                    "Учебный лимит capacity: " + MAX_CAPACITY + "; вычисленный рост: " + length);
         return (int) length;
     }
 
@@ -125,12 +132,12 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
                 op.index() > (op.type() == OperationType.ADD_AT ? size : size - 1)))
             throw new IllegalArgumentException("Индекс вне диапазона: " + op.index() + "; size = " + size);
         if (op.type() == OperationType.ADD || op.type() == OperationType.ADD_AT) {
-            if (size == MAX_SIZE) throw new IllegalArgumentException("Учебный лимит: 128 элементов");
+            if (size == MAX_SIZE) throw new IllegalArgumentException("Учебный лимит: " + MAX_SIZE + " элементов");
             if (size == elementData.length) grownCapacity(size + 1);
         }
         if (op.type() == OperationType.ENSURE_CAPACITY) {
             if (op.minCapacity() == null) throw new IllegalArgumentException("Укажите minCapacity (Java int)");
-            if (op.minCapacity() > elementData.length && !(defaultEmpty && op.minCapacity() <= 10))
+            if (op.minCapacity() > elementData.length && !(defaultEmpty && op.minCapacity() <= DEFAULT_CAPACITY))
                 grownCapacity(op.minCapacity());
         }
         var before = snapshot();
@@ -211,9 +218,10 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
                 case ENSURE_CAPACITY -> {
                     int minimum = op.minCapacity();
                     emit("CAPACITY_CHECKED", "capacity",
-                            "Default-empty и minCapacity ≤ 10: выделение не требуется; отрицательный minCapacity — no-op",
+                            "Default-empty и minCapacity ≤ " + DEFAULT_CAPACITY +
+                                    ": выделение не требуется; отрицательный minCapacity — no-op",
                             "minimumCapacity", minimum);
-                    if (minimum > elementData.length && !(defaultEmpty && minimum <= 10))
+                    if (minimum > elementData.length && !(defaultEmpty && minimum <= DEFAULT_CAPACITY))
                         reallocate(grownCapacity(minimum), "CAPACITY_RESERVED", minimum);
                 }
                 case TRIM_TO_SIZE -> {
@@ -224,7 +232,8 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
                 default -> throw new AssertionError(op.type());
             }
             emit("OPERATION_COMPLETED", "operation", "Операция завершена; состояние зафиксировано", "result", result);
-            return new Trace<>(1, "ARRAY_LIST", op, result, before, List.copyOf(recording), snapshot());
+            return new Trace<>(ArrayListSnapshot.SCHEMA_VERSION, "ARRAY_LIST", op, result, before,
+                    List.copyOf(recording), snapshot());
         } finally {
             recording = null;
             current = null;
@@ -343,7 +352,8 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
         }
         var last = steps.getLast();
         var result = (Result) last.details().get("result");
-        return new Trace<>(1, "ARRAY_LIST", new Operation(OperationType.SCENARIO, null, name), result, before,
+        return new Trace<>(ArrayListSnapshot.SCHEMA_VERSION, "ARRAY_LIST",
+                new Operation(OperationType.SCENARIO, null, name), result, before,
                 List.copyOf(steps), snapshot());
     }
 
