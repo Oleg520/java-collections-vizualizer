@@ -5,11 +5,11 @@ export default defineConfig({
   ...base,
   testIgnore: [],
   testMatch: "session-lifecycle.spec.ts",
-  webServer: (base.webServer as { command: string }[]).map((server) => ({
+  webServer: (base.webServer as { url: string }[]).map((server) => ({
     ...server,
     // Strict budgets reproduce the original failures; never reuse the broad-suite backend.
     reuseExistingServer: false,
-    ...(server.command.includes("make backend")
+    ...(server.url.endsWith("/api/v1/health")
       ? {
           env: {
             MAX_SESSIONS: "32",

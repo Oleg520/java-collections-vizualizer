@@ -29,7 +29,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "cd .. && make backend",
+      command:
+        'cd .. && "${JAVA_HOME:+$JAVA_HOME/bin/}java" -jar "$(sh scripts/backend-jar.sh)"',
       // The suite creates many isolated sessions from one localhost client.
       // Production limits remain unchanged and are covered by API limit tests.
       env: {
