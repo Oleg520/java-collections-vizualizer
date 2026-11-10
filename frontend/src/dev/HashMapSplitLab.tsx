@@ -1,3 +1,4 @@
+import "./HashMapSplitLab.css";
 import { useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MotionConfig } from "motion/react";
@@ -74,7 +75,7 @@ function HashMapSplitLab() {
   );
   const copies = nodes.filter((n) => logicalCounts.get(n.id)! > 1);
   return (
-    <main className="app-shell">
+    <main className="app-shell split-lab">
       <h1>HashMap split laboratory · local development only</h1>
       <p>
         Реальные Java-команды. Две копии записи имеют общий id и разные
