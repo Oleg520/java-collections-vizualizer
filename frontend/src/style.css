@@ -1152,6 +1152,16 @@ h1 > span {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
 }
+/* The desktop grid row must be sized by the bounded diagram + inline player,
+   not by the intrinsic height of a potentially very long event list.
+   Resolve the inspector's 100% minimum height after the row has been sized;
+   both internal panes then scroll without increasing document height. */
+@media (min-width: 1001px) {
+  .inspector {
+    height: 0;
+    min-height: 100%;
+  }
+}
 .inspector-panes {
   min-height: 0;
   display: grid;
