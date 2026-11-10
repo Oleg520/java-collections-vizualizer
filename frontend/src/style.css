@@ -1776,6 +1776,7 @@ h1 > span {
   }
   .scenario-list {
     display: flex;
+    overscroll-behavior-y: auto;
     gap: 6px;
     overflow: auto;
     align-items: stretch;

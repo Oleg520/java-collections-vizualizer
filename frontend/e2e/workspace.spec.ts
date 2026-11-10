@@ -343,5 +343,30 @@ test("ArrayList buffers and selection scroll inside one stable viewport", async 
     expect(
       await page.locator(".scenario-list").evaluate((el) => el.scrollLeft),
     ).toBeGreaterThan(0);
+    // A vertical gesture starting on the horizontal strip must still scroll the document.
+    await page.evaluate(() => scrollTo(0, 0));
+    const strip = (await page.locator(".scenario-list").boundingBox())!;
+    const point = {
+      x: strip.x + strip.width / 2,
+      y: strip.y + strip.height / 2,
+    };
+    const client = await page.context().newCDPSession(page);
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [point],
+    });
+    for (let i = 1; i <= 6; i++) {
+      await client.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ ...point, y: point.y - i * 20 }],
+      });
+      await page.evaluate(() => new Promise(requestAnimationFrame));
+    }
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+    await client.detach();
   }
 });
