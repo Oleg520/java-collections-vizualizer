@@ -1,37 +1,28 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 
-async function dockIsAvailable(page: Page, expanded = true) {
-  const dock = page.getByRole("region", {
+async function playerIsAvailable(page: Page, expanded = true) {
+  const player = page.getByRole("region", {
     name: "Управление воспроизведением",
     exact: true,
   });
-  const viewport = page.viewportSize()!;
-  await expect
-    .poll(async () => {
-      const r = (await dock.boundingBox())!;
-      const gap = viewport.height - r.y - r.height;
-      return gap >= 8 && gap <= 32;
-    })
-    .toBe(true);
-  const bounds = (await dock.boundingBox())!;
-  expect(bounds.y).toBeGreaterThan(0);
-  expect(bounds.width).toBeLessThanOrEqual(950);
-  if (
-    expanded &&
-    (await page.locator(".canvas-column").boundingBox())!.width >= 950
-  ) {
-    expect(bounds.width).toBeGreaterThanOrEqual(850);
-  }
-  expect(bounds.x).toBeGreaterThanOrEqual(8);
-  expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width - 8);
-  await expect
-    .poll(async () => {
-      const main = (await page.locator(".canvas-column").boundingBox())!;
-      const card = (await dock.boundingBox())!;
-      return Math.abs(card.x + card.width / 2 - main.x - main.width / 2);
-    })
-    .toBeLessThan(1);
-  for (const control of await dock
+  await player.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await expect(player).toHaveCSS("position", "static");
+  const bounds = (await player.boundingBox())!;
+  const column = (await page.locator(".canvas-column").boundingBox())!;
+  expect(bounds.x).toBeCloseTo(column.x, 0);
+  expect(bounds.width).toBeCloseTo(column.width, 0);
+  expect(
+    await player.evaluate((el) =>
+      el.previousElementSibling?.matches(
+        ".visualization,.array-diagram,.connecting",
+      ),
+    ),
+  ).toBe(true);
+  const diagram = (await page
+    .locator(".canvas-column > :first-child")
+    .boundingBox())!;
+  expect(bounds.y - diagram.y - diagram.height).toBeCloseTo(12, 0);
+  for (const control of await player
     .locator("button, input, select")
     .filter({ visible: true })
     .all()) {
@@ -39,24 +30,24 @@ async function dockIsAvailable(page: Page, expanded = true) {
     expect(
       await control.evaluate((element) => {
         const rect = element.getBoundingClientRect();
-        const card = element.closest(".playback-dock")!.getBoundingClientRect();
+        const card = element.closest(".playback")!.getBoundingClientRect();
         return rect.left >= card.left && rect.right <= card.right;
       }),
     ).toBe(true);
   }
-  const explanation = dock.getByRole("region", {
+  const explanation = player.getByRole("region", {
     name: "Пояснение текущего шага",
   });
   if (expanded) {
     await expect(explanation).toBeInViewport({ ratio: 1 });
-    await expect(dock.getByLabel("Позиция воспроизведения")).toBeVisible();
-    await expect(dock.getByLabel("Скорость воспроизведения")).toBeVisible();
+    await expect(player.getByLabel("Позиция воспроизведения")).toBeVisible();
+    await expect(player.getByLabel("Скорость воспроизведения")).toBeVisible();
   } else {
     await expect(explanation).toBeHidden();
-    await expect(dock.getByLabel("Позиция воспроизведения")).toBeHidden();
-    await expect(dock.getByLabel("Скорость воспроизведения")).toBeHidden();
+    await expect(player.getByLabel("Позиция воспроизведения")).toBeHidden();
+    await expect(player.getByLabel("Скорость воспроизведения")).toBeHidden();
   }
-  await expect(dock.getByLabel("История операций")).toHaveCount(0);
+  await expect(player.getByLabel("История операций")).toHaveCount(0);
   await expect(
     page.locator(".inspector").getByLabel("История операций"),
   ).toHaveCount(1);
@@ -67,21 +58,14 @@ async function dockIsAvailable(page: Page, expanded = true) {
   return bounds;
 }
 
-async function reachableWithoutDockOverlap(page: Page, target: Locator) {
+async function contentIsReachable(page: Page, target: Locator) {
   await target.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await expect
     .poll(async () => {
       const rect = (await target.boundingBox())!;
-      const dock = (await page.locator(".playback-dock").boundingBox())!;
-      const separate =
-        rect.x + rect.width <= dock.x ||
-        rect.x >= dock.x + dock.width ||
-        rect.y + rect.height <= dock.y ||
-        rect.y >= dock.y + dock.height;
       return (
-        rect.y >= 0 &&
-        rect.y + rect.height <= page.viewportSize()!.height &&
-        separate
+        rect.y >= (await page.locator(".app-header").boundingBox())!.height &&
+        rect.y + rect.height <= page.viewportSize()!.height
       );
     })
     .toBe(true);
@@ -99,7 +83,7 @@ async function pageEndIsReachable(page: Page) {
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   const viewport = page.viewportSize()!;
   const details = page.locator(".technical-details > :last-child");
-  await reachableWithoutDockOverlap(page, details);
+  await contentIsReachable(page, details);
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   if (viewport.width > 680) {
     await expect
@@ -123,7 +107,7 @@ async function pageEndIsReachable(page: Page) {
         Math.max(...columns.map((el) => el.getBoundingClientRect().bottom))
       );
     });
-    // The right column is beside the dock, so main must not append another dock-height gap.
+    // Only the normal main padding follows the columns; no playback spacer remains.
     expect(remaining).toBeLessThanOrEqual(24);
   }
 }
@@ -148,7 +132,7 @@ test("short ArrayList layouts retain bounded panes without redundant bottom spac
         await page
           .getByRole("button", { name: "Свернуть плеер", exact: true })
           .click();
-      await dockIsAvailable(page, expanded);
+      await playerIsAvailable(page, expanded);
       await pageEndIsReachable(page);
       // A short trace retains the same bounded workbench pane as a long one (#59).
       expect(
@@ -163,10 +147,7 @@ test("short ArrayList layouts retain bounded panes without redundant bottom spac
           .boundingBox())!.height,
         0,
       );
-      await reachableWithoutDockOverlap(
-        page,
-        page.locator(".array-buffer-heading"),
-      );
+      await contentIsReachable(page, page.locator(".array-buffer-heading"));
     }
     await page
       .getByRole("button", { name: "Развернуть плеер", exact: true })
@@ -193,7 +174,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     const position = await page.getByTestId("step-number").innerText();
     const history = await page.getByLabel("История операций").inputValue();
     const originalWrites = writes;
-    const expanded = await dockIsAvailable(page);
+    const expanded = await playerIsAvailable(page);
     const collapse = page.getByRole("button", {
       name: "Свернуть плеер",
       exact: true,
@@ -206,13 +187,10 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     });
     await expect(expand).toBeFocused();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
-    const compact = await dockIsAvailable(page, false);
+    const compact = await playerIsAvailable(page, false);
     expect(compact.height).toBeLessThan(expanded.height / 2);
     await expect(page.getByTestId("step-number")).toHaveText(position);
-    await reachableWithoutDockOverlap(
-      page,
-      page.getByLabel("История операций"),
-    );
+    await contentIsReachable(page, page.getByLabel("История операций"));
     await pageEndIsReachable(page);
     const next = page.getByRole("button", { name: "Шаг вперёд", exact: true });
     if (isMobile) await next.tap();
@@ -247,18 +225,18 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       page.getByRole("button", { name: "Пауза", exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Пауза", exact: true }).click();
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
     await expect(page.getByLabel("История операций")).toHaveValue(history);
     expect(writes).toBe(originalWrites);
   });
-  test(`playback stays at the viewport bottom through tree growth and scrolling (${reducedMotion})`, async ({
+  test(`playback stays below the bounded diagram through tree growth and scrolling (${reducedMotion})`, async ({
     page,
     isMobile,
   }) => {
     await page.emulateMedia({ reducedMotion });
     await page.goto("/");
     await expect(page.locator(".primary-button")).toBeEnabled();
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
     await expect(
       page.getByRole("button", { name: "Воспроизвести", exact: true }),
     ).toBeDisabled();
@@ -266,52 +244,39 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
     await expect(page.getByTestId("committed-size")).toHaveText("9");
     await page.getByRole("button", { name: "В начало", exact: true }).click();
-    const beforeGrowth = await dockIsAvailable(page);
+    await playerIsAvailable(page);
+    const beforeGrowth = await page.evaluate(
+      () => document.documentElement.scrollHeight,
+    );
     await page.getByRole("button", { name: "В конец", exact: true }).click();
     await expect(page.getByTestId("metric-size")).toHaveText("9");
-    const afterGrowth = await dockIsAvailable(page);
-    expect(afterGrowth.y).toBeCloseTo(beforeGrowth.y, 0);
+    await playerIsAvailable(page);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight),
+    ).toBe(beforeGrowth);
     if (!isMobile) {
-      // Resize the real workspace without implementing the future sidebar toggle.
+      // CSS layout follows a real workspace width change without measured offsets.
       await page
         .locator("main")
         .evaluate((el) => (el.style.width = "calc(100% - 100px)"));
-      await dockIsAvailable(page);
+      await playerIsAvailable(page);
       await page.locator("main").evaluate((el) => (el.style.width = ""));
-      await dockIsAvailable(page);
+      await playerIsAvailable(page);
     }
 
     await page.evaluate(() => scrollTo(0, 0));
     await page.mouse.move(page.viewportSize()!.width - 20, 30);
     await page.mouse.wheel(0, 350);
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
-    await dockIsAvailable(page);
-    await reachableWithoutDockOverlap(
-      page,
-      page.getByLabel("История операций"),
-    );
-    // Browser focus must uncover a control that was underneath the floating card.
-    await page.getByRole("button", { name: "В начало", exact: true }).focus();
-    await page.getByLabel("Скрыть пустые").evaluate((el) => {
-      const r = el.getBoundingClientRect();
-      const dock = document.getElementById("playback")!.getBoundingClientRect();
-      scrollBy(0, r.top + r.height / 2 - dock.top - dock.height / 2);
-    });
+    await playerIsAvailable(page);
+    await contentIsReachable(page, page.getByLabel("История операций"));
     await page.getByLabel("Скрыть пустые").focus();
-    await expect
-      .poll(async () => {
-        const r = (await page.getByLabel("Скрыть пустые").boundingBox())!;
-        return (
-          r.y + r.height <=
-          (await page.locator(".playback-dock").boundingBox())!.y
-        );
-      })
-      .toBe(true);
-    await reachableWithoutDockOverlap(page, page.locator(".technical-details"));
+    await contentIsReachable(page, page.getByLabel("Скрыть пустые"));
+    await contentIsReachable(page, page.locator(".technical-details"));
     await pageEndIsReachable(page);
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
 
-    // Focus, keyboard stepping and touch stay in the dock without scrolling it away.
+    // The skip link reaches the inline player; keyboard stepping and touch retain focus.
     await page.getByRole("button", { name: "В начало", exact: true }).click();
     await page
       .getByRole("link", { name: "К управлению воспроизведением" })
@@ -345,7 +310,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     const step = await page.getByTestId("step-number").innerText();
     await expect(page.getByTestId("step-number")).not.toHaveText(step);
     await page.getByRole("button", { name: "Пауза", exact: true }).click();
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
   });
 
   test(`ArrayList copying and long explanations remain usable on short screens (${reducedMotion})`, async ({
@@ -376,9 +341,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await expect(
       page.getByRole("region", { name: "Новый буфер" }),
     ).toBeVisible();
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
     // The bottom of the second buffer and the end of the page remain reachable.
-    await reachableWithoutDockOverlap(page, page.locator(".array-step"));
+    await contentIsReachable(page, page.locator(".array-step"));
     await pageEndIsReachable(page);
 
     await page
@@ -402,10 +367,10 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
         .poll(() => explanation.evaluate((el) => el.scrollTop))
         .toBeGreaterThan(0);
     }
-    await dockIsAvailable(page);
-    // Resizing to landscape recalculates the scroll area without stale spacer heights.
+    await playerIsAvailable(page);
+    // Responsive reflow keeps the player attached and the final content reachable.
     await page.setViewportSize({ width: 844, height: 390 });
-    await dockIsAvailable(page);
+    await playerIsAvailable(page);
     await pageEndIsReachable(page);
     expect(
       await page.evaluate(

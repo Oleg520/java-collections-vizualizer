@@ -2,20 +2,6 @@ import { test, expect, type Page, type Locator } from "@playwright/test";
 import type { CompactSessionTrace } from "../src/api/trace/decodeTrace";
 
 async function geometry(page: Page) {
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          parseFloat(
-            document.documentElement.style.getPropertyValue(
-              "--playback-height",
-            ),
-          ) ===
-          (document.querySelector(".playback-dock") as HTMLElement)
-            .offsetHeight,
-      ),
-    )
-    .toBe(true);
   return page.evaluate(() => ({
     page: document.documentElement.scrollHeight,
     inspector: document.querySelector(".inspector")!.getBoundingClientRect()
@@ -169,9 +155,9 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   ).toBeGreaterThan(before + 150);
   await expect
     .poll(async () => {
-      const dock = (await page.locator(".playback-dock").boundingBox())!;
+      const player = (await page.locator(".playback").boundingBox())!;
       const canvas = (await page.locator(".canvas-column").boundingBox())!;
-      return Math.abs(dock.x + dock.width / 2 - canvas.x - canvas.width / 2);
+      return Math.abs(player.x + player.width / 2 - canvas.x - canvas.width / 2);
     })
     .toBeLessThan(1);
   await expect(page.getByTestId("step-number")).toHaveText(position);

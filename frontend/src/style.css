@@ -22,12 +22,7 @@
   --sidebar-width: 240px;
   /* Bounded teaching panes; short screens keep ordinary document scrolling. */
   --visualization-height: clamp(540px, 64dvh, 760px);
-  --playback-edge: 12px;
   --workspace-bottom-gap: 16px;
-  --playback-clearance: calc(
-    var(--playback-height, 160px) + var(--playback-edge) +
-      env(safe-area-inset-bottom, 0px) + 12px
-  );
   color-scheme: dark;
 }
 * {
@@ -37,7 +32,7 @@
 }
 html {
   scroll-padding-top: calc(var(--header-height) + 12px);
-  scroll-padding-bottom: var(--playback-clearance);
+  scroll-padding-bottom: 12px;
 }
 body {
   margin: 0;
@@ -679,10 +674,9 @@ h1 > span {
 }
 .canvas-column {
   min-width: 0;
-  padding-bottom: max(
-    0px,
-    calc(var(--playback-clearance) - var(--workspace-bottom-gap))
-  );
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .panel-heading {
   display: flex;
@@ -989,26 +983,9 @@ h1 > span {
   color: #96ba78;
 }
 .playback {
+  width: 100%;
   padding: 10px 14px;
   background: #1a231b;
-}
-.playback-dock {
-  position: fixed;
-  z-index: 5;
-  bottom: calc(var(--playback-edge) + env(safe-area-inset-bottom, 0px));
-  left: var(--playback-center, 50%);
-  transform: translateX(-50%);
-  width: min(
-    900px,
-    calc(var(--playback-workspace-width, 100vw) - 2 * var(--playback-edge))
-  );
-  box-shadow: 0 8px 28px #0006;
-}
-.playback-dock.is-collapsed {
-  width: max-content;
-  max-width: calc(
-    var(--playback-workspace-width, 100vw) - 2 * var(--playback-edge)
-  );
 }
 .playback [hidden] {
   display: none;
@@ -1170,10 +1147,7 @@ h1 > span {
 }
 .inspector {
   background: #161f17;
-  height: calc(
-    var(--visualization-height) +
-      max(0px, var(--playback-clearance) - var(--workspace-bottom-gap))
-  );
+  align-self: stretch;
   min-height: 0;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr);
@@ -1626,12 +1600,6 @@ h1 > span {
   .inspector {
     height: var(--visualization-height);
   }
-  .workspace > main {
-    padding-bottom: var(--playback-clearance);
-  }
-  .canvas-column {
-    padding-bottom: 0;
-  }
   .workspace {
     --sidebar-width: 180px;
   }
@@ -2005,16 +1973,6 @@ h1 > span {
   }
   .connecting {
     min-height: 300px;
-  }
-}
-@media (max-width: 680px) {
-  .playback-dock {
-    left: 50%;
-    width: calc(100vw - 2 * var(--playback-edge));
-  }
-  .playback-dock.is-collapsed {
-    width: max-content;
-    max-width: calc(100vw - 2 * var(--playback-edge));
   }
 }
 @media (max-width: 400px) {
