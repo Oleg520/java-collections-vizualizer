@@ -351,10 +351,10 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
   await page.route(
     /\/scenarios\?collection=ARRAY_LIST$/,
     async (route) => {
+      const response = await route.fetch();
       await catalogGate;
-      await route.continue();
+      await route.fulfill({ response });
     },
-    { times: 1 },
   );
   await page.goto("/");
   await arrived;
