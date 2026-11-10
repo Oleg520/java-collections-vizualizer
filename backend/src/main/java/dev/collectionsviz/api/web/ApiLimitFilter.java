@@ -76,7 +76,7 @@ public class ApiLimitFilter extends OncePerRequestFilter {
         }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        json.writeValue(response.getOutputStream(), new ErrorResponse(1, code,
+        json.writeValue(response.getOutputStream(), new ErrorResponse(ErrorResponse.SCHEMA_VERSION, code,
                 "Слишком много запросов. Повторите через " + retryAfter + " сек.; команда не выполнена."));
     }
 }

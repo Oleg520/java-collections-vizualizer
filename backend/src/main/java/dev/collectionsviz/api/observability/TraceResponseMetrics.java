@@ -1,6 +1,7 @@
 package dev.collectionsviz.api.observability;
 
 import dev.collectionsviz.api.dto.SessionTrace;
+import dev.collectionsviz.api.trace.CompactTraceRegistry;
 import dev.collectionsviz.api.dto.CompactTraceResponse;
 
 import java.io.IOException;
@@ -44,9 +45,10 @@ public class TraceResponseMetrics extends OncePerRequestFilter implements Respon
                                   Class<? extends HttpMessageConverter<?>> converter, ServerHttpRequest request,
                                   ServerHttpResponse response) {
         Kind kind = null;
-        if (body instanceof CompactTraceResponse trace) kind = new Kind(trace.trace().collection(), "compact");
+        if (body instanceof CompactTraceResponse trace)
+            kind = new Kind(trace.trace().collection(), CompactTraceRegistry.COMPACT_ENCODING);
         else if (body instanceof SessionTrace<?> trace)
-            kind = new Kind(trace.trace().collection(), "full");
+            kind = new Kind(trace.trace().collection(), CompactTraceRegistry.FULL_ENCODING);
         if (kind != null && request instanceof ServletServerHttpRequest servlet)
             servlet.getServletRequest().setAttribute(TRACE, kind);
         return body;

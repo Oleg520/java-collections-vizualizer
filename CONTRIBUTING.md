@@ -125,3 +125,23 @@ one and reviewing its baseline belongs in a separate frontend formatting task.
 Apply these conventions going forward. Do not rewrite existing Git history,
 force-push rewritten published commits, or retroactively edit old PRs, issues,
 or documentation merely to change their language or naming.
+
+## Java values and defaults
+
+- Give shared rules an owner in the relevant model/component. Collection snapshot
+  `SCHEMA_VERSION` values also govern their trace/session envelopes; error schema
+  versions and compact wire encoding names have independent lifecycles. Avoid
+  generic `Constants` classes and sharing values just because their numbers match.
+- Keep request negotiation in `SnapshotProtocol`: `snapshotVersion=0` means
+  unspecified, never HashMap V1 support. HashMap requires V2 before reads/writes;
+  ArrayList retains its existing acceptance of 0/1/2. Missing/empty encoding selects
+  `full`, subject to the full-trace policy; `compact` is a request selector, while
+  `node-table-v2` and `array-frames-v1` identify response formats.
+- Deployment defaults and environment overrides belong in `application.yml`;
+  Java injects and validates them without repeating fallback defaults. Document
+  sentinels next to their interpretation (for example, automatic per-client quota).
+- Keep OpenJDK algorithm constants separate from collection teaching limits and
+  deployment settings. Reuse an existing constant for the same rule, including
+  reported bounds; leave routes, local JSON keys, ordinary arithmetic and concrete
+  scenario data inline. Preserve independent literal expectations and fixed wire
+  fixtures in contract tests so changing a constant cannot silently update the test.

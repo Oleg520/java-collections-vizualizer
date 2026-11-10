@@ -8,6 +8,9 @@ import java.util.Map;
 import io.micrometer.core.instrument.*;
 import org.springframework.stereotype.Component;
 
+import static dev.collectionsviz.api.trace.CompactTraceRegistry.COMPACT_ENCODING;
+import static dev.collectionsviz.api.trace.CompactTraceRegistry.FULL_ENCODING;
+
 /**
  * Only fixed, server-owned dimensions; never use request data as meter tags.
  */
@@ -25,10 +28,10 @@ public class ApiMetrics {
         creations = registry.counter("visualizer.api.admissions", "kind", "creation");
         work = registry.counter("visualizer.api.admissions", "kind", "work");
         traces = Map.of(
-                "HASH_MAP:compact", traceMeters(registry, "HASH_MAP", "compact"),
-                "HASH_MAP:full", traceMeters(registry, "HASH_MAP", "full"),
-                "ARRAY_LIST:compact", traceMeters(registry, "ARRAY_LIST", "compact"),
-                "ARRAY_LIST:full", traceMeters(registry, "ARRAY_LIST", "full"));
+                "HASH_MAP:" + COMPACT_ENCODING, traceMeters(registry, "HASH_MAP", COMPACT_ENCODING),
+                "HASH_MAP:" + FULL_ENCODING, traceMeters(registry, "HASH_MAP", FULL_ENCODING),
+                "ARRAY_LIST:" + COMPACT_ENCODING, traceMeters(registry, "ARRAY_LIST", COMPACT_ENCODING),
+                "ARRAY_LIST:" + FULL_ENCODING, traceMeters(registry, "ARRAY_LIST", FULL_ENCODING));
         Gauge.builder("visualizer.sessions.active", sessions, SessionStore::storedSessions)
                 .description("Occupied session slots; expired entries remain until ordinary cleanup/access")
                 .register(registry);

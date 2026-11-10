@@ -14,6 +14,10 @@ import java.util.function.Function;
  * Backend bindings keep transport encoding separate from domain registration.
  */
 public final class CompactTraceRegistry {
+    // Request selectors (also metric tags), distinct from collection-specific wire encodings.
+    public static final String FULL_ENCODING = "full";
+    public static final String COMPACT_ENCODING = "compact";
+
     public static final CompactTraceRegistry STANDARD = new CompactTraceRegistry(List.of(
             new Registration<>(CollectionRegistry.HASH_MAP, CompactTrace::encode),
             new Registration<>(CollectionRegistry.ARRAY_LIST, CompactArrayTrace::encode)));
@@ -50,9 +54,9 @@ public final class CompactTraceRegistry {
     }
 
     public static boolean requested(String encoding) {
-        if (!encoding.equals("full") && !encoding.equals("compact"))
+        if (!encoding.equals(FULL_ENCODING) && !encoding.equals(COMPACT_ENCODING))
             throw new IllegalArgumentException("encoding: full или compact");
-        return encoding.equals("compact");
+        return encoding.equals(COMPACT_ENCODING);
     }
 
     public Object encode(SessionTrace<?> response) {

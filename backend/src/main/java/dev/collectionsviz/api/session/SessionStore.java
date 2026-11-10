@@ -1,6 +1,7 @@
 package dev.collectionsviz.api.session;
 
 import dev.collectionsviz.api.dto.SessionState;
+import dev.collectionsviz.core.collections.hashmap.HashMapSnapshot;
 import dev.collectionsviz.api.dto.SnapshotProtocol;
 import dev.collectionsviz.api.dto.SessionTrace;
 import dev.collectionsviz.api.error.ApiException;
@@ -23,6 +24,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SessionStore {
+    /**
+     * Configuration sentinel: derive the per-client quota from the global limit.
+     */
+    private static final int AUTO_PER_CLIENT_LIMIT = 0;
+    private static final int AUTO_PER_CLIENT_CEILING = 32;
+    private static final int AUTO_PER_CLIENT_DIVISOR = 4;
+
     private static class Session {
         final UUID id = UUID.randomUUID();
         CollectionEngine<? extends Snapshot> engine;
@@ -45,14 +53,14 @@ public class SessionStore {
     private final Clock clock;
 
     @Autowired
-    public SessionStore(@Value("${visualizer.session-ttl-seconds:1800}") long ttlSeconds,
-                        @Value("${visualizer.max-sessions:128}") int maximum,
-                        @Value("${visualizer.max-sessions-per-client:0}") int maximumPerClient) {
+    public SessionStore(@Value("${visualizer.session-ttl-seconds}") long ttlSeconds,
+                        @Value("${visualizer.max-sessions}") int maximum,
+                        @Value("${visualizer.max-sessions-per-client}") int maximumPerClient) {
         this(ttlSeconds, maximum, maximumPerClient, Clock.systemUTC());
     }
 
     SessionStore(long ttlSeconds, int maximum, Clock clock) {
-        this(ttlSeconds, maximum, 0, clock);
+        this(ttlSeconds, maximum, AUTO_PER_CLIENT_LIMIT, clock);
     }
 
     SessionStore(long ttlSeconds, int maximum, int maximumPerClient, Clock clock) {
@@ -61,7 +69,9 @@ public class SessionStore {
         this.ttlMillis = ttlSeconds * 1000;
         this.maximum = maximum;
         this.clock = clock;
-        this.maximumPerClient = maximumPerClient == 0 ? Math.min(32, Math.max(1, maximum / 4)) : maximumPerClient;
+        this.maximumPerClient = maximumPerClient == AUTO_PER_CLIENT_LIMIT
+                ? Math.min(AUTO_PER_CLIENT_CEILING, Math.max(1, maximum / AUTO_PER_CLIENT_DIVISOR))
+                : maximumPerClient;
     }
 
     public SessionState create(int capacity) {
@@ -103,7 +113,7 @@ public class SessionStore {
      */
     public SessionState reset(UUID id, long expectedRevision, CollectionType collection, Integer capacity,
                               String owner) {
-        return reset(id, expectedRevision, collection, capacity, owner, 2);
+        return reset(id, expectedRevision, collection, capacity, owner, HashMapSnapshot.SCHEMA_VERSION);
     }
 
     public SessionState reset(UUID id, long expectedRevision, CollectionType collection, Integer capacity, String owner,
@@ -125,11 +135,11 @@ public class SessionStore {
     }
 
     public SessionTrace<?> execute(UUID id, long expectedRevision, Operation operation) {
-        return execute(id, expectedRevision, operation, 2);
+        return execute(id, expectedRevision, operation, HashMapSnapshot.SCHEMA_VERSION);
     }
 
     public SessionTrace<?> scenario(UUID id, long expectedRevision, String name) {
-        return scenario(id, expectedRevision, name, 2);
+        return scenario(id, expectedRevision, name, HashMapSnapshot.SCHEMA_VERSION);
     }
 
     public SessionTrace<?> execute(UUID id, long revision, Operation operation, int version) {
@@ -148,7 +158,7 @@ public class SessionStore {
                     "Состояние изменилось. Текущая версия: " + s.revision + ". Обновите сессию.");
             var trace = action.apply(s.engine);
             s.revision++;
-            return new SessionTrace<>(s.collection == CollectionType.HASH_MAP ? 2 : 1, id, s.revision, trace);
+            return new SessionTrace<>(SnapshotProtocol.schemaVersion(s.collection), id, s.revision, trace);
         });
     }
 
@@ -171,7 +181,7 @@ public class SessionStore {
     }
 
     private SessionState state(Session s) {
-        return new SessionState(s.collection == CollectionType.HASH_MAP ? 2 : 1, s.id, s.collection.name(), s.revision,
+        return new SessionState(SnapshotProtocol.schemaVersion(s.collection), s.id, s.collection.name(), s.revision,
                 ttlMillis / 1000, s.engine.snapshot());
     }
 

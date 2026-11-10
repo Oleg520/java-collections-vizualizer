@@ -10,10 +10,32 @@ import java.time.*;
 import java.util.concurrent.*;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SessionStoreTest {
+    @ParameterizedTest
+    @CsvSource({"1, 1", "3, 1", "4, 1", "32, 8", "128, 32", "256, 32"})
+    void zeroPerClientLimitUsesBoundedQuarterOfGlobalQuota(int maximum, int expected) {
+        var store = SessionFixtures.store(60, maximum, 0, new MutableClock());
+        for (int i = 0; i < expected; i++) store.create(0, "owner");
+        var error = assertThrows(ApiException.class, () -> store.create(0, "owner"));
+        assertEquals(maximum == expected ? "SESSION_LIMIT" : "CLIENT_SESSION_LIMIT", error.code);
+        assertEquals(expected, store.storedSessions());
+    }
+
+    @Test
+    void positivePerClientLimitOverridesAutomaticQuotaAndNegativeIsInvalid() {
+        var store = SessionFixtures.store(60, 128, 2, new MutableClock());
+        store.create(0, "owner");
+        store.create(0, "owner");
+        assertEquals("CLIENT_SESSION_LIMIT", assertThrows(ApiException.class, () -> store.create(0, "owner")).code);
+        assertNotNull(store.create(0, "another"));
+        assertThrows(IllegalArgumentException.class, () -> SessionFixtures.store(60, 128, -1, new MutableClock()));
+    }
+
     @Test
     void expiresInactiveSessionsAndEnforcesCapacity() {
         var clock = new MutableClock();

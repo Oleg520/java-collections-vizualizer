@@ -32,6 +32,7 @@ import java.lang.reflect.*;
 import java.util.function.LongSupplier;
 
 final class InstrumentedHashMap<K, V> {
+    // OpenJDK algorithm constants; teaching resource limits belong to HashMapEngine.
     static final int DEFAULT_INITIAL_CAPACITY = 16, MAXIMUM_CAPACITY = 1 << 30;
     static final int TREEIFY_THRESHOLD = 8, UNTREEIFY_THRESHOLD = 6, MIN_TREEIFY_CAPACITY = 64;
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
@@ -388,7 +389,9 @@ final class InstrumentedHashMap<K, V> {
         int n, index;
         Node<K, V> e;
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY) {
-            emit("TREEIFY_DEFERRED", "Длинная цепочка, но capacity < 64: resize вместо дерева", "minimumCapacity", 64,
+            emit("TREEIFY_DEFERRED",
+                    "Длинная цепочка, но capacity < " + MIN_TREEIFY_CAPACITY + ": resize вместо дерева",
+                    "minimumCapacity", MIN_TREEIFY_CAPACITY,
                     "capacity", tab == null ? 0 : tab.length);
             resize();
         } else if ((e = tab[index = (n - 1) & hash]) != null) {

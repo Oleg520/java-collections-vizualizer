@@ -41,12 +41,12 @@ public class ApiAdmission {
 
     @Autowired
     public ApiAdmission(
-            @Value("${visualizer.limits.window-seconds:60}") int windowSeconds,
-            @Value("${visualizer.limits.session-creations:30}") int createLimit,
-            @Value("${visualizer.limits.work-requests:600}") int workLimit,
-            @Value("${visualizer.limits.tracked-clients:4096}") int trackedLimit,
-            @Value("${visualizer.limits.concurrent-work:2}") int globalLimit,
-            @Value("${visualizer.limits.concurrent-work-per-client:1}") int clientLimit) {
+            @Value("${visualizer.limits.window-seconds}") int windowSeconds,
+            @Value("${visualizer.limits.session-creations}") int createLimit,
+            @Value("${visualizer.limits.work-requests}") int workLimit,
+            @Value("${visualizer.limits.tracked-clients}") int trackedLimit,
+            @Value("${visualizer.limits.concurrent-work}") int globalLimit,
+            @Value("${visualizer.limits.concurrent-work-per-client}") int clientLimit) {
         this(windowSeconds, createLimit, workLimit, trackedLimit, globalLimit, clientLimit, Clock.systemUTC());
     }
 

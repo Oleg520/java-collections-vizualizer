@@ -12,7 +12,7 @@ public class ClientAddress {
     public static final String HEADER = "X-JCV-Client-IP";
     private final Set<String> proxies = new HashSet<>();
 
-    public ClientAddress(@Value("${visualizer.trusted-proxies:}") String trustedProxies) {
+    public ClientAddress(@Value("${visualizer.trusted-proxies}") String trustedProxies) {
         for (String value : trustedProxies.split(",")) {
             if (value.isBlank()) continue;
             String ip = literal(value.trim());

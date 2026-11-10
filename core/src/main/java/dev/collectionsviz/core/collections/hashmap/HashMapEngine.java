@@ -17,7 +17,9 @@ import java.util.*;
  * Not thread safe: a session serializes access. Only immutable records leave this boundary.
  */
 public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
+    // Teaching limits, independent of OpenJDK capacities and treeification thresholds.
     public static final int MAX_ENTRIES = 128;
+    private static final int MAX_KEY_LENGTH = 64, MAX_VALUE_LENGTH = 128, MAX_TEACHING_IDS = 512;
     private final int initialCapacity;
     private final Map<String, Integer> collisionHashes = new HashMap<>();
     private InstrumentedHashMap<Object, String> map;
@@ -30,6 +32,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
     }
 
     public HashMapEngine(int initialCapacity) {
+        // API constructor choices are a teaching policy, not OpenJDK limits.
         if (initialCapacity != 0 && initialCapacity != 16 && initialCapacity != 32 && initialCapacity != 64)
             throw new IllegalArgumentException("Начальная ёмкость: 16, 32 или 64 (0 — стандартный конструктор)");
         this.initialCapacity = initialCapacity;
@@ -64,8 +67,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                 throw new IllegalArgumentException("NULL-ключ не имеет value/hashCode");
             return null;
         }
-        if (spec.value() == null || spec.value().length() > 64)
-            throw new IllegalArgumentException("Ключ должен содержать до 64 символов");
+        if (spec.value() == null || spec.value().length() > MAX_KEY_LENGTH)
+            throw new IllegalArgumentException("Ключ должен содержать до " + MAX_KEY_LENGTH + " символов");
         if (spec.type() != KeyType.COLLISION && spec.hashCodeOverride() != null)
             throw new IllegalArgumentException("hashCode задаётся только для учебного ключа");
         return switch (spec.type()) {
@@ -83,8 +86,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                 Integer previous = collisionHashes.get(spec.value());
                 if (previous != null && !previous.equals(spec.hashCodeOverride())) throw new IllegalArgumentException(
                         "hashCode этого ID уже закреплён: " + previous + ". Выполните reset для смены.");
-                if (previous == null && collisionHashes.size() >= 512)
-                    throw new IllegalArgumentException("Лимит 512 учебных ID; выполните reset");
+                if (previous == null && collisionHashes.size() >= MAX_TEACHING_IDS)
+                    throw new IllegalArgumentException("Лимит " + MAX_TEACHING_IDS + " учебных ID; выполните reset");
                 yield new TeachingKey(spec.value(), spec.hashCodeOverride());
             }
             default -> throw new IllegalArgumentException("Неизвестный ключ");
@@ -103,8 +106,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
             throw new IllegalArgumentException("Допустимые операции: PUT, GET, REMOVE, CLEAR, RESET");
         if (operation.index() != null || operation.element() != null || operation.minCapacity() != null)
             throw new IllegalArgumentException("HashMap не принимает поля ArrayList");
-        if (operation.value() != null && operation.value().length() > 128)
-            throw new IllegalArgumentException("Значение: до 128 символов");
+        if (operation.value() != null && operation.value().length() > MAX_VALUE_LENGTH)
+            throw new IllegalArgumentException("Значение: до " + MAX_VALUE_LENGTH + " символов");
         Object key = switch (operation.type()) {
             case PUT, GET, REMOVE -> key(operation.key());
             default -> null;
@@ -114,7 +117,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         if (operation.type() == OperationType.PUT) {
             existing = map.getNode(key);
             if (existing == null && map.size >= MAX_ENTRIES)
-                throw new IllegalArgumentException("Учебный лимит: 128 элементов");
+                throw new IllegalArgumentException("Учебный лимит: " + MAX_ENTRIES + " элементов");
         }
         if (key instanceof TeachingKey k) collisionHashes.putIfAbsent(k.id(), k.hashCode());
         var before = snapshot();
@@ -166,7 +169,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                 default -> throw new IllegalArgumentException("Неизвестная операция");
             }
             map.emit("OPERATION_COMPLETED", "Операция завершена; состояние зафиксировано", "size", map.size);
-            return new Trace<>(2, "HASH_MAP", operation, result, before, List.copyOf(recording), snapshot());
+            return new Trace<>(HashMapSnapshot.SCHEMA_VERSION, "HASH_MAP", operation, result, before,
+                    List.copyOf(recording), snapshot());
         } finally {
             recording = null;
             current = null;
@@ -205,7 +209,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         var before = snapshot();
         var steps = new ArrayList<Step<HashMapSnapshot>>();
         // Demonstrations own their constructor choice. The session's reset setting stays intact.
-        int scenarioCapacity = name.startsWith("tree") ? 64 : 0;
+        int scenarioCapacity = name.startsWith("tree") ? InstrumentedHashMap.MIN_TREEIFY_CAPACITY : 0;
         append(steps, execute(new Operation(OperationType.RESET, null, null), scenarioCapacity));
         Trace<HashMapSnapshot> last;
         switch (name) {
@@ -239,7 +243,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         for (var s : steps)
             indexed.add(new Step<>(indexed.size(), s.operation(), s.event(), s.stage(), s.message(), s.details(),
                     s.snapshot()));
-        return new Trace<>(2, "HASH_MAP", new Operation(OperationType.SCENARIO, null, name), last.result(), before,
+        return new Trace<>(HashMapSnapshot.SCHEMA_VERSION, "HASH_MAP",
+                new Operation(OperationType.SCENARIO, null, name), last.result(), before,
                 List.copyOf(indexed), snapshot());
     }
 
