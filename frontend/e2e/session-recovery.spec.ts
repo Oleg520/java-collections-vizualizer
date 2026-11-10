@@ -348,14 +348,11 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
     },
     { times: 1 },
   );
-  await page.route(
-    /\/scenarios\?collection=ARRAY_LIST$/,
-    async (route) => {
-      const response = await route.fetch();
-      await catalogGate;
-      await route.fulfill({ response });
-    },
-  );
+  await page.route(/\/scenarios\?collection=ARRAY_LIST$/, async (route) => {
+    const response = await route.fetch();
+    await catalogGate;
+    await route.fulfill({ response });
+  });
   await page.goto("/");
   await arrived;
   await page
@@ -374,4 +371,38 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
     page.getByRole("button", { name: "Выполнить add(E)", exact: true }),
   ).toBeEnabled();
   expect(creates).toBe(2);
+});
+
+test("zero or elapsed Retry-After does not leave recovery permanently disabled", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".primary-button")).toBeEnabled();
+  for (const retryAfter of ["0", "Tue, 10 Nov 2020 10:00:00 GMT"]) {
+    await page.route(
+      /\/commands\?encoding=compact$/,
+      (route) =>
+        route.fulfill({
+          status: 429,
+          headers: { "Retry-After": retryAfter },
+          body: "busy",
+        }),
+      { times: 1 },
+    );
+    await page.locator(".primary-button").click();
+    await expect(page.getByRole("alert")).toContainText(
+      "Слишком много запросов",
+    );
+    await expect(
+      page.getByRole("button", { name: "Обновить состояние", exact: true }),
+    ).toBeEnabled();
+    await expect(page.locator(".primary-button")).toBeEnabled();
+    await expect(page.locator(".primary-button .spin")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "Обновить состояние", exact: true })
+      .click();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+  }
+  await page.locator(".primary-button").click();
+  await expect(page.getByTestId("committed-size")).toHaveText("1");
 });

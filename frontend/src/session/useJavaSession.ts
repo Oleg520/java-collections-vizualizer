@@ -119,8 +119,9 @@ export function useJavaSession(playback: PlaybackActions) {
     if (session) setLastKnownSession(session);
   }, [session]);
   useEffect(() => {
-    if (retryAt <= Date.now()) return;
-    setNow(Date.now());
+    const currentTime = Date.now();
+    setNow(currentTime);
+    if (retryAt <= currentTime) return;
     const timer = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(timer);
   }, [retryAt, retryAt > now]);
