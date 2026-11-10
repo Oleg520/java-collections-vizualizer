@@ -89,9 +89,9 @@ export function ScenarioSidebar({
           J<span>21</span>
         </div>
         <p>
-          Алгоритм живёт в Java.
+          Java — источник истины.
           <br />
-          <span>Здесь вы видите каждый шаг.</span>
+          <span>React — представление.</span>
         </p>
       </div>
     </aside>

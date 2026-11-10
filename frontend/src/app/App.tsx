@@ -8,7 +8,6 @@ import {
 import { useRef, useState } from "react";
 import {
   ArrowUpRight,
-  Braces,
   ChevronRight,
   GitBranch,
   Github,
@@ -28,7 +27,7 @@ export default function App({
   localSplits,
 }: { localSplits?: LocalSplits } = {}) {
   const playback = useTracePlayback();
-  const workspaceRef = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
     collection,
@@ -131,7 +130,7 @@ export default function App({
           session={session}
           onDemo={demo}
         />
-        <main ref={workspaceRef}>
+        <main>
           <div className="page-heading">
             <div>
               <div className="breadcrumbs">
@@ -197,7 +196,7 @@ export default function App({
             {...statePresentation(snapshot, trace)}
           />
           <div className="lab-grid">
-            <div className="canvas-column">
+            <div className="canvas-column" ref={canvasRef}>
               {snapshot ? (
                 <view.Diagram
                   snapshot={snapshot}
@@ -229,15 +228,17 @@ export default function App({
                     {localSplits.jumpLabel}
                   </button>
                 )}
-              <OperationHistory
-                playback={playback}
-                onSelectHistory={(index) => {
-                  playback.selectHistory(index);
-                  setSelectedNodeId(undefined);
-                }}
-              />
             </div>
             <TraceInspector
+              history={
+                <OperationHistory
+                  playback={playback}
+                  onSelectHistory={(index) => {
+                    playback.selectHistory(index);
+                    setSelectedNodeId(undefined);
+                  }}
+                />
+              }
               algorithm={view.algorithm}
               sourceUrl={view.sourceUrl}
               trace={trace}
@@ -249,20 +250,9 @@ export default function App({
               navigate={navigate}
             />
           </div>
-          <footer className="page-footer">
-            <span>
-              <Braces size={13} /> Java — источник истины. React —
-              представление.
-            </span>
-            <span>128 элементов / сессия · шаги доступны без соединения</span>
-          </footer>
         </main>
       </div>
-      <PlaybackPanel
-        playback={playback}
-        step={step}
-        workspaceRef={workspaceRef}
-      />
+      <PlaybackPanel playback={playback} step={step} canvasRef={canvasRef} />
     </div>
   );
 }

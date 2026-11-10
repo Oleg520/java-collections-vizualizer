@@ -16,14 +16,17 @@ async function dockIsAvailable(page: Page, expanded = true) {
   const bounds = (await dock.boundingBox())!;
   expect(bounds.y).toBeGreaterThan(0);
   expect(bounds.width).toBeLessThanOrEqual(950);
-  if (expanded && (await page.locator("main").boundingBox())!.width >= 950) {
+  if (
+    expanded &&
+    (await page.locator(".canvas-column").boundingBox())!.width >= 950
+  ) {
     expect(bounds.width).toBeGreaterThanOrEqual(850);
   }
   expect(bounds.x).toBeGreaterThanOrEqual(8);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width - 8);
   await expect
     .poll(async () => {
-      const main = (await page.locator("main").boundingBox())!;
+      const main = (await page.locator(".canvas-column").boundingBox())!;
       const card = (await dock.boundingBox())!;
       return Math.abs(card.x + card.width / 2 - main.x - main.width / 2);
     })
@@ -54,6 +57,13 @@ async function dockIsAvailable(page: Page, expanded = true) {
     await expect(dock.getByLabel("Скорость воспроизведения")).toBeHidden();
   }
   await expect(dock.getByLabel("История операций")).toHaveCount(0);
+  await expect(
+    page.locator(".inspector").getByLabel("История операций"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator(".canvas-column").getByLabel("История операций"),
+  ).toHaveCount(0);
+  await expect(page.locator(".page-footer")).toHaveCount(0);
   return bounds;
 }
 
@@ -74,6 +84,30 @@ async function reachableAboveDock(page: Page, target: Locator) {
       );
     }),
   ).toBe(true);
+}
+
+async function pageEndIsReachable(page: Page) {
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  const viewport = page.viewportSize()!;
+  const details = page.locator(".technical-details > :last-child");
+  await reachableAboveDock(page, details);
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  if (viewport.width > 680) {
+    await expect
+      .poll(async () => {
+        const sidebar = (await page.locator(".sidebar").boundingBox())!;
+        return Math.abs(sidebar.y + sidebar.height - viewport.height);
+      })
+      .toBeLessThanOrEqual(1);
+  }
+  if (viewport.width > 1000) {
+    await expect(page.locator(".sidebar-bottom")).toContainText(
+      "Java — источник истины.",
+    );
+    await expect(page.locator(".sidebar-bottom")).toContainText(
+      "React — представление.",
+    );
+  }
 }
 
 for (const reducedMotion of ["no-preference", "reduce"] as const) {
@@ -112,7 +146,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     expect(compact.height).toBeLessThan(expanded.height / 2);
     await expect(page.getByTestId("step-number")).toHaveText(position);
     await reachableAboveDock(page, page.getByLabel("История операций"));
-    await reachableAboveDock(page, page.locator(".page-footer"));
+    await pageEndIsReachable(page);
     const next = page.getByRole("button", { name: "Шаг вперёд", exact: true });
     if (isMobile) await next.tap();
     else await next.click();
@@ -188,15 +222,15 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await reachableAboveDock(page, page.getByLabel("История операций"));
     // Browser focus must uncover a control that was underneath the floating card.
     await page.getByRole("button", { name: "В начало", exact: true }).focus();
-    await page.getByLabel("История операций").evaluate((el) => {
+    await page.getByLabel("Скрыть пустые").evaluate((el) => {
       const r = el.getBoundingClientRect();
       const dock = document.getElementById("playback")!.getBoundingClientRect();
       scrollBy(0, r.top + r.height / 2 - dock.top - dock.height / 2);
     });
-    await page.getByLabel("История операций").focus();
+    await page.getByLabel("Скрыть пустые").focus();
     await expect
       .poll(async () => {
-        const r = (await page.getByLabel("История операций").boundingBox())!;
+        const r = (await page.getByLabel("Скрыть пустые").boundingBox())!;
         return (
           r.y + r.height <=
           (await page.locator(".playback-dock").boundingBox())!.y
@@ -204,7 +238,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       })
       .toBe(true);
     await reachableAboveDock(page, page.locator(".technical-details"));
-    await reachableAboveDock(page, page.locator(".page-footer"));
+    await pageEndIsReachable(page);
     await dockIsAvailable(page);
 
     // Focus, keyboard stepping and touch stay in the dock without scrolling it away.
@@ -275,7 +309,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await dockIsAvailable(page);
     // The bottom of the second buffer and the end of the page remain reachable.
     await reachableAboveDock(page, page.locator(".array-step"));
-    await reachableAboveDock(page, page.locator(".page-footer"));
+    await pageEndIsReachable(page);
 
     await page
       .getByLabel("Элемент", { exact: true })
@@ -302,7 +336,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     // Resizing to landscape recalculates the scroll area without stale spacer heights.
     await page.setViewportSize({ width: 844, height: 390 });
     await dockIsAvailable(page);
-    await reachableAboveDock(page, page.locator(".page-footer"));
+    await pageEndIsReachable(page);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

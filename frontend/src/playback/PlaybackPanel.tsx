@@ -18,11 +18,11 @@ import type { useTracePlayback } from "./useTracePlayback";
 export function PlaybackPanel({
   playback,
   step,
-  workspaceRef,
+  canvasRef,
 }: {
   playback: ReturnType<typeof useTracePlayback>;
   step?: Step;
-  workspaceRef: RefObject<HTMLElement | null>;
+  canvasRef: RefObject<HTMLElement | null>;
 }) {
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
@@ -30,11 +30,11 @@ export function PlaybackPanel({
   const dockRef = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const dock = dockRef.current;
-    const workspace = workspaceRef.current;
-    if (!dock || !workspace) return;
+    const canvas = canvasRef.current;
+    if (!dock || !canvas) return;
     const root = document.documentElement;
     const update = () => {
-      const bounds = workspace.getBoundingClientRect();
+      const bounds = canvas.getBoundingClientRect();
       dock.style.setProperty(
         "--playback-center",
         `${bounds.left + bounds.width / 2}px`,
@@ -44,7 +44,7 @@ export function PlaybackPanel({
     };
     update();
     const observer = new ResizeObserver(update);
-    observer.observe(workspace);
+    observer.observe(canvas);
     observer.observe(dock);
     window.addEventListener("resize", update);
     return () => {
@@ -52,7 +52,7 @@ export function PlaybackPanel({
       window.removeEventListener("resize", update);
       root.style.removeProperty("--playback-height");
     };
-  }, [workspaceRef, collapsed]);
+  }, [canvasRef, collapsed]);
   return (
     <section
       ref={dockRef}

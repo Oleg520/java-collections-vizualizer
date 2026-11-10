@@ -30,7 +30,6 @@ html {
 }
 body {
   margin: 0;
-  padding-bottom: var(--playback-clearance);
 }
 .skip-playback:not(:focus) {
   position: absolute;
@@ -63,7 +62,7 @@ button {
 }
 button:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
+  cursor: default;
 }
 button {
   transition:
@@ -329,6 +328,9 @@ code {
 main {
   padding: 30px 30px 16px;
   min-width: 0;
+}
+.workspace > main {
+  padding-bottom: var(--playback-clearance);
 }
 .page-heading {
   display: flex;
@@ -1125,6 +1127,23 @@ h1 > span {
   border-radius: 3px;
   padding: 2px 4px;
 }
+.inspector-history {
+  grid-column: 1/-1;
+  border-bottom: 1px solid var(--line);
+}
+.inspector-history .history-bar {
+  margin: 0;
+  padding: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.inspector-history .history-bar select {
+  order: 3;
+  flex-basis: 100%;
+  width: 100%;
+  max-width: none;
+  min-height: 28px;
+}
 .inspector-title {
   display: flex;
   justify-content: space-between;
@@ -1312,21 +1331,6 @@ h1 > span {
   color: #b2ce98;
   font-size: 9px;
   margin-top: 16px;
-}
-.page-footer {
-  border-top: 1px solid #25331e;
-  margin-top: 8px;
-  padding-top: 15px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 8px;
-  color: #5e7951;
-}
-.page-footer > span:first-child {
-  display: flex;
-  align-items: center;
-  gap: 7px;
 }
 .error-banner,
 .loading-banner {
@@ -1520,7 +1524,7 @@ h1 > span {
   }
   .technical-details {
     grid-column: 2;
-    grid-row: 2/4;
+    grid-row: 3/5;
     border-top: 0;
     border-left: 1px solid var(--line);
     max-height: 345px;
@@ -1581,9 +1585,6 @@ h1 > span {
     line-height: 1.7;
   }
   .header-right .connection {
-    display: none;
-  }
-  .page-footer > span:last-child {
     display: none;
   }
 }
@@ -1885,11 +1886,18 @@ h1 > span {
   .error-banner .icon-button {
     margin-left: auto;
   }
-  .page-footer {
-    font-size: 7px;
-  }
   .connecting {
     min-height: 300px;
+  }
+}
+@media (max-width: 680px) {
+  .playback-dock {
+    left: 50%;
+    width: calc(100vw - 2 * var(--playback-edge));
+  }
+  .playback-dock.is-collapsed {
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--playback-edge));
   }
 }
 @media (max-width: 400px) {
