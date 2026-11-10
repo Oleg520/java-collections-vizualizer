@@ -112,6 +112,8 @@ footer отсутствует. Обычные collection-тесты сохран
 поэтому правый инспектор может доходить до конца viewport рядом с Dock.
 Проверки используют настоящий backend. [Скриншоты desktop/mobile](verification/playback-dock/)
 показывают раскрытое и свёрнутое состояние.
+Общий бюджет desktop/mobile-набора — 5 минут для одного worker, включая реальные
+15-секундные recovery-проверки; индивидуальные тайм-ауты тестов не увеличены.
 
 ```bash
 E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- playback-dock.spec.ts
