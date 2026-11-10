@@ -8,7 +8,7 @@
 сессий и одновременной работе. **429** возвращает `Retry-After` в секундах и код
 `RATE_LIMITED`, `WORK_LIMIT`, `CLIENT_TRACKING_LIMIT` либо `CLIENT_SESSION_LIMIT`;
 команда не исполняется, revision не меняется. Health и OPTIONS не ограничиваются.
-Подробности и безопасная настройка Caddy: [API_SECURITY.md](API_SECURITY.md).
+Подробности и безопасная настройка reverse proxy: [API_SECURITY.md](API_SECURITY.md).
 
 Для команд и сценариев указывайте `?encoding=compact`: full по умолчанию отключён.
 Правила и диагностический режим описаны в разделе компактного trace ниже.

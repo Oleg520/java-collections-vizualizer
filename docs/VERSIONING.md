@@ -53,7 +53,7 @@ make backend
 `scripts/backend-jar.sh` требует ровно один `backend-*.jar` и отклоняет отсутствующие,
 несколько устаревших JAR или симлинки. `.jar.original` не выбирается.
 
-Actions checkout получает полную историю и теги; ручной deploy собирает
+Actions checkout получает полную историю и теги; release workflow собирает
 неизменяемый dispatch SHA. Docker также использует `.git` и те же правила:
 запускайте `docker build -t collections-viz .` из обычного клона с каталогом `.git`.
 Для Git worktree, где `.git` — ссылка-файл на внешний каталог, сначала сделайте
@@ -65,33 +65,26 @@ Actions checkout получает полную историю и теги; ру�
 workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
 Обычные сборки выполняйте с включённым расширением.
 
-## Release artifacts and delivery
+## Релизные сборки и previews
 
-[Build release artifacts](RELEASE_ARTIFACTS.md) is a manual, credential-free
-main-only build. It requires the unique exact tag, runs the complete application
-checks and publishes a versioned backend/frontend bundle with a manifest.
-The API origin is a public build input; environment ownership and production
-delivery remain outside application build logic.
+[Build release artifacts](RELEASE_ARTIFACTS.md) — ручная сборка из `main` без
+production-секретов. Workflow требует единственный точный тег на dispatch SHA,
+выполняет проверки приложения и публикует backend/frontend с manifest.
+API origin — публичный параметр сборки. Формат bundle и правила проверки
+потребителем описаны в [контракте артефактов](RELEASE_ARTIFACTS.md).
 
-Release order remains **PR → merge → tag → verified build → backend deploy →
-frontend deploy → checks → GitHub Release**. The private coordinator consumes
-the same bundle after validating successful CI, SHA/tag, hashes and environment
-compatibility. Publish the Release only after delivery checks; never mutate
-the existing 0.3.2 tag or Release.
+Оба компонента собираются с одного SHA и одной версией. Backend должен сохранять
+совместимость с предыдущим frontend и уже открытыми вкладками; равенство строк
+версий само по себе не доказывает совместимость API. Перезапуск теряет сессии
+в памяти. Ставьте тег до сборки релизных байтов и сохраняйте проверенный bundle:
+пересборка того же SHA с другим набором тегов меняет версию и содержимое JAR.
+Не перемещайте опубликованные теги и не заменяйте существующие артефакты.
 
-Backend rollout must remain compatible with the preceding frontend and open
-tabs. Version equality alone does not prove API compatibility. Restart loses
-in-memory sessions. The same deployed source SHA cannot acquire different JAR
-bytes: tag before the first deployment, retain immutable bytes and use a new
-reviewed source commit for a new release.
+Git-based frontend previews используют `scripts/fetch-version-tags.sh` перед
+сборкой: скрипт получает annotated/lightweight tags даже в shallow checkout
+и проверяет `CF_PAGES_COMMIT_SHA == HEAD`. Ошибка fetch останавливает сборку;
+без точного релизного тега интерфейс показывает `dev`.
+Настройки сборки preview — в [RELEASE_ARTIFACTS.md](RELEASE_ARTIFACTS.md#static-hosting-and-previews).
 
-The legacy direct-deployment workflows are removed by this PR when merged in the
-approved handoff described in [deployment overview](../deploy/README.md).
-Do not activate two production coordinators simultaneously. No push/PR/tag
-automatically deploys production. Git-based frontend previews still fetch tags
-with scripts/fetch-version-tags.sh and show dev without an exact release tag.
-Keep their existing Root/Build/Output configuration.
-
-All tag tests run in temporary repositories, without publishing tags. Local
-development, PR creation and builds do not authorize merge, release creation,
-production access or cutover.
+Тесты тегов выполняются во временных репозиториях без публикации тегов.
+PR и push не запускают release workflow или production delivery.

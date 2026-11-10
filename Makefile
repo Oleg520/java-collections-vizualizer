@@ -1,4 +1,10 @@
-.PHONY: build test backend frontend e2e
+.PHONY: setup build test backend frontend e2e
+
+# Prepare a fresh clone for the two-terminal development workflow.
+setup:
+	./mvnw -B clean package -DskipTests
+	npm --prefix frontend ci
+
 build:
 	./mvnw -B clean verify
 	npm --prefix frontend ci
@@ -9,7 +15,7 @@ test:
 	npm --prefix frontend test
 
 backend:
-	java -jar "$$(sh scripts/backend-jar.sh)"
+	"$${JAVA_HOME:+$$JAVA_HOME/bin/}java" -jar "$$(sh scripts/backend-jar.sh)"
 
 frontend:
 	npm --prefix frontend run dev

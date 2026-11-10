@@ -5,7 +5,7 @@
 
 **[Открыть приложение](https://java-collections-vizualizer.pages.dev)** ·
 [Контракт API](docs/API.md) ·
-[Сборка и доставка](deploy/README.md)
+[Архитектура](docs/ARCHITECTURE.md)
 
 Это **учебная инструментированная реализация, ориентированная на OpenJDK 21**.
 Она исполняет алгоритм на Java и создаёт события непосредственно в ходе выполнения.
@@ -32,46 +32,68 @@
 | `core/` | Java 21: инструментированные HashMap / ArrayList, события и неизменяемые снимки |
 | `backend/` | Spring Boot: REST API, сессии, compact trace и ограничения запросов |
 | `frontend/` | React, TypeScript, Vite, Tailwind CSS, Motion и SVG |
-| `deploy/` | Конфигурации и проверяемые скрипты доставки backend |
+| `scripts/` | Git-версионирование, упаковка артефактов и локальные измерения |
 
 Java исполняет алгоритм и формирует trace; React размещает узлы и воспроизводит
 готовые снимки. Перемотка не вызывает API и не меняет состояние коллекции.
 
 ## Быстрый запуск
 
-Нужны **JDK 21** (`java` в PATH либо `JAVA_HOME`), **Node.js 22.12+** и npm, **Git** и POSIX shell (`sh`). Сборка выполняется из Git checkout с тегами.
-Maven 3.9.11 скачивается Maven Wrapper; отдельно устанавливать Maven не нужно.
-Первый запуск сборки требует сети для загрузки зависимостей.
+Нужны **JDK 21**, **Node.js 22.12+ из ветки 22 или Node.js 24+**, npm,
+Git и POSIX shell (`sh`). Для команд `make` нужен GNU Make.
+Maven Wrapper сам скачает Maven 3.9.11. Первый запуск требует сети для зависимостей.
+Windows: используйте WSL или Git Bash; для `mvnw.cmd` также нужен `sh` в PATH.
 
 ```bash
-./mvnw clean verify
-npm --prefix frontend ci
-npm --prefix frontend run build
+git clone https://github.com/Oleg520/java-collections-vizualizer.git
+cd java-collections-vizualizer
+make setup
 ```
 
-В первом терминале:
+`make setup` собирает исполняемый backend и устанавливает frontend-зависимости.
+JDK выбирается через `JAVA_HOME` либо `java` в PATH. Настройки и секреты для
+локального запуска не нужны: используются defaults приложения.
+
+В первом терминале из корня проекта:
 
 ```bash
-java -jar "$(sh scripts/backend-jar.sh)"
+make backend
 ```
 
-Во втором:
+Во втором терминале из корня проекта:
 
 ```bash
-npm --prefix frontend run dev
+make frontend
 ```
 
 Откройте **http://127.0.0.1:5173**. Vite проксирует `/api` на `http://127.0.0.1:8080`.
-Проверка backend: `curl http://127.0.0.1:8080/api/v1/health`.
-Windows: запускайте команды в Git Bash; при использовании `mvnw.cmd` также нужен `sh` в PATH. Альтернативно доступны
-`make build`, `make backend`, `make frontend`, `make test`, `make e2e`.
+Проверка backend: `curl --fail http://127.0.0.1:8080/api/v1/health`.
+Остановить каждый процесс можно через Ctrl+C. Изменения frontend подхватывает Vite;
+после изменений Java повторите `make setup` и перезапустите backend.
 
-Для разработки backend с Spring Boot:
+Без Make эквивалентные команды:
 
 ```bash
-./mvnw install -DskipTests
+./mvnw -B clean package -DskipTests
+npm --prefix frontend ci
+# Первый терминал (java из JDK 21 должен быть в PATH):
+java -jar "$(sh scripts/backend-jar.sh)"
+# Второй терминал:
+npm --prefix frontend run dev
+```
+
+Для запуска Java через Spring Boot Maven plugin:
+
+```bash
+./mvnw -B install -DskipTests
 ./mvnw -pl backend spring-boot:run
 ```
+
+Сборка использует Git checkout и точные теги; ZIP исходников не подходит.
+После смены коммита пересоберите backend, чтобы удалить старые JAR.
+Если порт занят, остановите прежний процесс. Параметры API описаны в
+[API security](docs/API_SECURITY.md), локальная диагностика — в
+[Observability](docs/OBSERVABILITY.md).
 
 ## Проверка
 
@@ -79,24 +101,43 @@ Windows: запускайте команды в Git Bash; при использ�
 ./mvnw verify
 npm --prefix frontend run build
 npm --prefix frontend test
+python3 -m unittest discover -s scripts/tests -v
 ```
 
-[Полная проверка, E2E и измерение ресурсов](docs/TESTING.md).
+`make build` проверяет Java и собирает frontend; `make test` запускает Maven и Vitest
+после `make setup`. Для E2E установите Chromium:
 
-## Docker и размещение
+```bash
+npm --prefix frontend exec -- playwright install --with-deps chromium
+make e2e
+npm --prefix frontend run test:e2e:lifecycle
+```
+
+Playwright запускает серверы сам. Перед lifecycle-прогоном освободите порты
+8080/5173. [Полная проверка, E2E и измерение ресурсов](docs/TESTING.md).
+
+## Docker
+
+Docker Compose запускает только backend; JDK на хосте не требуется:
 
 ```bash
 docker compose up --build
+# В другом терминале:
+npm --prefix frontend ci
+npm --prefix frontend run dev
 ```
 
-Docker требует обычный Git clone с каталогом `.git`; ZIP и Git worktree для
-контейнерной сборки не подходят. Backend доступен на `http://localhost:8080`.
-Frontend запускается отдельно. Для размещения frontend задайте `VITE_API_URL`
-(HTTPS origin backend без `/api/v1`) до сборки и точный `ALLOWED_ORIGINS` у backend.
-Пример локального окружения: [frontend/.env.example](frontend/.env.example).
+Backend доступен на **http://127.0.0.1:8080**, интерфейс — на
+**http://127.0.0.1:5173**. Остановка: `docker compose down`.
+Не запускайте одновременно Java backend и Compose на одном порту.
+Docker требует обычный Git clone с каталогом `.git`; ZIP и Git worktree
+для контейнерной сборки не подходят. Контейнер запускает тесты при сборке,
+содержит JRE и JAR и работает без root. Management-порт не публикуется.
 
-Frontend размещается на hosting для статических файлов, backend — отдельный Java-процесс.
-[Релизные артефакты](docs/RELEASE_ARTIFACTS.md) · [Описание доставки](deploy/README.md) · [Версии и релизы](docs/VERSIONING.md).
+Для отдельного статического hosting задайте `VITE_API_URL` до сборки frontend
+и точные `ALLOWED_ORIGINS` у backend. Локально оставьте
+[frontend/.env.example](frontend/.env.example) без изменений; копировать его
+не требуется. [Настройки preview и релизных артефактов](docs/RELEASE_ARTIFACTS.md).
 
 ## Ограничения
 
@@ -112,6 +153,8 @@ ArrayList: до 128 элементов, 256 выделенных ячеек, з�
 - [Контракт API](docs/API.md) и [OpenAPI](docs/openapi.yml)
 - [Ограничения API и доверие proxy](docs/API_SECURITY.md)
 - [Проверки](docs/TESTING.md) и [результаты измерений](docs/verification/README.md)
+- [Надёжность](docs/RELIABILITY.md) и [направление развития архитектуры](docs/ARCHITECTURE_VISION.md)
+- [Версионирование](docs/VERSIONING.md) и [контракт артефактов](docs/RELEASE_ARTIFACTS.md)
 - [Участие в разработке](CONTRIBUTING.md)
 - [Мобильный интерфейс](docs/hashmap-mobile.png)
 

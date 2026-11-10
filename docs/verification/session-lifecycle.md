@@ -1,7 +1,7 @@
 # Session lifecycle investigation for 0.3.1
 
-Investigation date: 2026-11-08. No production configuration, service, release,
-repository settings or deployment was changed during this investigation.
+Local regression analysis for the session reuse fix introduced in 0.3.1.
+This document records the failure mechanism and reproducible checks.
 
 ## Confirmed causes
 
@@ -11,33 +11,16 @@ TTL; switching dropped the client's reference without retiring the server entry.
 With MAX_SESSIONS=32 and automatic per-client sizing, the live limit is 8/IP.
 This reproduces CLIENT_SESSION_LIMIT even when requests are spaced across windows.
 
-Read-only inspection of the running backend confirmed the relevant production
-settings: MAX_SESSIONS=32, automatic per-client sizing, SESSION_CREATE_RATE_LIMIT=6,
-WORK_RATE_LIMIT=120, RATE_WINDOW_SECONDS=60, and one concurrent work request/IP.
-A separate create-rate budget is consumed before MVC, including admitted creations
-that later fail live-quota validation. Repeated switches/recovery attempts can
-therefore exhaust six creations in a minute and return RATE_LIMITED before reaching
-the eight-live-session limit. RATE_LIMITED does not identify which individual
-person consumed a shared IP budget. Historical counters/request attribution were
-not available, so the second user's specific incident cannot be assigned to a
-particular burst, NAT, or proxy misidentification.
+A reproducible strict local configuration uses MAX_SESSIONS=32, automatic
+per-client sizing, SESSION_CREATE_RATE_LIMIT=6, WORK_RATE_LIMIT=120,
+RATE_WINDOW_SECONDS=60 and one concurrent work request/IP. The create budget
+is consumed before MVC, including admitted creations later rejected by live
+quota validation. Repeated creation attempts can exhaust six creations/minute
+before reaching eight live sessions. Users behind NAT share the same IP budget.
 
-## Proxy hypothesis: not confirmed
-
-The running Java process trusts only the configured loopback proxy literals.
-The backend listener is IPv4-mapped loopback, which ClientAddress normalizes.
-The on-disk application Caddy route overwrites the custom client header with the
-socket's remote host, and the main Caddy configuration imports that route.
-No evidence of a missing TRUSTED_PROXIES setting or an exposed backend listener
-was found. Arbitrary client Forwarded/X-Forwarded-For headers are ignored.
-
-The Caddy admin endpoint could not be queried. Consequently, the loaded runtime
-route and the resolved identities of two historical external users were not
-independently observed. The owner should verify that the running route matches
-the reviewed file and overwrites duplicate/spoofed custom headers, and compare
-resolved identities from two genuinely distinct network clients using approved,
-privacy-preserving diagnostics. Shared NAT addresses legitimately share quotas.
-No change to proxy trust is justified by the available evidence.
+Arbitrary Forwarded/X-Forwarded-For headers are ignored. Proxy trust and header
+validation are covered by [API security](../API_SECURITY.md); do not broaden
+trusted proxies to compensate for session accumulation.
 
 ## Fix and remaining limits
 
@@ -86,25 +69,3 @@ reconfigure a slot safely; it fails visibly instead of falling back to creation.
 A backend restart expires in-memory sessions; the new backend's explicit
 SESSION_NOT_FOUND then permits one replacement. Network failures/409 followed by
 an unrecognized recovery GET 404 never discard a known UUID.
-
-Historical read-only version/release check on 2026-11-08 (not current deployment instructions):
-
-- Latest published GitHub Release: 0.2.1; the 0.3.0 Release remains a draft.
-- Existing immutable tag 0.3.0 points at d73f0d9e26529dbd0ffb921055f7f25403340737.
-- Production health and the published frontend bundle both report 0.3.0.
-- Netlify's attempted production build for 27577c4 was not published because the
-  account credit quota was exhausted. This must be resolved by the owner before
-  a future frontend release can be verified; this work changes no hosting settings.
-- Next unused patch version: 0.3.1. Do not reuse or move 0.3.0 just because its
-  GitHub Release is still a draft. No tag/release/deploy is part of this fix.
-
-At the time of this investigation, automatic Netlify builds on main could publish the frontend
-before a separately dispatched backend rollout. The owner must coordinate this
-window: the fix safely reports incompatibility, but cannot make an old backend
-implement /reset. There is intentionally no version-string-based fallback or
-create-on-error workaround. The temporary local-only Playwright configuration
-that disabled managed test servers has been removed; CI uses the isolated runners.
-
-Current hosting and coordinated release instructions are in [deployment](../../deploy/README.md)
-and [versioning](../VERSIONING.md). Production 0.3.2 subsequently migrated to Cloudflare Pages;
-the historical observations above do not describe current hosting or the next release number.
