@@ -40,57 +40,54 @@ Java исполняет алгоритм и формирует trace; React ра
 ## Быстрый запуск
 
 Нужны **JDK 21**, **Node.js 22.12+ из ветки 22 или Node.js 24+**, npm,
-Git и POSIX shell (`sh`). Для команд `make` нужен GNU Make.
-Maven Wrapper сам скачает Maven 3.9.11. Первый запуск требует сети для зависимостей.
+Git и POSIX shell (`sh`). Maven Wrapper сам скачает Maven 3.9.11;
+отдельно устанавливать Maven не нужно. Первый запуск требует сети для зависимостей.
 Windows: используйте WSL или Git Bash; для `mvnw.cmd` также нужен `sh` в PATH.
+JDK выбирается через `JAVA_HOME` либо `java` в PATH.
+
+Клонируйте репозиторий и установите зависимости из его корня:
 
 ```bash
 git clone https://github.com/Oleg520/java-collections-vizualizer.git
 cd java-collections-vizualizer
-make setup
+./mvnw -B clean install -DskipTests
+npm --prefix frontend ci
 ```
 
-`make setup` собирает исполняемый backend и устанавливает frontend-зависимости.
-JDK выбирается через `JAVA_HOME` либо `java` в PATH. Настройки и секреты для
-локального запуска не нужны: используются defaults приложения.
+Maven собирает оба модуля и устанавливает родительский POM и `core` в локальный
+Maven repository: они нужны для отдельного запуска `backend`.
+Все зависимости доступны публично. Настройки, секреты и дополнительные
+Spring-профили для локального запуска не нужны: используются defaults приложения.
 
 В первом терминале из корня проекта:
 
 ```bash
-make backend
+./mvnw -pl backend spring-boot:run
 ```
 
 Во втором терминале из корня проекта:
 
 ```bash
-make frontend
+npm --prefix frontend run dev
 ```
 
 Откройте **http://127.0.0.1:5173**. Vite проксирует `/api` на `http://127.0.0.1:8080`.
 Проверка backend: `curl --fail http://127.0.0.1:8080/api/v1/health`.
-Остановить каждый процесс можно через Ctrl+C. Изменения frontend подхватывает Vite;
-после изменений Java повторите `make setup` и перезапустите backend.
-
-Без Make эквивалентные команды:
+Остановить каждый процесс можно через Ctrl+C. Изменения frontend подхватывает Vite.
+После изменений Java остановите backend, пересоберите оба модуля и запустите его снова:
 
 ```bash
-./mvnw -B clean package -DskipTests
-npm --prefix frontend ci
-# Первый терминал (java из JDK 21 должен быть в PATH):
-java -jar "$(sh scripts/backend-jar.sh)"
-# Второй терминал:
-npm --prefix frontend run dev
-```
-
-Для запуска Java через Spring Boot Maven plugin:
-
-```bash
-./mvnw -B install -DskipTests
+./mvnw -B clean install -DskipTests
 ./mvnw -pl backend spring-boot:run
 ```
 
+Повторный `install` обновляет в том числе изменённый `core`.
+Не добавляйте `-am` к `spring-boot:run`: Maven попытается запустить также
+родительский модуль и `core`, в которых нет Spring Boot main-класса.
+
 Сборка использует Git checkout и точные теги; ZIP исходников не подходит.
-После смены коммита пересоберите backend, чтобы удалить старые JAR.
+После смены коммита или тегов повторите `clean install`: Git определяет версии
+всех модулей, поэтому зависимости предыдущего коммита не подходят.
 Если порт занят, остановите прежний процесс. Параметры API описаны в
 [API security](docs/API_SECURITY.md), локальная диагностика — в
 [Observability](docs/OBSERVABILITY.md).
@@ -104,16 +101,19 @@ npm --prefix frontend test
 python3 -m unittest discover -s scripts/tests -v
 ```
 
-`make build` проверяет Java и собирает frontend; `make test` запускает Maven и Vitest
-после `make setup`. Для E2E установите Chromium:
+Команды выполняются из корня после установки зависимостей.
+`verify` запускает Java-тесты и собирает исполняемый backend JAR.
+Python 3 нужен только для проверок Git-версий и упаковки.
+Для E2E установите Chromium:
 
 ```bash
 npm --prefix frontend exec -- playwright install --with-deps chromium
-make e2e
+npm --prefix frontend run test:e2e
 npm --prefix frontend run test:e2e:lifecycle
 ```
 
-Playwright запускает серверы сам. Перед lifecycle-прогоном освободите порты
+Playwright запускает собранный JAR и Vite сам; после изменений Java сначала
+повторите `./mvnw clean verify`. Перед lifecycle-прогоном освободите порты
 8080/5173. [Полная проверка, E2E и измерение ресурсов](docs/TESTING.md).
 
 ## Docker

@@ -46,10 +46,13 @@ npm --prefix frontend ci
 npm --prefix frontend run build
 npm --prefix frontend test
 python3 -m unittest discover -s scripts/tests -v
-make backend
+java -jar "$(sh scripts/backend-jar.sh)"
 ```
 
-После смены коммита или тегов используйте `clean verify`. Общий селектор
+Это проверка собранного JAR; для разработки через `spring-boot:run` используйте
+`clean install -DskipTests` и `./mvnw -pl backend spring-boot:run`, как в
+[README](../README.md#быстрый-запуск). После смены коммита или тегов повторите
+`clean verify` (JAR) или `clean install` (запуск через Maven). Общий селектор
 `scripts/backend-jar.sh` требует ровно один `backend-*.jar` и отклоняет отсутствующие,
 несколько устаревших JAR или симлинки. `.jar.original` не выбирается.
 
