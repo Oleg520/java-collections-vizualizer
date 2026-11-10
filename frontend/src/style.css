@@ -19,6 +19,7 @@
   --lime: #c5ef86;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --playback-edge: 12px;
+  --workspace-bottom-gap: 16px;
   --playback-clearance: calc(var(--playback-height, 160px) + var(--playback-edge) + env(safe-area-inset-bottom, 0px) + 12px);
   color-scheme: dark;
 }
@@ -180,6 +181,7 @@ code {
   max-width: 1920px;
   margin: auto;
   min-height: calc(100vh - 76px);
+  min-height: calc(100dvh - 76px);
 }
 .sidebar {
   border-right: 1px solid var(--line);
@@ -326,11 +328,11 @@ code {
   color: #6e8172;
 }
 main {
-  padding: 30px 30px 16px;
+  padding: 30px 30px var(--workspace-bottom-gap);
   min-width: 0;
 }
 .workspace > main {
-  padding-bottom: var(--playback-clearance);
+  align-self: start;
 }
 .page-heading {
   display: flex;
@@ -611,6 +613,7 @@ h1 > span {
 }
 .canvas-column {
   min-width: 0;
+  padding-bottom: max(0px, calc(var(--playback-clearance) - var(--workspace-bottom-gap)));
 }
 .panel-heading {
   display: flex;
@@ -1160,7 +1163,7 @@ h1 > span {
   letter-spacing: 0.7px;
 }
 .event-list {
-  height: 410px;
+  max-height: 410px;
   overflow: auto;
   padding: 0 7px 12px;
   scrollbar-width: thin;
@@ -1291,7 +1294,7 @@ h1 > span {
   right: 10px;
 }
 .algorithm-list {
-  height: 410px;
+  max-height: 410px;
   overflow: auto;
   padding: 0 15px 15px;
 }
@@ -1405,13 +1408,14 @@ h1 > span {
   }
   .workspace {
     grid-template-columns: 260px minmax(0, 1fr);
+    --workspace-bottom-gap: 20px;
   }
   .diagram-scroll {
     min-height: 365px;
   }
   .event-list,
   .algorithm-list {
-    height: 465px;
+    max-height: 465px;
   }
   .empty-diagram {
     min-height: 365px;
@@ -1500,6 +1504,12 @@ h1 > span {
   }
 }
 @media (max-width: 1000px) {
+  .workspace > main {
+    padding-bottom: var(--playback-clearance);
+  }
+  .canvas-column {
+    padding-bottom: 0;
+  }
   .workspace {
     grid-template-columns: 180px minmax(0, 1fr);
   }
@@ -1519,7 +1529,7 @@ h1 > span {
   }
   .event-list,
   .algorithm-list {
-    height: 300px;
+    max-height: 300px;
     grid-column: 1;
   }
   .technical-details {
@@ -1589,6 +1599,9 @@ h1 > span {
   }
 }
 @media (max-width: 680px) {
+  .workspace > main {
+    align-self: stretch;
+  }
   .app-header {
     height: 62px;
     padding: 0 17px;
@@ -1618,6 +1631,9 @@ h1 > span {
   .workspace {
     display: flex;
     flex-direction: column;
+    --workspace-bottom-gap: 15px;
+    min-height: calc(100vh - 62px);
+    min-height: calc(100dvh - 62px);
   }
   .sidebar {
     border-right: 0;
@@ -1866,7 +1882,7 @@ h1 > span {
   }
   .event-list,
   .algorithm-list {
-    height: 280px;
+    max-height: 280px;
   }
   .inspector-tabs button {
     padding: 14px;
