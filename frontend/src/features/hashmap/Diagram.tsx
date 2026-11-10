@@ -141,82 +141,89 @@ export function Diagram({
           </button>
         </div>
       </div>
-      <div className="array-heading">
-        <code>Node&lt;K, V&gt;[] table</code>
-        <label className="check-label">
-          <input
-            type="checkbox"
-            checked={hideEmpty}
-            onChange={(e) => setHideEmpty(e.target.checked)}
-          />{" "}
-          Скрыть пустые
-        </label>
-      </div>
-      {state.capacity > 0 ? (
-        <>
-          <div className="bucket-array" aria-label="Массив бакетов">
-            {indexList.map((i) => (
-              <button
-                key={i}
-                title={`Бакет ${i}: ${occupied.get(i)?.kind ?? "пустой"}`}
-                className={`bucket-cell ${occupied.has(i) ? "occupied" : ""} ${activeBucket === i || focusedBucket === i ? "active" : ""}`}
-                onClick={() => {
-                  setFocusedBucket(i === focusedBucket ? null : i);
-                  const bucket = occupied.get(i);
-                  const target = layout.nodes.find(
-                    (n) =>
-                      n.bucket === i &&
-                      !n.pending &&
-                      (bucket?.rootId == null ||
-                        objectId(n.node) === bucket.rootId),
-                  );
-                  if (target) centerOn(target.x, target.y);
-                }}
-              >
-                <span className="bucket-index">
-                  {String(i).padStart(2, "0")}
-                </span>
+      <div className="bucket-overview">
+        <div className="array-heading">
+          <code>Node&lt;K, V&gt;[] table</code>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={hideEmpty}
+              onChange={(e) => setHideEmpty(e.target.checked)}
+            />{" "}
+            Скрыть пустые
+          </label>
+        </div>
+        {state.capacity > 0 ? (
+          <>
+            <div
+              className="bucket-array"
+              role="region"
+              tabIndex={0}
+              aria-label="Массив бакетов"
+            >
+              {indexList.map((i) => (
+                <button
+                  key={i}
+                  title={`Бакет ${i}: ${occupied.get(i)?.kind ?? "пустой"}`}
+                  className={`bucket-cell ${occupied.has(i) ? "occupied" : ""} ${activeBucket === i || focusedBucket === i ? "active" : ""}`}
+                  onClick={() => {
+                    setFocusedBucket(i === focusedBucket ? null : i);
+                    const bucket = occupied.get(i);
+                    const target = layout.nodes.find(
+                      (n) =>
+                        n.bucket === i &&
+                        !n.pending &&
+                        (bucket?.rootId == null ||
+                          objectId(n.node) === bucket.rootId),
+                    );
+                    if (target) centerOn(target.x, target.y);
+                  }}
+                >
+                  <span className="bucket-index">
+                    {String(i).padStart(2, "0")}
+                  </span>
+                  <span>
+                    {occupied.has(i)
+                      ? occupied.get(i)!.kind === "TREE"
+                        ? "T"
+                        : occupied.get(i)!.nodes.filter((n) => n.linked).length
+                      : "·"}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="array-caption">
+              {state.capacity} бакетов · {state.buckets.length} занято{" "}
+              {hideEmpty &&
+                `· ${state.capacity - state.buckets.length} пустых скрыто`}
+              {focusedBucket !== null && (
                 <span>
-                  {occupied.has(i)
-                    ? occupied.get(i)!.kind === "TREE"
-                      ? "T"
-                      : occupied.get(i)!.nodes.filter((n) => n.linked).length
-                    : "·"}
+                  {" "}
+                  · [{focusedBucket}]{" "}
+                  {occupied.has(focusedBucket)
+                    ? occupied.get(focusedBucket)!.kind
+                    : "null — пустой бакет"}
                 </span>
-              </button>
-            ))}
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="unallocated">
+            <code>table = null</code>
+            <span>Массив будет выделен при первом put.</span>
           </div>
-          <div className="array-caption">
-            {state.capacity} бакетов · {state.buckets.length} занято{" "}
-            {hideEmpty &&
-              `· ${state.capacity - state.buckets.length} пустых скрыто`}
-            {focusedBucket !== null && (
-              <span>
-                {" "}
-                · [{focusedBucket}]{" "}
-                {occupied.has(focusedBucket)
-                  ? occupied.get(focusedBucket)!.kind
-                  : "null — пустой бакет"}
-              </span>
-            )}
+        )}
+        {step?.event === "BUCKET_SPLIT" && (
+          <div className="split-explanation">
+            <span className="pulse-dot" /> SPLIT{" "}
+            <code>{String(step.details.formula)}</code>
+            <span>
+              bucket [{String(step.details.fromBucket)}] → [
+              {String(step.details.toBucket)}]
+            </span>
           </div>
-        </>
-      ) : (
-        <div className="unallocated">
-          <code>table = null</code>
-          <span>Массив будет выделен при первом put.</span>
-        </div>
-      )}
-      {step?.event === "BUCKET_SPLIT" && (
-        <div className="split-explanation">
-          <span className="pulse-dot" /> SPLIT{" "}
-          <code>{String(step.details.formula)}</code>
-          <span>
-            bucket [{String(step.details.fromBucket)}] → [
-            {String(step.details.toBucket)}]
-          </span>
-        </div>
-      )}
+        )}
+      </div>
       <div className="diagram-navigation">
         <span>Прокрутите схему · нажмите на бакет, чтобы перейти к узлам</span>
         {selectedObjectId !== undefined && positions.has(selectedObjectId) && (

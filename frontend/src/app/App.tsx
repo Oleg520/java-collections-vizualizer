@@ -28,6 +28,7 @@ export default function App({
 }: { localSplits?: LocalSplits } = {}) {
   const playback = useTracePlayback();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
     collection,
@@ -119,8 +120,12 @@ export default function App({
           </a>
         </div>
       </header>
-      <div className="workspace">
+      <div
+        className={`workspace${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
+      >
         <ScenarioSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((value) => !value)}
           collection={collection}
           collections={collectionOptions}
           onCollection={switchCollection}

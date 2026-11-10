@@ -128,7 +128,7 @@ async function pageEndIsReachable(page: Page) {
   }
 }
 
-test("short ArrayList layouts use content height without redundant bottom space", async ({
+test("short ArrayList layouts retain bounded panes without redundant bottom space", async ({
   page,
 }) => {
   await page.goto("/");
@@ -150,18 +150,19 @@ test("short ArrayList layouts use content height without redundant bottom space"
           .click();
       await dockIsAvailable(page, expanded);
       await pageEndIsReachable(page);
-      // Empty/short Events should not retain a fixed-height blank area below its content.
+      // A short trace retains the same bounded workbench pane as a long one (#59).
       expect(
-        await page.locator(".event-list").evaluate((list) => {
-          if (list.scrollHeight > list.clientHeight + 1) return true;
-          const last = list.lastElementChild!;
-          return (
-            list.getBoundingClientRect().bottom -
-              last.getBoundingClientRect().bottom <=
-            parseFloat(getComputedStyle(list).paddingBottom) + 1
-          );
-        }),
-      ).toBe(true);
+        (await page.locator(".inspector").boundingBox())!.height,
+      ).toBeCloseTo(
+        (await page
+          .locator(
+            page.viewportSize()!.width > 1000
+              ? ".canvas-column"
+              : ".array-diagram",
+          )
+          .boundingBox())!.height,
+        0,
+      );
       await reachableWithoutDockOverlap(
         page,
         page.locator(".array-buffer-heading"),

@@ -87,6 +87,7 @@ export function ArrayDiagram({
       className="panel array-diagram"
       data-testid="array-diagram"
       aria-label="Внутренний массив ArrayList"
+      tabIndex={0}
     >
       <div className="array-title">
         <h2>Внутри ArrayList</h2>
