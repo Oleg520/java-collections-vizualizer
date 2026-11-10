@@ -55,7 +55,10 @@ public class ApiLimitFilter extends OncePerRequestFilter {
         response.setHeader("Retry-After",Integer.toString(retryAfter));
         response.addHeader("Vary","Origin");
         String origin=request.getHeader("Origin");
-        if(origin!=null && origins.contains(origin)) response.setHeader("Access-Control-Allow-Origin",origin);
+        if(origin!=null && origins.contains(origin)) {
+            response.setHeader("Access-Control-Allow-Origin",origin);
+            response.setHeader("Access-Control-Expose-Headers","Retry-After");
+        }
         response.setContentType("application/json"); response.setCharacterEncoding("UTF-8");
         json.writeValue(response.getOutputStream(),new ErrorResponse(1,code,
             "Слишком много запросов. Повторите через "+retryAfter+" сек.; команда не выполнена."));

@@ -55,9 +55,11 @@ class ApiLimitsIntegrationTest {
             .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("RATE_LIMITED"))
             .andExpect(header().string("Retry-After","10"));
         clock.millis+=10000;
-        mvc.perform(from(post("/api/v1/sessions").contentType("application/json").content("{}"),ip))
+        mvc.perform(from(post("/api/v1/sessions").contentType("application/json").content("{}")
+            .header("Origin","http://localhost:5173"),ip))
             .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("CLIENT_SESSION_LIMIT"))
-            .andExpect(header().string("Retry-After","60"));
+            .andExpect(header().string("Retry-After","60"))
+            .andExpect(header().string("Access-Control-Expose-Headers","Retry-After"));
         assertEquals(0,store.get(a).revision()); assertEquals(0,store.get(b).state().size());
         assertNotNull(create("198.51.100.12","/api/v1/sessions"));
         clock.millis+=60000;
@@ -77,7 +79,8 @@ class ApiLimitsIntegrationTest {
                 .header("Origin","http://localhost:5173"),ip))
                 .andExpect(status().isTooManyRequests()).andExpect(jsonPath("code").value("RATE_LIMITED"))
                 .andExpect(header().string("Retry-After","10"))
-                .andExpect(header().string("Access-Control-Allow-Origin","http://localhost:5173"));
+                .andExpect(header().string("Access-Control-Allow-Origin","http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Expose-Headers","Retry-After"));
             assertEquals(before,store.get(id));
         }
         clock.millis+=10000;

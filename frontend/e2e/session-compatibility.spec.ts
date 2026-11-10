@@ -27,9 +27,11 @@ test("old backend route 404 preserves the slot and shows an actionable error wit
   await expect(page.locator(".primary-button")).toBeDisabled();
   expect(creates).toBe(1);
   expect(resets).toBe(1);
-  await page.getByRole("button", { name: "Новая сессия", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Повторить подключение", exact: true })
+    .click();
   await expect(
-    page.getByRole("button", { name: "Новая сессия", exact: true }),
+    page.getByRole("button", { name: "Повторить подключение", exact: true }),
   ).toBeEnabled();
   expect(creates).toBe(1);
   expect(resets).toBe(2);

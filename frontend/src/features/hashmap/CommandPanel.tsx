@@ -9,11 +9,13 @@ import type {
 } from "../../api/types/index";
 export function CommandPanel({
   busy,
+  blocked = false,
   session,
   onCommand,
   onError: setError,
 }: {
   busy: boolean;
+  blocked?: boolean;
   session: Session | null;
   onCommand: (operation: Operation) => void;
   onError: (message: string) => void;
@@ -76,7 +78,7 @@ export function CommandPanel({
           <button
             className="subtle-button"
             onClick={() => command("CLEAR")}
-            disabled={busy || !session}
+            disabled={busy || blocked || !session}
             title="clear сохраняет массив бакетов"
           >
             <Trash2 size={13} />
@@ -85,7 +87,7 @@ export function CommandPanel({
           <button
             className="subtle-button"
             onClick={() => command("RESET")}
-            disabled={busy || !session}
+            disabled={busy || blocked || !session}
           >
             <RotateCcw size={13} /> Начать заново
           </button>
@@ -153,7 +155,7 @@ export function CommandPanel({
         <button
           className="primary-button"
           type="submit"
-          disabled={busy || !session}
+          disabled={busy || blocked || !session}
         >
           {busy ? (
             <LoaderCircle size={16} className="spin" />

@@ -27,6 +27,12 @@ export default function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<number>();
   const {
     collection,
+    lastKnownSession,
+    recoverSession,
+    recoveryLabel,
+    retrySeconds,
+    blocked,
+    uncertain,
     switchCollection,
     session,
     scenarios,
@@ -50,7 +56,12 @@ export default function App() {
     showCommitted: playback.showCommitted,
   });
   const { trace, step, cursor, historyIndex, playing, navigate } = playback;
-  const snapshot = step?.snapshot ?? session?.state;
+  const snapshot =
+    step?.snapshot ??
+    session?.state ??
+    (lastKnownSession?.collection === collection
+      ? lastKnownSession.state
+      : undefined);
   const view = collectionViews[collection];
   const details = view.selectedDetails(snapshot, selectedNodeId, () =>
     setSelectedNodeId(undefined),
@@ -72,9 +83,11 @@ export default function App() {
             <i />
             {busy
               ? "Java выполняет…"
-              : session
-                ? "Java engine connected"
-                : "Подключение к Java"}
+              : error
+                ? "Ошибка запроса"
+                : session
+                  ? "Java engine connected"
+                  : "Подключение к Java"}
           </span>
           <a
             className="repo-link"
@@ -100,7 +113,7 @@ export default function App() {
           onCollection={switchCollection}
           scenarios={scenarios}
           trace={trace}
-          busy={busy}
+          busy={busy || blocked}
           session={session}
           onDemo={demo}
         />
@@ -126,13 +139,21 @@ export default function App() {
           {error && (
             <div className="error-banner" role="alert">
               <Info size={18} />
-              <span>{error}</span>
-              <button onClick={() => void startSession()} disabled={busy}>
-                Новая сессия
+              <span>
+                {error}
+                {retrySeconds > 0 &&
+                  ` Повторный запрос через ${retrySeconds} сек.`}
+              </span>
+              <button
+                onClick={() => void recoverSession()}
+                disabled={busy || retrySeconds > 0}
+              >
+                {recoveryLabel}
               </button>
               <button
                 className="icon-button"
                 aria-label="Закрыть ошибку"
+                disabled={blocked || !session}
                 onClick={() => setError(null)}
               >
                 <X size={16} />
@@ -142,11 +163,12 @@ export default function App() {
           {slow && (
             <div className="loading-banner" role="status">
               <LoaderCircle size={16} className="spin" /> Ожидаем Java-сервис.
-              При холодном запуске это может занять до минуты.
+              После ошибки можно безопасно обновить состояние.
             </div>
           )}
           <view.Commands
             busy={busy}
+            blocked={blocked}
             session={session}
             onCommand={command}
             onError={setError}
@@ -157,6 +179,7 @@ export default function App() {
           <StateMetrics
             snapshot={snapshot}
             session={session}
+            stale={uncertain || !session}
             {...statePresentation(snapshot, trace)}
           />
           <div className="lab-grid">
@@ -170,8 +193,12 @@ export default function App() {
                 />
               ) : (
                 <div className="panel connecting">
-                  <LoaderCircle className="spin" />
-                  <h2>Подключаем Java-движок</h2>
+                  <LoaderCircle className={busy ? "spin" : ""} />
+                  <h2>
+                    {busy
+                      ? "Подключаем Java-движок"
+                      : "Нет соединения с Java-движком"}
+                  </h2>
                   <p>Состояние коллекции появится после создания сессии.</p>
                 </div>
               )}

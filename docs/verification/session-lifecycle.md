@@ -69,3 +69,20 @@ reconfigure a slot safely; it fails visibly instead of falling back to creation.
 A backend restart expires in-memory sessions; the new backend's explicit
 SESSION_NOT_FOUND then permits one replacement. Network failures/409 followed by
 an unrecognized recovery GET 404 never discard a known UUID.
+
+## Issue #26 audit during #27
+
+The main branch already contains one-slot reset, bounded quotas, ownership and
+proxy-header checks, serialized revisions, stale-response isolation, constructor
+replacement, and explicit expiry handling. The Java lifecycle/proxy/admission tests,
+frontend connection tests and strict desktop/mobile lifecycle suite provide local
+regression evidence; #27 additionally guards failed reconciliation and queued
+creation after a failed create reply.
+
+Issue #26 also asks for read-only verification of the **running production proxy**.
+This checkout provides neither the private delivery repository nor access to the
+loaded proxy configuration, trusted-peer settings or origin reachability. Public
+health/HTML cannot prove that the proxy overwrites client headers or that the origin
+cannot be bypassed. Consequently #26 remains open pending those concrete runtime
+diagnostics. This is an evidence gap, not a claim that the current proxy is unsafe.
+No production settings or limits have been changed.
