@@ -5,7 +5,7 @@ import {
   collectionOptions,
   statePresentation,
 } from "./collectionViews";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -27,7 +27,6 @@ export default function App({
   localSplits,
 }: { localSplits?: LocalSplits } = {}) {
   const playback = useTracePlayback();
-  const canvasRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
@@ -201,7 +200,7 @@ export default function App({
             {...statePresentation(snapshot, trace)}
           />
           <div className="lab-grid">
-            <div className="canvas-column" ref={canvasRef}>
+            <div className="canvas-column">
               {snapshot ? (
                 <view.Diagram
                   snapshot={snapshot}
@@ -220,6 +219,7 @@ export default function App({
                   <p>Состояние коллекции появится после создания сессии.</p>
                 </div>
               )}
+              <PlaybackPanel playback={playback} step={step} />
               {localSplits &&
                 trace?.operation.type === "SCENARIO" &&
                 localSplits.scenarios.some(
@@ -257,7 +257,6 @@ export default function App({
           </div>
         </main>
       </div>
-      <PlaybackPanel playback={playback} step={step} canvasRef={canvasRef} />
     </div>
   );
 }

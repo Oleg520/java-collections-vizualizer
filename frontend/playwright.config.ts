@@ -4,7 +4,7 @@ const preview = process.env.E2E_PREVIEW === "1";
 const port = preview ? 4173 : 5173;
 
 export default defineConfig({
-  // One worker runs both viewports, including real 15s recovery and dock regressions.
+  // One worker runs both viewports, including real 15s recovery and playback regressions.
   globalTimeout: 300000,
   testDir: "./e2e",
   testIgnore: "session-lifecycle.spec.ts",

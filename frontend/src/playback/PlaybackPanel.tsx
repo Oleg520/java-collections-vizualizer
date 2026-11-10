@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useState } from "react";
 import { operationLabel } from "../presentation/operationLabel";
 import {
   ArrowRight,
@@ -18,47 +18,18 @@ import type { useTracePlayback } from "./useTracePlayback";
 export function PlaybackPanel({
   playback,
   step,
-  canvasRef,
 }: {
   playback: ReturnType<typeof useTracePlayback>;
   step?: Step;
-  canvasRef: RefObject<HTMLElement | null>;
 }) {
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
   const [collapsed, setCollapsed] = useState(false);
-  const dockRef = useRef<HTMLElement>(null);
-  useLayoutEffect(() => {
-    const dock = dockRef.current;
-    const canvas = canvasRef.current;
-    if (!dock || !canvas) return;
-    const root = document.documentElement;
-    const update = () => {
-      const bounds = canvas.getBoundingClientRect();
-      dock.style.setProperty(
-        "--playback-center",
-        `${bounds.left + bounds.width / 2}px`,
-      );
-      dock.style.setProperty("--playback-workspace-width", `${bounds.width}px`);
-      root.style.setProperty("--playback-height", `${dock.offsetHeight}px`);
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(canvas);
-    observer.observe(dock);
-    window.addEventListener("resize", update);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", update);
-      root.style.removeProperty("--playback-height");
-    };
-  }, [canvasRef, collapsed]);
   return (
     <section
-      ref={dockRef}
       id="playback"
       tabIndex={-1}
-      className={`playback panel playback-dock${collapsed ? " is-collapsed" : ""}`}
+      className={`playback panel${collapsed ? " is-collapsed" : ""}`}
       aria-label="Управление воспроизведением"
     >
       <div className="playback-top">
