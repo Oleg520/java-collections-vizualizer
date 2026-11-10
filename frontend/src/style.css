@@ -2341,3 +2341,15 @@ h1 > span {
     margin: 4px 0;
   }
 }
+/* Below this height the fixed sidebar regions cannot leave a usable list.
+   Fall back to document flow rather than clipping scenarios or the information footer. */
+@media (min-width: 681px) and (max-height: 320px) {
+  .sidebar {
+    position: static;
+    height: auto;
+    align-self: start;
+  }
+  .scenario-list {
+    max-height: 50dvh;
+  }
+}

@@ -196,6 +196,11 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   await expect(page.locator(".sidebar-bottom")).toBeInViewport({ ratio: 1 });
   await page.locator(".scenario-button").last().focus();
   await accessible(page, page.locator(".scenario-button").last());
+  // At extreme browser-zoom/short-window heights, flow is preferable to clipping pinned regions.
+  await page.setViewportSize({ width: 1100, height: 240 });
+  await expect(page.locator(".sidebar")).toHaveCSS("position", "static");
+  await accessible(page, page.locator(".sidebar-bottom"));
+  await accessible(page, page.locator(".scenario-button").last());
 });
 
 test("inspector splitter supports pointer, keyboard and touch without changing document height", async ({
