@@ -10,11 +10,13 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
   let creates = 0,
     resets = 0;
   page.on("request", (r) => {
-    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
-    if (r.url().endsWith("/reset")) resets++;
+    if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+      creates++;
+    if (/\/reset(?:\?.*)?$/.test(r.url())) resets++;
   });
   const created = page.waitForResponse(
-    (r) => r.request().method() === "POST" && /\/sessions$/.test(r.url()),
+    (r) =>
+      r.request().method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()),
   );
   await page.goto("/");
   const initial = await (await created).json();
@@ -45,7 +47,7 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
   const gate = new Promise<void>((r) => (release = r)),
     atServer = new Promise<void>((r) => (arrived = r));
   await page.route(
-    /\/reset$/,
+    /\/reset(?:\?.*)?$/,
     async (route) => {
       const response = await route.fetch();
       arrived();
@@ -66,7 +68,7 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
   ).toBeEnabled();
   const beforeLost = resets;
   await page.route(
-    /\/reset$/,
+    /\/reset(?:\?.*)?$/,
     async (route) => {
       const response = await route.fetch();
       await response.dispose();
@@ -89,7 +91,9 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
   await expect(second.locator(".primary-button")).toBeEnabled();
   await expect(second.getByTestId("committed-size")).toHaveText("0");
   const current = await (
-    await context.request.get(`/api/v1/sessions/${initial.id}`)
+    await context.request.get(
+      `/api/v1/sessions/${initial.id}?snapshotVersion=2`,
+    )
   ).json();
   expect(current.id).toBe(initial.id);
   expect(current.collection).toBe("ARRAY_LIST");
@@ -97,9 +101,16 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
   // Genuine creation exhaustion remains protected and cannot be bypassed by reset traffic.
   for (let i = 0; i < 4; i++)
     expect(
-      (await context.request.post("/api/v1/sessions", { data: {} })).status(),
+      (
+        await context.request.post("/api/v1/sessions?snapshotVersion=2", {
+          data: {},
+        })
+      ).status(),
     ).toBe(201);
-  const limited = await context.request.post("/api/v1/sessions", { data: {} });
+  const limited = await context.request.post(
+    "/api/v1/sessions?snapshotVersion=2",
+    { data: {} },
+  );
   expect(limited.status()).toBe(429);
   expect((await limited.json()).code).toBe("RATE_LIMITED");
   await switchTo("HASH_MAP");

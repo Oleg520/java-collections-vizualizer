@@ -7,6 +7,7 @@ export interface KeySpec {
 export type CommandType = "PUT" | "GET" | "REMOVE" | "CLEAR" | "RESET";
 export interface MapNode {
   id: number;
+  objectId: number;
   key: KeySpec;
   value: string | null;
   rawHashCode: number;

@@ -204,7 +204,7 @@ for (const initialCapacity of [0, 16, 32, 64]) {
       if (message.type() === "error") errors.push(message.text());
     });
     // Only changes constructor input; all responses come from the real backend.
-    await page.route("**/api/v1/sessions", (route) =>
+    await page.route(/\/api\/v1\/sessions(?:\?.*)?$/, (route) =>
       route.continue({ postData: JSON.stringify({ initialCapacity }) }),
     );
     await ready(page);
@@ -227,7 +227,7 @@ for (const initialCapacity of [0, 16, 32, 64]) {
         .click();
       const response = await responsePromise;
       expect(response.ok()).toBe(true);
-      expect((await response.json()).encoding).toBe("node-table-v1");
+      expect((await response.json()).encoding).toBe("node-table-v2");
       await expect(
         page.getByRole("button", { name: "Выполнить put" }),
       ).toBeEnabled();
@@ -253,14 +253,15 @@ test("large tree split, conflict recovery and offline history", async ({
 }, testInfo) => {
   test.setTimeout(60000);
   const created = page.waitForResponse(
-    (r) => /\/sessions$/.test(r.url()) && r.request().method() === "POST",
+    (r) =>
+      /\/sessions(?:\?.*)?$/.test(r.url()) && r.request().method() === "POST",
   );
   await ready(page);
   const session = await (await created).json();
   let revision = 0;
   for (let i = 0; i < 96; i++) {
     const response = await request.post(
-      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact`,
+      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
       {
         data: {
           expectedRevision: revision,
@@ -306,11 +307,19 @@ test("large tree split, conflict recovery and offline history", async ({
   await expect(page.getByText("RB TREE", { exact: true })).toHaveCount(2);
   const zoomLabel = page.locator(".zoom-controls > span");
   const fitZoom = Number.parseInt((await zoomLabel.textContent())!);
-  await page.getByRole("button", { name: "Уменьшить масштаб", exact: true }).click();
-  await expect.poll(async () => Number.parseInt((await zoomLabel.textContent())!)).toBeLessThan(fitZoom);
+  await page
+    .getByRole("button", { name: "Уменьшить масштаб", exact: true })
+    .click();
+  await expect
+    .poll(async () => Number.parseInt((await zoomLabel.textContent())!))
+    .toBeLessThan(fitZoom);
   const smallerZoom = Number.parseInt((await zoomLabel.textContent())!);
-  await page.getByRole("button", { name: "Увеличить масштаб", exact: true }).click();
-  await expect.poll(async () => Number.parseInt((await zoomLabel.textContent())!)).toBeGreaterThan(smallerZoom);
+  await page
+    .getByRole("button", { name: "Увеличить масштаб", exact: true })
+    .click();
+  await expect
+    .poll(async () => Number.parseInt((await zoomLabel.textContent())!))
+    .toBeGreaterThan(smallerZoom);
   await page.getByRole("button", { name: "Масштаб 100%", exact: true }).click();
   expect(
     await page
@@ -340,10 +349,15 @@ test("large tree split, conflict recovery and offline history", async ({
     body: JSON.stringify(heap, null, 2),
     contentType: "application/json",
   });
-  if (process.env.UPDATE_SCREENSHOTS) await writeFile(
-    `../docs/verification/browser-memory-${testInfo.project.name}.json`,
-    JSON.stringify({ scenario: "97-entry tree split, compact trace, after GC", ...heap }, null, 2) + "\n",
-  );
+  if (process.env.UPDATE_SCREENSHOTS)
+    await writeFile(
+      `../docs/verification/browser-memory-${testInfo.project.name}.json`,
+      JSON.stringify(
+        { scenario: "97-entry tree split, compact trace, after GC", ...heap },
+        null,
+        2,
+      ) + "\n",
+    );
   expect(heap.usedSize).toBeLessThan(96 * 1024 * 1024);
   expect(
     await page.evaluate(

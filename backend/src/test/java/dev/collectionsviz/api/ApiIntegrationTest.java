@@ -18,16 +18,16 @@ class ApiIntegrationTest {
     @Autowired ObjectMapper json;
     @Autowired org.springframework.boot.info.BuildProperties build;
     String create() throws Exception {
-        return json.readTree(mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{}"))
+        return json.readTree(mvc.perform(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{}"))
             .andExpect(status().isCreated()).andExpect(jsonPath("state.capacity").value(0))
-            .andExpect(jsonPath("schemaVersion").value(1)).andReturn().getResponse().getContentAsString()).get("id").asText();
+            .andExpect(jsonPath("schemaVersion").value(2)).andReturn().getResponse().getContentAsString()).get("id").asText();
     }
     static String command(long revision,String type,String key,String value) {
         return "{\"expectedRevision\":"+revision+",\"operation\":{\"type\":\""+type+"\",\"key\":{\"type\":\"STRING\",\"value\":\""+key+"\"},\"value\":"+value+"}}";
     }
     @Test void fullContractIsolationAndRevisionConflicts() throws Exception {
         String a=create(),b=create();
-        String body=mvc.perform(post("/api/v1/sessions/"+a+"/commands").contentType("application/json").content(command(0,"PUT","A","\"hello\"")))
+        String body=mvc.perform(post("/api/v1/sessions/"+a+"/commands").param("snapshotVersion","2").contentType("application/json").content(command(0,"PUT","A","\"hello\"")))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1)).andExpect(jsonPath("trace.committed.size").value(1))
             .andExpect(jsonPath("encoding").doesNotExist()).andExpect(jsonPath("trace.committed.buckets[0].nodes[0].key.value").value("A"))
             .andExpect(jsonPath("trace.result.found").value(false)).andExpect(jsonPath("trace.committed.capacity").value(16))
@@ -35,43 +35,43 @@ class ApiIntegrationTest {
         JsonNode trace=json.readTree(body).get("trace"),steps=trace.get("steps");
         assertEquals(trace.get("committed"),steps.get(steps.size()-1).get("snapshot"));
         assertEquals(0,steps.get(0).get("index").asInt());
-        mvc.perform(get("/api/v1/sessions/"+b)).andExpect(jsonPath("state.size").value(0)).andExpect(jsonPath("revision").value(0));
-        mvc.perform(post("/api/v1/sessions/"+a+"/commands").contentType("application/json").content(command(0,"PUT","B","null")))
+        mvc.perform(get("/api/v1/sessions/"+b).param("snapshotVersion","2")).andExpect(jsonPath("state.size").value(0)).andExpect(jsonPath("revision").value(0));
+        mvc.perform(post("/api/v1/sessions/"+a+"/commands").param("snapshotVersion","2").contentType("application/json").content(command(0,"PUT","B","null")))
             .andExpect(status().isConflict()).andExpect(jsonPath("code").value("REVISION_CONFLICT"));
-        mvc.perform(post("/api/v1/sessions/"+a+"/commands").contentType("application/json").content(command(1,"GET","A","null")))
+        mvc.perform(post("/api/v1/sessions/"+a+"/commands").param("snapshotVersion","2").contentType("application/json").content(command(1,"GET","A","null")))
             .andExpect(status().isOk()).andExpect(jsonPath("trace.result.value").value("hello"));
-        mvc.perform(post("/api/v1/sessions/"+a+"/commands").contentType("application/json").content(command(2,"REMOVE","A","null")))
+        mvc.perform(post("/api/v1/sessions/"+a+"/commands").param("snapshotVersion","2").contentType("application/json").content(command(2,"REMOVE","A","null")))
             .andExpect(status().isOk()).andExpect(jsonPath("trace.result.previousValue").value("hello")).andExpect(jsonPath("trace.committed.size").value(0));
     }
     @Test void malformedInputsDoNotMutate() throws Exception {
         String id=create(),url="/api/v1/sessions/"+id+"/commands";
         for(String body:new String[]{"{}","{\"expectedRevision\":-1,\"operation\":{\"type\":\"RESET\"}}","{\"expectedRevision\":0,\"operation\":{\"type\":\"BOGUS\"}}",command(0,"PUT","A".repeat(65),"null"),"{\"expectedRevision\":0,\"operation\":{\"type\":\"PUT\",\"key\":null}}"})
-            mvc.perform(post(url).contentType("application/json").content(body)).andExpect(status().isBadRequest()).andExpect(jsonPath("code").exists());
-        mvc.perform(get("/api/v1/sessions/"+id)).andExpect(jsonPath("revision").value(0)).andExpect(jsonPath("state.size").value(0));
-        mvc.perform(get("/api/v1/sessions/not-a-uuid")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/sessions/00000000-0000-0000-0000-000000000000")).andExpect(status().isNotFound());
-        mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{\"initialCapacity\":1000000}")).andExpect(status().isBadRequest());
+            mvc.perform(post(url).param("snapshotVersion","2").contentType("application/json").content(body)).andExpect(status().isBadRequest()).andExpect(jsonPath("code").exists());
+        mvc.perform(get("/api/v1/sessions/"+id).param("snapshotVersion","2")).andExpect(jsonPath("revision").value(0)).andExpect(jsonPath("state.size").value(0));
+        mvc.perform(get("/api/v1/sessions/not-a-uuid").param("snapshotVersion","2")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/sessions/00000000-0000-0000-0000-000000000000").param("snapshotVersion","2")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{\"initialCapacity\":1000000}")).andExpect(status().isBadRequest());
     }
     @Test void scenariosAndCors() throws Exception {
         String id=create();
-        mvc.perform(get("/api/v1/scenarios")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(8));
-        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/treeify").contentType("application/json").content("{\"expectedRevision\":0}"))
+        mvc.perform(get("/api/v1/scenarios").param("snapshotVersion","2")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(8));
+        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/treeify").param("snapshotVersion","2").contentType("application/json").content("{\"expectedRevision\":0}"))
             .andExpect(status().isOk()).andExpect(jsonPath("trace.committed.buckets[0].kind").value("TREE"))
             .andExpect(jsonPath("trace.committed.buckets[0].rootId").isNumber());
         mvc.perform(options("/api/v1/sessions").header("Origin","http://localhost:5173").header("Access-Control-Request-Method","POST"))
             .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","http://localhost:5173"));
         mvc.perform(options("/api/v1/sessions").header("Origin","https://unlisted.example").header("Access-Control-Request-Method","POST"))
             .andExpect(status().isForbidden());
-        mvc.perform(get("/api/v1/health")).andExpect(jsonPath("status").value("UP")).andExpect(jsonPath("java").value("21"))
+        mvc.perform(get("/api/v1/health").param("snapshotVersion","2")).andExpect(jsonPath("status").value("UP")).andExpect(jsonPath("java").value("21"))
             .andExpect(jsonPath("version").value(build.getVersion()));
     }
     @Test void compactContractIsOptInAndBadEncodingCannotCommit() throws Exception {
         String id=create(),url="/api/v1/sessions/"+id+"/commands";
-        mvc.perform(post(url+"?encoding=bad").contentType("application/json").content(command(0,"PUT","A","null")))
+        mvc.perform(post(url+"?encoding=bad").param("snapshotVersion","2").contentType("application/json").content(command(0,"PUT","A","null")))
             .andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/sessions/"+id)).andExpect(jsonPath("revision").value(0));
-        mvc.perform(post(url+"?encoding=compact").contentType("application/json").content(command(0,"PUT","A","null")))
-            .andExpect(status().isOk()).andExpect(jsonPath("encoding").value("node-table-v1"))
+        mvc.perform(get("/api/v1/sessions/"+id).param("snapshotVersion","2")).andExpect(jsonPath("revision").value(0));
+        mvc.perform(post(url+"?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(command(0,"PUT","A","null")))
+            .andExpect(status().isOk()).andExpect(jsonPath("encoding").value("node-table-v2"))
             .andExpect(jsonPath("nodePool[0].key.value").value("A"))
             .andExpect(jsonPath("trace.committed.buckets[0].nodeRefs[0]").value(0))
             .andExpect(jsonPath("trace.committed.buckets[0].nodes").doesNotExist());
@@ -79,19 +79,19 @@ class ApiIntegrationTest {
 
     @Test void explicitlyEnabledFullWorksForCommandsAndScenarios() throws Exception {
         String id=create();
-        mvc.perform(post("/api/v1/sessions/"+id+"/commands?encoding=full").contentType("application/json").content(command(0,"PUT","A","null")))
+        mvc.perform(post("/api/v1/sessions/"+id+"/commands?encoding=full").param("snapshotVersion","2").contentType("application/json").content(command(0,"PUT","A","null")))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1))
             .andExpect(jsonPath("trace.committed.buckets[0].nodes[0].key.value").value("A"))
             .andExpect(jsonPath("nodePool").doesNotExist());
-        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/treeify?encoding=full").contentType("application/json").content("{\"expectedRevision\":1}"))
+        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/treeify?encoding=full").param("snapshotVersion","2").contentType("application/json").content("{\"expectedRevision\":1}"))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(2))
             .andExpect(jsonPath("trace.committed.buckets[0].nodes.length()").value(9));
     }
 
     @Test void explicitlyEnabledArrayListFullTraceHasRealBuffers() throws Exception {
-        String id=json.readTree(mvc.perform(post("/api/v1/sessions").contentType("application/json").content("{\"collection\":\"ARRAY_LIST\"}"))
+        String id=json.readTree(mvc.perform(post("/api/v1/sessions").param("snapshotVersion","2").contentType("application/json").content("{\"collection\":\"ARRAY_LIST\"}"))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asText();
-        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/growth?encoding=full").contentType("application/json").content("{\"expectedRevision\":0}"))
+        mvc.perform(post("/api/v1/sessions/"+id+"/scenarios/growth?encoding=full").param("snapshotVersion","2").contentType("application/json").content("{\"expectedRevision\":0}"))
             .andExpect(status().isOk()).andExpect(jsonPath("trace.committed.capacity").value(15))
             .andExpect(jsonPath("trace.committed.buffer.cells.length()").value(15)).andExpect(jsonPath("encoding").doesNotExist());
     }

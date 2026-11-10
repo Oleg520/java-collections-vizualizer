@@ -122,7 +122,7 @@ load test is required.
 ## Совместимость сериализации
 
 `dto/SerializationContractTest` сравнивает фиксированные запросы, ошибки, состояния
-и full/compact trace обеих коллекций с `backend/src/test/resources/contracts/wire-v1.json`.
+и full/compact trace обеих коллекций с `backend/src/test/resources/contracts/wire-current.json`.
 Эталон получен на main после PR #38 (`350b653`) и проверен до и после переноса типов.
 Сравнение JSON учитывает значения, null и порядок массивов; порядок полей объектов свободный.
 

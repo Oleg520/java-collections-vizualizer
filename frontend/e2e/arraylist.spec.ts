@@ -216,7 +216,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
     if (r.method() === "POST" && r.url().includes("/commands")) writes++;
   });
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     async (route) => {
       const response = await route.fetch();
       expect(response.ok()).toBe(true);
@@ -232,7 +232,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   await expect(page.locator(".primary-button")).toBeEnabled();
   let sessionId = "";
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     async (route) => {
       const url = route.request().url();
       sessionId = url.split("/sessions/")[1].split("/")[0];
@@ -264,7 +264,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
     committed = resolve;
   });
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     async (route) => {
       const response = await route.fetch();
       committed();
@@ -286,7 +286,10 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("16");
   expect(
-    (await (await request.get(`/api/v1/sessions/${sessionId}`)).json()).state
-      .size,
+    (
+      await (
+        await request.get(`/api/v1/sessions/${sessionId}?snapshotVersion=2`)
+      ).json()
+    ).state.size,
   ).toBe(1);
 });

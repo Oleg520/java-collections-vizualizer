@@ -24,7 +24,10 @@ rows = []
 
 def request(path, body=None):
     raw = None if body is None else json.dumps(body).encode()
-    req = urllib.request.Request(args.url + '/api/v1' + path + ('?encoding=' + args.encoding if '/commands' in path or '/scenarios/' in path else ''), raw, {'Content-Type': 'application/json'})
+    query = '?encoding=' + args.encoding if '/commands' in path or '/scenarios/' in path else ''
+    if path.startswith('/sessions'):
+        query += ('&' if query else '?') + 'snapshotVersion=2'
+    req = urllib.request.Request(args.url + '/api/v1' + path + query, raw, {'Content-Type': 'application/json'})
     start = time.perf_counter()
     with urllib.request.urlopen(req, timeout=60) as response:
         data = response.read()
@@ -121,7 +124,7 @@ second_heap=retained_heap()
 
 # Check negotiated HTTP compression, not just an offline gzip estimate.
 s=sessions[0]
-req=urllib.request.Request(args.url+f"/api/v1/sessions/{s['id']}/scenarios/treeify?encoding={args.encoding}",
+req=urllib.request.Request(args.url+f"/api/v1/sessions/{s['id']}/scenarios/treeify?encoding={args.encoding}&snapshotVersion=2",
     json.dumps({'expectedRevision':s['revision']}).encode(),
     {'Content-Type':'application/json','Accept-Encoding':'gzip'})
 with urllib.request.urlopen(req,timeout=60) as response:

@@ -25,6 +25,11 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
+      - name: Verify local split demos in the standard development UI
+        run: npm run test:e2e -- --grep 'local splits use|local preparation'
+        working-directory: frontend
+        env:
+          E2E_PREVIEW: '0'
       - run: npm run test:e2e
         working-directory: frontend
         env:
@@ -63,7 +68,7 @@ jobs:
           with open('/tmp/health.json') as response:
               health = json.load(response)
           assert health == {
-              'status': 'UP', 'java': '21',
+              'status': 'UP', 'java': '21', 'hashMapSnapshotVersion': '2',
               'version': '0.0.0-' + os.environ['GITHUB_SHA'] + '-SNAPSHOT',
           }, health
           PYHEALTH

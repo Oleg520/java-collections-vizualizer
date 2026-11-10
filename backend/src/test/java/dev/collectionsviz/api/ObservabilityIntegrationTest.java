@@ -82,6 +82,7 @@ class ObservabilityIntegrationTest {
         }
     }
     private HttpResponse<byte[]> send(HttpClient client,int target,String path,String body) throws Exception {
+        if(path.startsWith("/api/v1/sessions")) path+=(path.contains("?")?"&":"?")+"snapshotVersion=2";
         var builder=HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+target+path));
         if(body!=null) builder.header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(body));
         return client.send(builder.build(),HttpResponse.BodyHandlers.ofByteArray());

@@ -42,11 +42,13 @@ final class InstrumentedHashMap<K,V> {
     int size, modCount, threshold;
     final float loadFactor = DEFAULT_LOAD_FACTOR;
     final LongSupplier ids;
+    final LongSupplier objectIds;
     final Observer observer;
     interface Observer { void event(String event, String message, Map<String,Object> details); }
-    InstrumentedHashMap(int initialCapacity, LongSupplier ids, Observer observer) {
+    InstrumentedHashMap(int initialCapacity, LongSupplier ids, LongSupplier objectIds, Observer observer) {
         this.threshold = initialCapacity == 0 ? 0 : tableSizeFor(initialCapacity);
         this.ids = ids;
+        this.objectIds = objectIds;
         this.observer = observer;
     }
     void emit(String event, String message, Object... pairs) {
@@ -60,13 +62,13 @@ final class InstrumentedHashMap<K,V> {
         boolean equalsChecked = hashEqual && !identityEqual && key != null;
         boolean equal = identityEqual || (equalsChecked && key.equals(node.key));
         emit("KEY_COMPARED", equal ? "Hash и ключ совпали: запись найдена" : "Ключ не совпал: продолжаем поиск",
-             "nodeId", node.id, "nodeKey", String.valueOf(node.key), "hashEqual", hashEqual,
+             "nodeId", node.id, "nodeObjectId", node.objectId, "nodeKey", String.valueOf(node.key), "hashEqual", hashEqual,
              "identityEqual", identityEqual, "equalsChecked", equalsChecked, "equal", equal);
         return equal;
     }
     void visit(Node<K,V> node, int hash, Object key) {
         emit("TREE_VISITED", "Сравниваем hash, equals и Comparable в узле дерева",
-             "nodeId", node.id, "nodeHash", node.hash, "searchHash", hash,
+             "nodeId", node.id, "nodeObjectId", node.objectId, "nodeHash", node.hash, "searchHash", hash,
              "equal", node.hash == hash && Objects.equals(node.key, key));
     }
     void select(int hash) {
@@ -77,29 +79,29 @@ final class InstrumentedHashMap<K,V> {
     }
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> next) {
         Node<K,V> node = new Node<>(hash, key, value, next);
-        node.id = ids.getAsLong(); node.owner = this; return node;
+        node.id = ids.getAsLong(); node.objectId = objectIds.getAsLong(); node.owner = this; return node;
     }
     TreeNode<K,V> newTreeNode(int hash, K key, V value, Node<K,V> next) {
         TreeNode<K,V> node = new TreeNode<>(hash, key, value, next);
-        node.id = ids.getAsLong(); node.owner = this; return node;
+        node.id = ids.getAsLong(); node.objectId = objectIds.getAsLong(); node.owner = this; return node;
     }
     Node<K,V> replacementNode(Node<K,V> p, Node<K,V> next) {
         Node<K,V> node = new Node<>(p.hash, p.key, p.value, next);
-        node.id=p.id; node.owner=this; return node;
+        node.id=p.id; node.objectId=objectIds.getAsLong(); node.owner=this; return node;
     }
     TreeNode<K,V> replacementTreeNode(Node<K,V> p, Node<K,V> next) {
         TreeNode<K,V> node = new TreeNode<>(p.hash, p.key, p.value, next);
-        node.id=p.id; node.owner=this; return node;
+        node.id=p.id; node.objectId=objectIds.getAsLong(); node.owner=this; return node;
     }
     void afterNodeAccess(Node<K,V> p) {
-        emit("VALUE_UPDATED", "Значение заменено; size не изменяется", "nodeId", p.id, "value", p.value);
+        emit("VALUE_UPDATED", "Значение заменено; size не изменяется", "nodeId", p.id, "nodeObjectId", p.objectId, "value", p.value);
     }
     void afterNodeInsertion(boolean evict) { }
     void afterNodeRemoval(Node<K,V> p) {
-        emit("NODE_REMOVED", "Узел удалён, ссылки перестроены", "nodeId", p.id);
+        emit("NODE_REMOVED", "Узел удалён, ссылки перестроены", "nodeId", p.id, "nodeObjectId", p.objectId);
     }
     static class Node<K,V> implements Map.Entry<K,V> {
-        long id;
+        long id, objectId;
         InstrumentedHashMap<K,V> owner;
         final int hash;
         final K key;
@@ -197,7 +199,7 @@ final class InstrumentedHashMap<K,V> {
         select(hash);
         if ((p = tab[i = (n - 1) & hash]) == null) {
             tab[i] = newNode(hash, key, value, null);
-            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "nodeId", tab[i].id, "bucketIndex", i);
+            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "nodeId", tab[i].id, "nodeObjectId", tab[i].objectId, "bucketIndex", i);
         }
         else {
             Node<K,V> e; K k;
@@ -210,7 +212,7 @@ final class InstrumentedHashMap<K,V> {
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
-                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "nodeId", p.next.id, "bucketIndex", i);
+                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "nodeId", p.next.id, "nodeObjectId", p.next.objectId, "bucketIndex", i);
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
@@ -320,7 +322,7 @@ final class InstrumentedHashMap<K,V> {
                     for (Node<K,V> moved : moving) {
                         int target = (moved.hash & oldCap) == 0 ? j : j + oldCap;
                         emit("BUCKET_SPLIT", "hash & oldCapacity: узел остаётся или переходит на +oldCapacity",
-                             "nodeId", moved.id, "fromBucket", j, "toBucket", target,
+                             "nodeId", moved.id, "nodeObjectId", moved.objectId, "fromBucket", j, "toBucket", target,
                              "oldCapacity", oldCap, "splitBit", moved.hash & oldCap,
                              "formula", moved.hash + " & " + oldCap + " = " + (moved.hash & oldCap));
                     }
@@ -476,7 +478,7 @@ final class InstrumentedHashMap<K,V> {
                           (kc = comparableClassFor(k)) != null) &&
                          (dir = compareComparables(kc, k, pk)) != 0)
                 {
-                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "nodeId", p.id,
+                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "nodeId", p.id, "nodeObjectId", p.objectId,
                         "compareResult", dir, "direction", dir < 0 ? "LEFT" : "RIGHT");
                     p = (dir < 0) ? pl : pr;
                 }
@@ -541,7 +543,7 @@ final class InstrumentedHashMap<K,V> {
                                  (dir = compareComparables(kc, k, pk)) == 0)
                             dir = tieBreakOrder(k, pk);
 
-                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "nodeId", p.id,
+                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "nodeId", p.id, "nodeObjectId", p.objectId,
                             "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
                         TreeNode<K,V> xp = p;
                         if ((p = (dir <= 0) ? p.left : p.right) == null) {
@@ -608,7 +610,7 @@ final class InstrumentedHashMap<K,V> {
                     dir = tieBreakOrder(k, pk);
                 }
 
-                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "nodeId", p.id,
+                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "nodeId", p.id, "nodeObjectId", p.objectId,
                     "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
                 TreeNode<K,V> xp = p;
                 if ((p = (dir <= 0) ? p.left : p.right) == null) {
@@ -622,9 +624,9 @@ final class InstrumentedHashMap<K,V> {
                     x.parent = x.prev = xp;
                     if (xpn != null)
                         ((TreeNode<K,V>)xpn).prev = x;
-                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "nodeId", x.id);
+                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "nodeId", x.id, "nodeObjectId", x.objectId);
                     moveRootToFront(tab, balanceInsertion(root, x));
-                    map.emit("TREE_BALANCED", "Свойства красно-чёрного дерева восстановлены", "nodeId", x.id);
+                    map.emit("TREE_BALANCED", "Свойства красно-чёрного дерева восстановлены", "nodeId", x.id, "nodeObjectId", x.objectId);
                     return null;
                 }
             }
@@ -818,7 +820,7 @@ final class InstrumentedHashMap<K,V> {
                     pp.right = r;
                 r.left = p;
                 p.parent = r;
-                p.owner.emit("TREE_ROTATED", "Левое вращение вокруг узла", "nodeId", p.id, "direction", "LEFT", "rootId", root.id);
+                p.owner.emit("TREE_ROTATED", "Левое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId, "direction", "LEFT", "rootId", root.id, "rootObjectId", root.objectId);
             }
             return root;
         }
@@ -837,7 +839,7 @@ final class InstrumentedHashMap<K,V> {
                     pp.left = l;
                 l.right = p;
                 p.parent = l;
-                p.owner.emit("TREE_ROTATED", "Правое вращение вокруг узла", "nodeId", p.id, "direction", "RIGHT", "rootId", root.id);
+                p.owner.emit("TREE_ROTATED", "Правое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId, "direction", "RIGHT", "rootId", root.id, "rootObjectId", root.objectId);
             }
             return root;
         }
@@ -845,11 +847,11 @@ final class InstrumentedHashMap<K,V> {
         static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
                                                     TreeNode<K,V> x) {
             x.red = true;
-            x.owner.emit("TREE_RECOLORED", "Новый узел окрашен в красный", "nodeId", x.id);
+            x.owner.emit("TREE_RECOLORED", "Новый узел окрашен в красный", "nodeId", x.id, "nodeObjectId", x.objectId);
             for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {
                 if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id);
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId", x.objectId);
                     return x;
                 }
                 else if (!xp.red || (xpp = xp.parent) == null)
@@ -859,7 +861,7 @@ final class InstrumentedHashMap<K,V> {
                         xppr.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id);
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
                     }
                     else {
@@ -881,7 +883,7 @@ final class InstrumentedHashMap<K,V> {
                         xppl.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id);
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
                     }
                     else {
@@ -908,7 +910,7 @@ final class InstrumentedHashMap<K,V> {
                     return root;
                 else if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id);
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId", x.objectId);
                     return x;
                 }
                 else if (x.red) {

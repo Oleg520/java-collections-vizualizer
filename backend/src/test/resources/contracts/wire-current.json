@@ -50,7 +50,7 @@
     "message" : "Состояние изменилось"
   },
   "mapState" : {
-    "schemaVersion" : 1,
+    "schemaVersion" : 2,
     "id" : "00000000-0000-0000-0000-000000000025",
     "collection" : "HASH_MAP",
     "revision" : 3,
@@ -83,7 +83,8 @@
           "right" : null,
           "prev" : null,
           "red" : null,
-          "linked" : true
+          "linked" : true,
+          "objectId" : 1
         } ]
       } ],
       "pendingBuckets" : [ ]
@@ -117,11 +118,11 @@
     }
   },
   "mapFull" : {
-    "schemaVersion" : 1,
+    "schemaVersion" : 2,
     "sessionId" : "00000000-0000-0000-0000-000000000025",
     "revision" : 3,
     "trace" : {
-      "schemaVersion" : 1,
+      "schemaVersion" : 2,
       "collection" : "HASH_MAP",
       "operation" : {
         "type" : "PUT",
@@ -298,7 +299,8 @@
         "message" : "В пустой бакет добавлен узел",
         "details" : {
           "nodeId" : 1,
-          "bucketIndex" : 10
+          "bucketIndex" : 10,
+          "nodeObjectId" : 1
         },
         "snapshot" : {
           "phase" : "WORKING",
@@ -328,7 +330,8 @@
               "right" : null,
               "prev" : null,
               "red" : null,
-              "linked" : true
+              "linked" : true,
+              "objectId" : 1
             } ]
           } ],
           "pendingBuckets" : [ ]
@@ -382,7 +385,8 @@
               "right" : null,
               "prev" : null,
               "red" : null,
-              "linked" : true
+              "linked" : true,
+              "objectId" : 1
             } ]
           } ],
           "pendingBuckets" : [ ]
@@ -435,7 +439,8 @@
               "right" : null,
               "prev" : null,
               "red" : null,
-              "linked" : true
+              "linked" : true,
+              "objectId" : 1
             } ]
           } ],
           "pendingBuckets" : [ ]
@@ -469,7 +474,8 @@
             "right" : null,
             "prev" : null,
             "red" : null,
-            "linked" : true
+            "linked" : true,
+            "objectId" : 1
           } ]
         } ],
         "pendingBuckets" : [ ]
@@ -845,12 +851,12 @@
     }
   },
   "mapCompact" : {
-    "schemaVersion" : 1,
+    "schemaVersion" : 2,
     "sessionId" : "00000000-0000-0000-0000-000000000025",
     "revision" : 3,
-    "encoding" : "node-table-v1",
+    "encoding" : "node-table-v2",
     "trace" : {
-      "schemaVersion" : 1,
+      "schemaVersion" : 2,
       "collection" : "HASH_MAP",
       "operation" : {
         "type" : "PUT",
@@ -1027,7 +1033,8 @@
         "message" : "В пустой бакет добавлен узел",
         "details" : {
           "nodeId" : 1,
-          "bucketIndex" : 10
+          "bucketIndex" : 10,
+          "nodeObjectId" : 1
         },
         "snapshot" : {
           "phase" : "WORKING",
@@ -1152,7 +1159,8 @@
       "right" : null,
       "prev" : null,
       "red" : null,
-      "linked" : true
+      "linked" : true,
+      "objectId" : 1
     } ]
   },
   "arrayCompact" : {

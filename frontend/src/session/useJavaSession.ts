@@ -1,3 +1,4 @@
+import type { LocalSplits } from "../dev/splitScenarios";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/api";
 import { SessionConnection } from "./sessionConnection";
@@ -18,7 +19,10 @@ interface PlaybackActions {
 }
 
 /** Owns committed Java state and serializes requests, including explicit session recovery. */
-export function useJavaSession(playback: PlaybackActions) {
+export function useJavaSession(
+  playback: PlaybackActions,
+  localSplits?: LocalSplits,
+) {
   const [session, setSession] = useState<Session | null>(null);
   const [lastKnownSession, setLastKnownSession] = useState<Session | null>(
     null,
@@ -55,6 +59,13 @@ export function useJavaSession(playback: PlaybackActions) {
     );
   };
 
+  const listScenarios = async (type: CollectionType) => {
+    const demos = await api.scenarios(type);
+    return type === "HASH_MAP" && localSplits
+      ? [...demos, ...localSplits.scenarios]
+      : demos;
+  };
+
   const startSession = async (
     next = config.current.collection,
     capacity: number | null | undefined = next === config.current.collection
@@ -78,7 +89,7 @@ export function useJavaSession(playback: PlaybackActions) {
     setError(null);
     playback.pause();
     try {
-      const demos = await api.scenarios(next);
+      const demos = await listScenarios(next);
       if (generation === epoch.current) setScenarios(demos);
       const newSession = await connection.current.change(
         next,
@@ -135,7 +146,10 @@ export function useJavaSession(playback: PlaybackActions) {
   }, [busy]);
 
   const execute = async (
-    request: (session: Session) => Promise<SessionTrace>,
+    work: (
+      connection: SessionConnection,
+      active: () => boolean,
+    ) => Promise<SessionTrace>,
   ) => {
     if (
       busyRef.current ||
@@ -150,7 +164,10 @@ export function useJavaSession(playback: PlaybackActions) {
     setError(null);
     playback.pause();
     try {
-      const response = await connection.current.execute(request);
+      const response = await work(
+        connection.current,
+        () => generation === epoch.current,
+      );
       if (generation !== epoch.current) return;
       setSession(connection.current.session);
       playback.accept(response.trace);
@@ -173,10 +190,19 @@ export function useJavaSession(playback: PlaybackActions) {
     }
   };
   const command = (operation: Operation) => {
-    if (session) void execute((current) => api.command(current, operation));
+    if (session)
+      void execute((conn) =>
+        conn.execute((current) => api.command(current, operation)),
+      );
   };
   const demo = (name: string) => {
-    if (session) void execute((current) => api.scenario(current, name));
+    if (!session) return;
+    if (localSplits?.scenarios.some((s) => s.id === name))
+      void execute((conn, active) => localSplits.run(name, conn, active));
+    else
+      void execute((conn) =>
+        conn.execute((current) => api.scenario(current, name)),
+      );
   };
 
   const recoverSession = async () => {
@@ -203,7 +229,7 @@ export function useJavaSession(playback: PlaybackActions) {
         setCollection(current.collection as CollectionType);
         playback.reset();
       } else playback.showCommitted();
-      const demos = await api.scenarios(
+      const demos = await listScenarios(
         (current?.collection ?? collection) as CollectionType,
       );
       if (generation === epoch.current) setScenarios(demos);

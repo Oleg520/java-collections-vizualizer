@@ -1,4 +1,5 @@
 import type { Bucket, MapNode, Snapshot } from "../../api/types/index";
+import { objectId } from "./identity";
 export interface PlacedNode {
   node: MapNode;
   x: number;
@@ -38,7 +39,7 @@ export function layoutSnapshot(state: Snapshot): Diagram {
   let top = 30,
     width = 650;
   const placeBucket = (bucket: Bucket, pending: boolean) => {
-    const byId = new Map(bucket.nodes.map((n) => [n.id, n]));
+    const byId = new Map(bucket.nodes.map((n) => [objectId(n), n]));
     const local = new Map<number, { x: number; y: number }>();
     let rank = 0,
       depth = 0;
@@ -60,38 +61,39 @@ export function layoutSnapshot(state: Snapshot): Diagram {
     if (bucket.kind === "TREE") {
       walk(bucket.rootId, 0);
       // During treeification some nodes are still in a forest; show them too.
-      for (const n of bucket.nodes) if (!visiting.has(n.id)) walk(n.id, 0);
+      for (const n of bucket.nodes)
+        if (!visiting.has(objectId(n))) walk(objectId(n), 0);
     } else {
       for (const n of bucket.nodes)
-        local.set(n.id, { x: 170 + rank++ * 160, y: top });
+        local.set(objectId(n), { x: 170 + rank++ * 160, y: top });
     }
     for (const n of bucket.nodes) {
-      const position = local.get(n.id);
-      if (!position || positioned.has(n.id)) continue;
-      positioned.add(n.id);
+      const position = local.get(objectId(n));
+      if (!position || positioned.has(objectId(n))) continue;
+      positioned.add(objectId(n));
       nodes.push({ node: n, ...position, bucket: bucket.index, pending });
       width = Math.max(width, position.x + 154);
-      if (bucket.kind === "TREE") {
+      if (n.red !== null) {
         if (n.left !== null)
           edges.push({
-            id: `${n.id}-${n.left}`,
-            from: n.id,
+            id: `L-${objectId(n)}-${n.left}`,
+            from: objectId(n),
             to: n.left,
             label: "L",
             tree: true,
           });
         if (n.right !== null)
           edges.push({
-            id: `${n.id}-${n.right}`,
-            from: n.id,
+            id: `R-${objectId(n)}-${n.right}`,
+            from: objectId(n),
             to: n.right,
             label: "R",
             tree: true,
           });
-      } else if (bucket.kind === "LIST" && n.next !== null)
+      } else if (n.next !== null)
         edges.push({
-          id: `${n.id}-${n.next}`,
-          from: n.id,
+          id: `next-${objectId(n)}-${n.next}`,
+          from: objectId(n),
           to: n.next,
           label: "next",
           tree: false,

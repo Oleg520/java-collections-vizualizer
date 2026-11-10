@@ -6,9 +6,10 @@ test("old backend route 404 preserves the slot and shows an actionable error wit
   let creates = 0,
     resets = 0;
   page.on("request", (r) => {
-    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+    if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+      creates++;
   });
-  await page.route(/\/reset$/, async (route) => {
+  await page.route(/\/reset(?:\?.*)?$/, async (route) => {
     resets++;
     await route.fulfill({
       status: 404,
@@ -47,14 +48,15 @@ test("old backend route 404 preserves the slot and shows an actionable error wit
 test("confirmed expiry creates exactly one replacement", async ({ page }) => {
   let creates = 0;
   page.on("request", (r) => {
-    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+    if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+      creates++;
   });
   await page.goto("/");
   await expect(
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
   await page.route(
-    /\/reset$/,
+    /\/reset(?:\?.*)?$/,
     (route) =>
       route.fulfill({
         status: 404,
@@ -75,4 +77,23 @@ test("confirmed expiry creates exactly one replacement", async ({ page }) => {
   ).toBeEnabled();
   expect(creates).toBe(2);
   await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("an incompatible backend is detected before creating a session or sending a command", async ({
+  page,
+}) => {
+  let writes = 0;
+  page.on("request", (r) => {
+    if (r.method() === "POST") writes++;
+  });
+  await page.route("**/api/v1/health", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "UP", version: "old" }),
+    }),
+  );
+  await page.goto("/");
+  await expect(page.getByRole("alert")).toContainText("Несовместимый backend");
+  expect(writes).toBe(0);
 });

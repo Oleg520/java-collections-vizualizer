@@ -1,3 +1,4 @@
+import { objectId, resolveSelection, type NodeSelection } from "./identity";
 import { keyLabel } from "./presentation";
 import { valueLabel } from "./presentation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -15,7 +16,7 @@ export function Diagram({
   state: Snapshot;
   step?: Step;
   onSelect: (node: MapNode) => void;
-  selectedId?: number;
+  selectedId?: NodeSelection;
 }) {
   const layout = useMemo(() => layoutSnapshot(state), [state]);
   const [zoom, setZoom] = useState<number | "fit" | null>(null);
@@ -62,7 +63,7 @@ export function Diagram({
     duration: reduced ? 0 : 0.3,
     ease: "easeInOut" as const,
   };
-  const positions = new Map(layout.nodes.map((n) => [n.node.id, n]));
+  const positions = new Map(layout.nodes.map((n) => [objectId(n.node), n]));
   const occupied = new Map(state.buckets.map((b) => [b.index, b]));
   const activeBucket =
     typeof step?.details.bucketIndex === "number"
@@ -70,7 +71,9 @@ export function Diagram({
       : typeof step?.details.toBucket === "number"
         ? step.details.toBucket
         : null;
-  const activeNode = step?.details.nodeId;
+  const activeNode = step?.details.nodeObjectId;
+  const selected = resolveSelection(state, selectedId);
+  const selectedObjectId = selected && objectId(selected);
   const indexList = hideEmpty
     ? state.buckets.map((b) => b.index)
     : Array.from({ length: state.capacity }, (_, i) => i);
@@ -164,7 +167,8 @@ export function Diagram({
                     (n) =>
                       n.bucket === i &&
                       !n.pending &&
-                      (bucket?.rootId == null || n.node.id === bucket.rootId),
+                      (bucket?.rootId == null ||
+                        objectId(n.node) === bucket.rootId),
                   );
                   if (target) centerOn(target.x, target.y);
                 }}
@@ -215,11 +219,11 @@ export function Diagram({
       )}
       <div className="diagram-navigation">
         <span>Прокрутите схему · нажмите на бакет, чтобы перейти к узлам</span>
-        {selectedId !== undefined && positions.has(selectedId) && (
+        {selectedObjectId !== undefined && positions.has(selectedObjectId) && (
           <button
             className="icon-button"
             onClick={() => {
-              const node = positions.get(selectedId)!;
+              const node = positions.get(selectedObjectId)!;
               centerOn(node.x, node.y);
             }}
           >
@@ -320,6 +324,7 @@ export function Diagram({
               return (
                 <motion.g
                   key={edge.id}
+                  data-edge={edge.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -348,10 +353,12 @@ export function Diagram({
               );
             })}
             {layout.nodes.map(({ node, x, y, bucket, pending }) => {
-              const active = activeNode === node.id || selectedId === node.id;
+              const active =
+                activeNode === objectId(node) ||
+                selectedObjectId === objectId(node);
               return (
                 <motion.g
-                  key={node.id}
+                  key={objectId(node)}
                   initial={{ opacity: 0, x, y: y - 12, scale: 0.9 }}
                   animate={{
                     x,
@@ -366,6 +373,9 @@ export function Diagram({
                   }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={transition}
+                  data-object-id={objectId(node)}
+                  data-entry-id={node.id}
+                  data-linked={node.linked}
                   role="button"
                   tabIndex={0}
                   aria-label={`Узел ${keyLabel(node.key)}, ${node.red === null ? "список" : node.red ? "красный" : "чёрный"}`}
@@ -378,11 +388,12 @@ export function Diagram({
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  <title>{`${keyLabel(node.key)} → ${valueLabel(node.value)}\nID: ${node.id}; hashCode: ${node.rawHashCode}; hash: ${node.hash}\nparent=${node.parent}; left=${node.left}; right=${node.right}; next=${node.next}`}</title>
+                  <title>{`${keyLabel(node.key)} → ${valueLabel(node.value)}\nID: ${node.id}; objectId: ${objectId(node)}; hashCode: ${node.rawHashCode}; hash: ${node.hash}\nparent=${node.parent}; left=${node.left}; right=${node.right}; next=${node.next}; prev=${node.prev}`}</title>
                   <rect
                     width="116"
                     height="65"
                     rx="9"
+                    strokeDasharray={!node.linked ? "4 3" : undefined}
                     className={`map-node ${active ? "highlighted" : ""} ${node.red === true ? "red-node" : node.red === false ? "black-node" : ""}`}
                   />
                   <line
@@ -413,8 +424,18 @@ export function Diagram({
                     textAnchor="middle"
                     className="svg-node-id"
                   >
-                    #{node.id} · h={node.hash}
+                    #{node.id} · obj {objectId(node)}
                   </text>
+                  {!node.linked && (
+                    <text
+                      x="57"
+                      y="95"
+                      textAnchor="middle"
+                      className="svg-node-id"
+                    >
+                      вне цепочки
+                    </text>
+                  )}
                 </motion.g>
               );
             })}

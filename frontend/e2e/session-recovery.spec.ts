@@ -6,7 +6,7 @@ test("a lost committed response recovers state without retrying rapid commands",
 }) => {
   const created = page.waitForResponse(
     (response) =>
-      /\/sessions$/.test(response.url()) &&
+      /\/sessions(?:\?.*)?$/.test(response.url()) &&
       response.request().method() === "POST",
   );
   await page.goto("/");
@@ -20,7 +20,7 @@ test("a lost committed response recovers state without retrying rapid commands",
       writes++;
   });
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     async (route) => {
       // Java really commits. Only delivery of its response to the browser is interrupted.
       const response = await route.fetch();
@@ -47,7 +47,7 @@ test("a lost committed response recovers state without retrying rapid commands",
   await expect(page.getByLabel("История операций")).toHaveValue("-1");
   await expect(page.getByTestId("step-number")).toHaveText("0");
   const response = await request.get(
-    `http://127.0.0.1:8080/api/v1/sessions/${session.id}`,
+    `http://127.0.0.1:8080/api/v1/sessions/${session.id}?snapshotVersion=2`,
   );
   const committed = await response.json();
   expect(committed.revision).toBe(1);
@@ -73,9 +73,9 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
       resets = 0;
     page.on("request", (r) => {
       if (r.method() !== "POST") return;
-      if (/\/sessions$/.test(r.url())) creates++;
+      if (/\/sessions(?:\?.*)?$/.test(r.url())) creates++;
       if (r.url().includes("/commands?")) writes++;
-      if (/\/reset$/.test(r.url())) resets++;
+      if (/\/reset(?:\?.*)?$/.test(r.url())) resets++;
     });
     await page.goto("/");
     await expect(page.locator(".primary-button")).toBeEnabled();
@@ -90,11 +90,15 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
     await page.locator(".primary-button").click();
     await expect(page.getByTestId("committed-size")).toHaveText("1");
     await expect(page.locator(".primary-button")).toBeEnabled();
-    await page.route(/\/sessions\/[^/?]+$/, (route) => route.abort("failed"), {
-      times: 1,
-    });
     await page.route(
-      /\/commands\?encoding=compact$/,
+      /\/sessions\/[^/?]+(?:\?.*)?$/,
+      (route) => route.abort("failed"),
+      {
+        times: 1,
+      },
+    );
+    await page.route(
+      /\/commands\?encoding=compact(?:&.*)?$/,
       async (route) => {
         const response = await route.fetch();
         expect(response.ok()).toBe(true);
@@ -138,7 +142,8 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
     request,
   }) => {
     const created = page.waitForResponse(
-      (r) => /\/sessions$/.test(r.url()) && r.request().method() === "POST",
+      (r) =>
+        /\/sessions(?:\?.*)?$/.test(r.url()) && r.request().method() === "POST",
     );
     await page.goto("/");
     const session = await (await created).json();
@@ -155,10 +160,12 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
     await expect(page.getByTestId("committed-size")).toHaveText("1");
     await expect(page.locator(".primary-button")).toBeEnabled();
     const current = await (
-      await request.get(`http://127.0.0.1:8080/api/v1/sessions/${session.id}`)
+      await request.get(
+        `http://127.0.0.1:8080/api/v1/sessions/${session.id}?snapshotVersion=2`,
+      )
     ).json();
     const external = await request.post(
-      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact`,
+      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
       {
         data: {
           expectedRevision: current.revision,
@@ -187,7 +194,8 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
         creates = 0;
       page.on("request", (r) => {
         if (r.method() === "POST" && r.url().includes("/commands?")) writes++;
-        if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+        if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+          creates++;
       });
       await page.goto("/");
       await expect(page.locator(".primary-button")).toBeEnabled();
@@ -200,7 +208,7 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
         ).toBeEnabled();
       }
       await page.route(
-        /\/commands\?encoding=compact$/,
+        /\/commands\?encoding=compact(?:&.*)?$/,
         (route) =>
           route.fulfill({
             status,
@@ -241,7 +249,8 @@ test("expired session or backend restart keeps the last snapshot and creates onl
 }) => {
   let creates = 0;
   page.on("request", (r) => {
-    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+    if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+      creates++;
   });
   await page.goto("/");
   await expect(page.locator(".primary-button")).toBeEnabled();
@@ -249,7 +258,7 @@ test("expired session or backend restart keeps the last snapshot and creates onl
   await expect(page.getByTestId("committed-size")).toHaveText("1");
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     (route) =>
       route.fulfill({
         status: 404,
@@ -274,7 +283,7 @@ test("initial backend failure stops the spinner and permits an explicit connecti
   page,
 }) => {
   await page.route(
-    /\/sessions$/,
+    /\/sessions(?:\?.*)?$/,
     (route) => route.fulfill({ status: 503, body: "unavailable" }),
     { times: 1 },
   );
@@ -300,7 +309,7 @@ test("a committed command whose response never arrives times out and reconciles 
   await page.goto("/");
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.route(
-    /\/commands\?encoding=compact$/,
+    /\/commands\?encoding=compact(?:&.*)?$/,
     async (route) => {
       const response = await route.fetch();
       expect(response.ok()).toBe(true);
@@ -329,7 +338,8 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
 }) => {
   let creates = 0;
   page.on("request", (r) => {
-    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+    if (r.method() === "POST" && /\/sessions(?:\?.*)?$/.test(r.url()))
+      creates++;
   });
   let releaseCreate!: () => void,
     createArrived!: () => void,
@@ -338,7 +348,7 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
   const arrived = new Promise<void>((r) => (createArrived = r));
   const catalogGate = new Promise<void>((r) => (releaseCatalog = r));
   await page.route(
-    /\/sessions$/,
+    /\/sessions(?:\?.*)?$/,
     async (route) => {
       const response = await route.fetch();
       expect(response.ok()).toBe(true);
@@ -359,7 +369,7 @@ test("a switch waiting for scenarios cannot create another slot after a lost cre
     .getByLabel("Коллекция", { exact: true })
     .selectOption("ARRAY_LIST");
   const failed = page.waitForEvent("requestfailed", {
-    predicate: (r) => /\/sessions$/.test(r.url()),
+    predicate: (r) => /\/sessions(?:\?.*)?$/.test(r.url()),
   });
   releaseCreate();
   await failed;
@@ -380,7 +390,7 @@ test("zero or elapsed Retry-After does not leave recovery permanently disabled",
   await expect(page.locator(".primary-button")).toBeEnabled();
   for (const retryAfter of ["0", "Tue, 10 Nov 2020 10:00:00 GMT"]) {
     await page.route(
-      /\/commands\?encoding=compact$/,
+      /\/commands\?encoding=compact(?:&.*)?$/,
       (route) =>
         route.fulfill({
           status: 429,

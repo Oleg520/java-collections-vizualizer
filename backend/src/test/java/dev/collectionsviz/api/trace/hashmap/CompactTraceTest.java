@@ -28,7 +28,7 @@ class CompactTraceTest {
         Trace<HashMapSnapshot> source=null;
         for(int i=0;i<97;i++) source=engine.execute(new Operation(OperationType.PUT,
             KeySpec.collision(String.format("%03d",i)+"\0".repeat(61),i%2==0?1:129),"\0".repeat(128)));
-        var response=new SessionTrace<>(1,UUID.randomUUID(),97,source);
+        var response=new SessionTrace<>(2,UUID.randomUUID(),97,source);
         var compact=CompactTrace.encode(response);
         assertEquals(source.before(),decode(compact.trace().before(),compact.nodePool()));
         assertEquals(source.committed(),decode(compact.trace().committed(),compact.nodePool()));
@@ -44,4 +44,20 @@ class CompactTraceTest {
         assertTrue(bytes<8*1024*1024,"compact response budget: "+bytes);
         assertTrue(compact.nodePool().size()<5000);
     }
+    @Test void physicalCopiesSurviveAsymmetricSplitRoundTrips() {
+        for(int low:List.of(6,2)) {
+            var engine=new HashMapEngine(64); Trace<HashMapSnapshot> last=null;
+            for(int i=0;i<low;i++) engine.execute(new Operation(OperationType.PUT,KeySpec.collision("L"+i,1),"L"));
+            for(int i=0;i<7;i++) engine.execute(new Operation(OperationType.PUT,KeySpec.collision("H"+i,65),"H"));
+            for(int i=0;engine.snapshot().size()<49;i++) last=engine.execute(new Operation(OperationType.PUT,KeySpec.collision("F"+i,2+i%30),"F"));
+            var encoded=CompactTrace.encode(new SessionTrace<>(2,UUID.randomUUID(),49,last));
+            assertEquals(2,encoded.schemaVersion()); assertEquals("node-table-v2",encoded.encoding());
+            for(int i=0;i<last.steps().size();i++) assertEquals(last.steps().get(i).snapshot(),decode(encoded.trace().steps().get(i).snapshot(),encoded.nodePool()));
+            var frame=decode(encoded.trace().steps().get(11).snapshot(),encoded.nodePool());
+            var nodes=new ArrayList<NodeView>(); frame.buckets().forEach(b->nodes.addAll(b.nodes()));frame.pendingBuckets().forEach(b->nodes.addAll(b.nodes()));
+            var copies=nodes.stream().filter(n->n.id()==(low==6?4:2)).toList();
+            assertEquals(2,copies.size());assertNotEquals(copies.get(0).objectId(),copies.get(1).objectId());
+        }
+    }
+
 }

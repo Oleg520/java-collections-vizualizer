@@ -24,11 +24,11 @@ class TracePolicyIntegrationTest {
     @Autowired SessionStore sessions;
 
     String state(String id) throws Exception {
-        return mvc.perform(get("/api/v1/sessions/"+id))
+        return mvc.perform(get("/api/v1/sessions/"+id).param("snapshotVersion","2"))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
     }
     void forbidden(String path,String body) throws Exception {
-        mvc.perform(post(path).contentType("application/json").content(body))
+        mvc.perform(post(path).param("snapshotVersion","2").contentType("application/json").content(body))
             .andExpect(status().isForbidden()).andExpect(jsonPath("schemaVersion").value(1))
             .andExpect(jsonPath("code").value("FULL_TRACE_DISABLED"))
             .andExpect(jsonPath("message").value("Полный trace отключён. Используйте encoding=compact."))
@@ -49,7 +49,7 @@ class TracePolicyIntegrationTest {
         }
         for(String endpoint:new String[]{"/commands","/scenarios/treeify"}) {
             String body=endpoint.equals("/commands")?ApiIntegrationTest.command(1,"PUT","A","null"):"{\"expectedRevision\":1}";
-            mvc.perform(post(base+endpoint+"?encoding=bad").contentType("application/json").content(body))
+            mvc.perform(post(base+endpoint+"?encoding=bad").param("snapshotVersion","2").contentType("application/json").content(body))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("code").value("INVALID_INPUT"));
             assertEquals(before,state(id));
         }
@@ -57,13 +57,13 @@ class TracePolicyIntegrationTest {
     @Test void compactScenariosAndRevisionConflictsStillWorkWhenFullIsDisabled() throws Exception {
         var session=sessions.create(0);
         String base="/api/v1/sessions/"+session.id();
-        mvc.perform(post(base+"/scenarios/treeify?encoding=compact").contentType("application/json").content("{\"expectedRevision\":0}"))
+        mvc.perform(post(base+"/scenarios/treeify?encoding=compact").param("snapshotVersion","2").contentType("application/json").content("{\"expectedRevision\":0}"))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(1))
-            .andExpect(jsonPath("encoding").value("node-table-v1"))
+            .andExpect(jsonPath("encoding").value("node-table-v2"))
             .andExpect(jsonPath("trace.committed.size").value(9))
             .andExpect(jsonPath("trace.committed.buckets[0].nodeRefs.length()").value(9));
         var before=state(session.id().toString());
-        mvc.perform(post(base+"/commands?encoding=compact").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")))
+        mvc.perform(post(base+"/commands?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(ApiIntegrationTest.command(0,"RESET","A","null")))
             .andExpect(status().isConflict()).andExpect(jsonPath("code").value("REVISION_CONFLICT"));
         assertEquals(before,state(session.id().toString()));
     }
@@ -77,9 +77,9 @@ class TracePolicyIntegrationTest {
         var before=state(id);
         forbidden(path+"?encoding=full",body);
         assertEquals(before,state(id));
-        byte[] compact=mvc.perform(post(path+"?encoding=compact").contentType("application/json").content(body))
+        byte[] compact=mvc.perform(post(path+"?encoding=compact").param("snapshotVersion","2").contentType("application/json").content(body))
             .andExpect(status().isOk()).andExpect(jsonPath("revision").value(97))
-            .andExpect(jsonPath("encoding").value("node-table-v1"))
+            .andExpect(jsonPath("encoding").value("node-table-v2"))
             .andExpect(jsonPath("trace.committed.size").value(97))
             .andExpect(jsonPath("trace.committed.capacity").value(256))
             .andExpect(jsonPath("trace.steps.length()").value(990))

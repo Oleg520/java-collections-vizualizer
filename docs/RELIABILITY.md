@@ -117,3 +117,17 @@ GC, число сессий или CPU. Изменение квот должно
 
 Команды: [TESTING.md](TESTING.md), [VERSIONING.md](VERSIONING.md),
 [RELEASE_ARTIFACTS.md](RELEASE_ARTIFACTS.md), [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+
+## HashMap physical snapshots (Issue #55)
+
+Working snapshots address Java objects by objectId; logical id is retained across
+replacement. Every-frame graph checks and asymmetric split fixtures guard against
+aliasing. Local resource medians and reproduction are recorded in
+[verification/hashmap-physical-identity.md](verification/hashmap-physical-identity.md).
+The probe is bounded and short; it does not prove leak freedom or a universal worst
+case. The decoder validates addressing before playback, increasing whole-history
+decode work; production quotas were not raised. HashMap V1 requests are rejected
+before mutation. Backend must be upgraded before the controlled frontend; old tabs
+reload rather than retry writes or downgrade the protocol. Animation smoothing
+remains Issue #47.

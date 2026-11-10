@@ -3,6 +3,7 @@ import { layoutSnapshot } from "./layout";
 import type { MapNode, Snapshot } from "../../api/types/index";
 const node = (id: number, extra: Partial<MapNode> = {}): MapNode => ({
   id,
+  objectId: id,
   key: { type: "COLLISION", value: `K${id}`, hashCodeOverride: 42 },
   value: "v",
   rawHashCode: 42,

@@ -1,3 +1,5 @@
+import type { LocalSplits } from "../dev/splitScenarios";
+import type { NodeSelection } from "../features/hashmap/identity";
 import {
   collectionViews,
   collectionOptions,
@@ -22,9 +24,11 @@ import { TraceInspector } from "../components/TraceInspector";
 import { useJavaSession } from "../session/useJavaSession";
 import { useTracePlayback } from "../playback/useTracePlayback";
 
-export default function App() {
+export default function App({
+  localSplits,
+}: { localSplits?: LocalSplits } = {}) {
   const playback = useTracePlayback();
-  const [selectedNodeId, setSelectedNodeId] = useState<number>();
+  const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
   const {
     collection,
     lastKnownSession,
@@ -43,18 +47,21 @@ export default function App() {
     startSession,
     command,
     demo,
-  } = useJavaSession({
-    pause: playback.pause,
-    reset: () => {
-      playback.reset();
-      setSelectedNodeId(undefined);
+  } = useJavaSession(
+    {
+      pause: playback.pause,
+      reset: () => {
+        playback.reset();
+        setSelectedNodeId(undefined);
+      },
+      accept: (trace) => {
+        playback.accept(trace);
+        setSelectedNodeId(undefined);
+      },
+      showCommitted: playback.showCommitted,
     },
-    accept: (trace) => {
-      playback.accept(trace);
-      setSelectedNodeId(undefined);
-    },
-    showCommitted: playback.showCommitted,
-  });
+    localSplits,
+  );
   const { trace, step, cursor, historyIndex, playing, navigate } = playback;
   const snapshot =
     step?.snapshot ??
@@ -63,8 +70,11 @@ export default function App() {
       ? lastKnownSession.state
       : undefined);
   const view = collectionViews[collection];
-  const details = view.selectedDetails(snapshot, selectedNodeId, () =>
-    setSelectedNodeId(undefined),
+  const details = view.selectedDetails(
+    snapshot,
+    selectedNodeId,
+    () => setSelectedNodeId(undefined),
+    setSelectedNodeId,
   );
   return (
     <div className="app-shell">
@@ -202,6 +212,19 @@ export default function App() {
                   <p>Состояние коллекции появится после создания сессии.</p>
                 </div>
               )}
+              {localSplits &&
+                trace?.operation.type === "SCENARIO" &&
+                localSplits.scenarios.some(
+                  (s) => s.id === trace.operation.value,
+                ) && (
+                  <button
+                    className="subtle-button"
+                    disabled={busy}
+                    onClick={() => navigate(localSplits.problemFrame)}
+                  >
+                    {localSplits.jumpLabel}
+                  </button>
+                )}
               <PlaybackPanel
                 playback={playback}
                 step={step}

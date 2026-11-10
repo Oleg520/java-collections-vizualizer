@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Fixed wire examples captured before the package refactor. */
+/** Fixed current wire examples, intentionally migrated with HashMap V2. */
 class SerializationContractTest {
     private final JsonMapper json = new JsonMapper();
 
@@ -27,7 +27,7 @@ class SerializationContractTest {
         var array = new ArrayListEngine(0);
         var mapOperation = new Operation(OperationType.PUT, KeySpec.collision("key\"\\\n", 42), "value\n");
         var arrayOperation = Operation.array(OperationType.ADD, null, new Element(ElementType.STRING, "value\"\n"), null);
-        var mapTrace = new SessionTrace<>(1, id, 3, map.execute(mapOperation));
+        var mapTrace = new SessionTrace<>(2, id, 3, map.execute(mapOperation));
         var arrayTrace = new SessionTrace<>(1, id, 4, array.execute(arrayOperation));
         Map<String,Object> examples = new LinkedHashMap<>();
         examples.put("create", new CreateRequest(CollectionType.ARRAY_LIST, 0));
@@ -37,14 +37,14 @@ class SerializationContractTest {
         examples.put("arrayCommand", new CommandRequest(3L, arrayOperation));
         examples.put("scenario", new ScenarioRequest(4L));
         examples.put("error", new ErrorResponse(1, "REVISION_CONFLICT", "Состояние изменилось"));
-        examples.put("mapState", new SessionState(1, id, "HASH_MAP", 3, 1800, map.snapshot()));
+        examples.put("mapState", new SessionState(2, id, "HASH_MAP", 3, 1800, map.snapshot()));
         examples.put("arrayState", new SessionState(1, id, "ARRAY_LIST", 4, 1800, array.snapshot()));
         examples.put("mapFull", mapTrace);
         examples.put("arrayFull", arrayTrace);
         examples.put("mapCompact", CompactTraceRegistry.STANDARD.encode(mapTrace));
         examples.put("arrayCompact", CompactTraceRegistry.STANDARD.encode(arrayTrace));
         var actual = json.readTree(json.writeValueAsString(examples));
-        try (var fixture = getClass().getResourceAsStream("/contracts/wire-v1.json")) {
+        try (var fixture = getClass().getResourceAsStream("/contracts/wire-current.json")) {
             assertNotNull(fixture);
             assertEquals(json.readTree(fixture), actual);
         }

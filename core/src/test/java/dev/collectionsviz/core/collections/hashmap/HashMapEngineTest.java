@@ -31,7 +31,7 @@ class HashMapEngineTest {
             Map<Long,NodeView> nodes=new HashMap<>();
             for(var n:b.nodes()) {
                 assertTrue(ids.add(n.id()),"unique ID"); assertTrue(keys.add(n.key()),"unique key");
-                assertEquals(b.index(),(state.capacity()-1)&n.hash()); assertTrue(n.linked()); nodes.put(n.id(),n);
+                assertEquals(b.index(),(state.capacity()-1)&n.hash()); assertTrue(n.linked()); nodes.put(n.objectId(),n);
                 assertEquals(n.rawHashCode() ^ (n.rawHashCode() >>> 16),n.hash());
             }
             Set<Long> chain=new HashSet<>(); Long id=b.headId(),prev=null;
@@ -53,12 +53,12 @@ class HashMapEngineTest {
     }
     static int blackHeight(NodeView node,Long parent,Map<Long,NodeView> nodes,Set<Long> visited) {
         if(node==null) return 1;
-        assertTrue(visited.add(node.id()),"acyclic tree"); assertEquals(parent,node.parent());
+        assertTrue(visited.add(node.objectId()),"acyclic tree"); assertEquals(parent,node.parent());
         var left=nodes.get(node.left()); var right=nodes.get(node.right());
         if(node.left()!=null) { assertNotNull(left); assertTrue(left.hash()<=node.hash()); }
         if(node.right()!=null) { assertNotNull(right); assertTrue(right.hash()>=node.hash()); }
         if(node.red()) { if(left!=null) assertFalse(left.red()); if(right!=null) assertFalse(right.red()); }
-        int l=blackHeight(left,node.id(),nodes,visited),r=blackHeight(right,node.id(),nodes,visited);
+        int l=blackHeight(left,node.objectId(),nodes,visited),r=blackHeight(right,node.objectId(),nodes,visited);
         assertEquals(l,r,"equal black height at "+node.id()); return l+(node.red()?0:1);
     }
     @Test void lazyAllocationHashNullAndUpdate() {
