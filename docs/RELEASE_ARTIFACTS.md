@@ -60,13 +60,14 @@ The frontend is static output from Vite. `frontend/public/_headers` provides
 caching for content-hashed assets. Serve `index.html` for SPA navigation; do not
 add a top-level `404.html`, catch-all redirect, Pages worker or functions.
 
-Cloudflare Pages Git previews use these repository-relative settings:
+The existing Cloudflare Pages project retains these Git preview build settings.
+Commands and output paths are relative to the repository root:
 
 | Setting | Value |
 | --- | --- |
-| Root directory | `frontend` |
-| Build command | `sh ../scripts/fetch-version-tags.sh && npm ci && npm run build` |
-| Output directory | `dist` |
+| Root directory | `/` (repository root) |
+| Build command | `sh scripts/fetch-version-tags.sh && npm --prefix frontend ci && npm --prefix frontend run build` |
+| Output directory | `frontend/dist` |
 | Node version | Match `frontend/package.json` (22.12+ on 22, or 24+) |
 
 Keep existing Git integration and preview settings when editing build scripts.
