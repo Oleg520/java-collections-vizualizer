@@ -270,3 +270,20 @@ it("does not turn a queued switch into another creation after a lost create", as
   await c.change("ARRAY_LIST", 0, () => true);
   expect(t.create).toHaveBeenCalledTimes(2);
 });
+
+it("retains the creation failure guard for user intents delayed before queue entry", async () => {
+  const t = transport(),
+    c = new SessionConnection(t);
+  const intentVersion = c.creationFailure;
+  t.create.mockRejectedValueOnce(new ApiError("lost", 0, "NETWORK_ERROR"));
+  await expect(c.change("HASH_MAP", undefined, () => true)).rejects.toThrow(
+    "lost",
+  );
+  // The user selected this before failure, but a slow catalog GET delayed queue entry.
+  await expect(
+    c.change("ARRAY_LIST", 0, () => true, intentVersion),
+  ).rejects.toThrow("явным действием");
+  expect(t.create).toHaveBeenCalledTimes(1);
+  await c.change("ARRAY_LIST", 0, () => true);
+  expect(t.create).toHaveBeenCalledTimes(2);
+});

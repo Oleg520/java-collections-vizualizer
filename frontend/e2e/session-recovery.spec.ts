@@ -323,3 +323,55 @@ test("a committed command whose response never arrives times out and reconciles 
   await expect(page.locator(".primary-button")).toBeEnabled();
   expect(writes).toBe(2);
 });
+
+test("a switch waiting for scenarios cannot create another slot after a lost creation", async ({
+  page,
+}) => {
+  let creates = 0;
+  page.on("request", (r) => {
+    if (r.method() === "POST" && /\/sessions$/.test(r.url())) creates++;
+  });
+  let releaseCreate!: () => void,
+    createArrived!: () => void,
+    releaseCatalog!: () => void;
+  const createGate = new Promise<void>((r) => (releaseCreate = r));
+  const arrived = new Promise<void>((r) => (createArrived = r));
+  const catalogGate = new Promise<void>((r) => (releaseCatalog = r));
+  await page.route(
+    /\/sessions$/,
+    async (route) => {
+      const response = await route.fetch();
+      expect(response.ok()).toBe(true);
+      createArrived();
+      await createGate;
+      await route.abort("failed");
+    },
+    { times: 1 },
+  );
+  await page.route(
+    /\/scenarios\?collection=ARRAY_LIST$/,
+    async (route) => {
+      await catalogGate;
+      await route.continue();
+    },
+    { times: 1 },
+  );
+  await page.goto("/");
+  await arrived;
+  await page
+    .getByLabel("Коллекция", { exact: true })
+    .selectOption("ARRAY_LIST");
+  const failed = page.waitForEvent("requestfailed", {
+    predicate: (r) => /\/sessions$/.test(r.url()),
+  });
+  releaseCreate();
+  await failed;
+  releaseCatalog();
+  await expect(page.getByRole("alert")).toContainText("явным действием");
+  expect(creates).toBe(1);
+  await page.getByRole("button", { name: "Новая сессия", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Выполнить add(E)", exact: true }),
+  ).toBeEnabled();
+  expect(creates).toBe(2);
+});

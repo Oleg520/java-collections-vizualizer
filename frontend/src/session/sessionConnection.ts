@@ -17,7 +17,7 @@ export class SessionConnection {
   session: Session | null = null;
   needsRefresh = false;
   retryAt = 0;
-  private creationFailure = 0;
+  creationFailure = 0;
   private pending: Promise<void> = Promise.resolve();
   constructor(
     private transport: Pick<typeof api, "create" | "reset" | "get"> = api,
@@ -35,8 +35,8 @@ export class SessionConnection {
     collection: CollectionType,
     capacity: number | undefined,
     active: () => boolean,
+    creationFailure = this.creationFailure,
   ) {
-    const creationFailure = this.creationFailure;
     return this.serialize(async () => {
       if (!active()) return null; // Coalesce switches that have not started yet.
       this.checkCooldown();

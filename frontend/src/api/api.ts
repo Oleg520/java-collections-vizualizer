@@ -59,7 +59,21 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
       signal: AbortSignal.timeout(15000),
     });
     // The same deadline covers headers AND the response body.
-    const body = await response.text();
+    const retryAt = retryDeadline(response.headers.get("Retry-After"));
+    let body: string;
+    try {
+      body = await response.text();
+    } catch (error) {
+      // Known HTTP rejection headers remain useful even when its body is lost.
+      if (!response.ok)
+        throw new ApiError(
+          apiMessage(response.status, "HTTP_ERROR", null),
+          response.status,
+          "HTTP_ERROR",
+          retryAt,
+        );
+      throw error;
+    }
     let payload;
     try {
       payload = JSON.parse(body);
@@ -73,7 +87,7 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
         apiMessage(response.status, code, payload?.message),
         response.status,
         code,
-        retryDeadline(response.headers.get("Retry-After")),
+        retryAt,
       );
     }
     if (payload === null)

@@ -75,3 +75,19 @@ it("treats malformed success JSON as uncertain and gives actionable route errors
   });
   await expect(api.get("tab")).rejects.toThrow("совместимость версий");
 });
+
+it("retains HTTP rejection and Retry-After when reading the error body fails", async () => {
+  const now = Date.now();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({ "Retry-After": "60" }),
+      text: vi.fn().mockRejectedValue(new Error("body disconnected")),
+    }),
+  );
+  const error = await api.get("tab").catch((e) => e);
+  expect(error.status).toBe(429);
+  expect(error.retryAt).toBeGreaterThanOrEqual(now + 60000);
+});

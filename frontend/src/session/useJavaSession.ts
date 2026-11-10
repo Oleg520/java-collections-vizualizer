@@ -62,6 +62,8 @@ export function useJavaSession(playback: PlaybackActions) {
       : undefined,
   ) => {
     if (Date.now() < connection.current.retryAt) return;
+    // Capture the user intent before the catalog request can delay queue entry.
+    const creationFailure = connection.current.creationFailure;
     const changedCollection = next !== config.current.collection;
     const generation = ++epoch.current;
     config.current = { collection: next, capacity: capacity ?? undefined };
@@ -82,6 +84,7 @@ export function useJavaSession(playback: PlaybackActions) {
         next,
         capacity ?? undefined,
         () => generation === epoch.current,
+        creationFailure,
       );
       if (generation !== epoch.current) return;
       if (!newSession) return;
