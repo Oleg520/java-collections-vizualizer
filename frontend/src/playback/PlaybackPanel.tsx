@@ -1,7 +1,10 @@
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { operationLabel } from "../presentation/operationLabel";
 import {
   ArrowRight,
   Check,
+  ChevronDown,
+  ChevronUp,
   Layers,
   Pause,
   Play,
@@ -15,17 +18,47 @@ import type { useTracePlayback } from "./useTracePlayback";
 export function PlaybackPanel({
   playback,
   step,
+  workspaceRef,
 }: {
   playback: ReturnType<typeof useTracePlayback>;
   step?: Step;
+  workspaceRef: RefObject<HTMLElement | null>;
 }) {
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
+  const [collapsed, setCollapsed] = useState(false);
+  const dockRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const dock = dockRef.current;
+    const workspace = workspaceRef.current;
+    if (!dock || !workspace) return;
+    const root = document.documentElement;
+    const update = () => {
+      const bounds = workspace.getBoundingClientRect();
+      dock.style.setProperty(
+        "--playback-center",
+        `${bounds.left + bounds.width / 2}px`,
+      );
+      dock.style.setProperty("--playback-workspace-width", `${bounds.width}px`);
+      root.style.setProperty("--playback-height", `${dock.offsetHeight}px`);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(workspace);
+    observer.observe(dock);
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+      root.style.removeProperty("--playback-height");
+    };
+  }, [workspaceRef, collapsed]);
   return (
     <section
+      ref={dockRef}
       id="playback"
       tabIndex={-1}
-      className="playback panel"
+      className={`playback panel playback-dock${collapsed ? " is-collapsed" : ""}`}
       aria-label="Управление воспроизведением"
     >
       <div className="playback-top">
@@ -80,55 +113,69 @@ export function PlaybackPanel({
           <b data-testid="step-number">{trace ? cursor + 1 : 0}</b>
           <span>/ {trace?.steps.length ?? 0}</span>
         </div>
-        <label className="speed-control">
-          <span>Скорость</span>
-          <select
-            aria-label="Скорость воспроизведения"
-            value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
-          >
-            {[0.5, 1, 2, 4].map((s) => (
-              <option key={s} value={s}>
-                {s}×
-              </option>
-            ))}
-          </select>
-        </label>
+        <button
+          className="icon-button collapse-playback"
+          aria-label={collapsed ? "Развернуть плеер" : "Свернуть плеер"}
+          title={collapsed ? "Развернуть плеер" : "Свернуть плеер"}
+          aria-expanded={!collapsed}
+          aria-controls="playback-details"
+          onClick={() => setCollapsed((value) => !value)}
+        >
+          {collapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </button>
       </div>
-      <input
-        aria-label="Позиция воспроизведения"
-        className="timeline"
-        type="range"
-        min="0"
-        max={Math.max(1, (trace?.steps.length ?? 1) - 1)}
-        value={cursor}
-        onChange={(e) => navigate(Number(e.target.value))}
-        disabled={!trace}
-      />
-      <div
-        className="step-explanation"
-        role="region"
-        aria-label="Пояснение текущего шага"
-        tabIndex={0}
-      >
-        <span className="step-symbol">
-          {step?.event === "OPERATION_COMPLETED" ? (
-            <Check size={16} />
-          ) : (
-            <ArrowRight size={16} />
-          )}
-        </span>
-        <div>
-          <strong>
-            {step?.message ?? "Операции превращаются в понятные шаги"}
-          </strong>
-          <code>
-            {step?.details.formula
-              ? String(step.details.formula)
-              : step
-                ? `${step.event} · ${operationLabel(step.operation)}`
-                : "Воспроизведение управляет временем, а не состоянием Java-коллекции."}
-          </code>
+      <div id="playback-details" hidden={collapsed}>
+        <div className="playback-timeline">
+          <input
+            aria-label="Позиция воспроизведения"
+            className="timeline"
+            type="range"
+            min="0"
+            max={Math.max(1, (trace?.steps.length ?? 1) - 1)}
+            value={cursor}
+            onChange={(e) => navigate(Number(e.target.value))}
+            disabled={!trace}
+          />
+          <label className="speed-control">
+            <span>Скорость</span>
+            <select
+              aria-label="Скорость воспроизведения"
+              value={speed}
+              onChange={(e) => setSpeed(Number(e.target.value))}
+            >
+              {[0.5, 1, 2, 4].map((s) => (
+                <option key={s} value={s}>
+                  {s}×
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div
+          className="step-explanation"
+          role="region"
+          aria-label="Пояснение текущего шага"
+          tabIndex={0}
+        >
+          <span className="step-symbol">
+            {step?.event === "OPERATION_COMPLETED" ? (
+              <Check size={16} />
+            ) : (
+              <ArrowRight size={16} />
+            )}
+          </span>
+          <div>
+            <strong>
+              {step?.message ?? "Операции превращаются в понятные шаги"}
+            </strong>
+            <code>
+              {step?.details.formula
+                ? String(step.details.formula)
+                : step
+                  ? `${step.event} · ${operationLabel(step.operation)}`
+                  : "Воспроизведение управляет временем, а не состоянием Java-коллекции."}
+            </code>
+          </div>
         </div>
       </div>
     </section>

@@ -97,11 +97,15 @@ The screenshot command updates `docs/arraylist-desktop.png` and
 
 ## Постоянное управление воспроизведением
 
-`playback-dock.spec.ts` проверяет нижнюю панель на desktop/mobile, при росте
+`playback-dock.spec.ts` проверяет плавающую карточку на desktop/mobile, при росте
 дерева, переносе между буферами ArrayList, прокрутке страницы и смене ориентации.
 Проверяются доступность истории, технических деталей и footer над панелью,
 клавиатурный переход к плееру, кнопки, timeline, touch, длинное пояснение на коротком
-экране и оба режима `prefers-reduced-motion`. Проверки используют настоящий backend.
+экране и оба режима `prefers-reduced-motion`. Отдельно проверяются центрирование
+при изменении рабочей области, сворачивание без сброса trace/cursor/playing,
+компенсация прокрутки и доступ к полю, оказавшемуся под карточкой.
+Проверки используют настоящий backend. [Скриншоты desktop/mobile](verification/playback-dock/)
+показывают раскрытое и свёрнутое состояние.
 
 ```bash
 E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- playback-dock.spec.ts
