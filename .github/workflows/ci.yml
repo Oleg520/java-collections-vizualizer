@@ -14,6 +14,23 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Read IntelliJ formatter version
+        id: formatter
+        run: |
+          python3 - <<'PY'
+          import os, runpy
+          formatter = runpy.run_path('scripts/java-format.py')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"version={formatter['VERSION']}-{formatter['BUILD']}\n")
+          PY
+      - name: Cache IntelliJ Java formatter
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/jcv-java-formatter
+          key: java-formatter-${{ runner.os }}-${{ runner.arch }}-${{ steps.formatter.outputs.version }}
+      - name: Check Java formatting
+        timeout-minutes: 15
+        run: ./mvnw -B -Djava.format=check validate
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

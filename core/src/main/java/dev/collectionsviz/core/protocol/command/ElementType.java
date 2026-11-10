@@ -1,3 +1,3 @@
 package dev.collectionsviz.core.protocol.command;
 
-public enum ElementType { STRING, INTEGER, NULL }
+public enum ElementType {STRING, INTEGER, NULL}

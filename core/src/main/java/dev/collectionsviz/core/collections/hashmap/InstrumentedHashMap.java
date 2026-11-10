@@ -31,93 +31,132 @@ import java.util.*;
 import java.lang.reflect.*;
 import java.util.function.LongSupplier;
 
-final class InstrumentedHashMap<K,V> {
+final class InstrumentedHashMap<K, V> {
     static final int DEFAULT_INITIAL_CAPACITY = 16, MAXIMUM_CAPACITY = 1 << 30;
     static final int TREEIFY_THRESHOLD = 8, UNTREEIFY_THRESHOLD = 6, MIN_TREEIFY_CAPACITY = 64;
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    Node<K,V>[] table, pendingTable;
+    Node<K, V>[] table, pendingTable;
     // Nodes held in resize's local lo/hi variables before they reach the new table.
-    List<Node<K,V>> inFlight = List.of();
+    List<Node<K, V>> inFlight = List.of();
     int inFlightIndex;
     int size, modCount, threshold;
     final float loadFactor = DEFAULT_LOAD_FACTOR;
     final LongSupplier ids;
     final LongSupplier objectIds;
     final Observer observer;
-    interface Observer { void event(String event, String message, Map<String,Object> details); }
+
+    interface Observer {
+        void event(String event, String message, Map<String, Object> details);
+    }
+
     InstrumentedHashMap(int initialCapacity, LongSupplier ids, LongSupplier objectIds, Observer observer) {
         this.threshold = initialCapacity == 0 ? 0 : tableSizeFor(initialCapacity);
         this.ids = ids;
         this.objectIds = objectIds;
         this.observer = observer;
     }
+
     void emit(String event, String message, Object... pairs) {
-        Map<String,Object> details = new LinkedHashMap<>();
-        for (int i=0;i<pairs.length;i+=2) details.put((String)pairs[i], pairs[i+1]);
+        Map<String, Object> details = new LinkedHashMap<>();
+        for (int i = 0; i < pairs.length; i += 2) details.put((String) pairs[i], pairs[i + 1]);
         observer.event(event, message, Collections.unmodifiableMap(details));
     }
-    boolean matches(Node<K,V> node, int hash, Object key) {
+
+    boolean matches(Node<K, V> node, int hash, Object key) {
         boolean hashEqual = node.hash == hash;
         boolean identityEqual = hashEqual && node.key == key;
         boolean equalsChecked = hashEqual && !identityEqual && key != null;
         boolean equal = identityEqual || (equalsChecked && key.equals(node.key));
         emit("KEY_COMPARED", equal ? "Hash и ключ совпали: запись найдена" : "Ключ не совпал: продолжаем поиск",
-             "nodeId", node.id, "nodeObjectId", node.objectId, "nodeKey", String.valueOf(node.key), "hashEqual", hashEqual,
-             "identityEqual", identityEqual, "equalsChecked", equalsChecked, "equal", equal);
+                "nodeId", node.id, "nodeObjectId", node.objectId, "nodeKey", String.valueOf(node.key), "hashEqual",
+                hashEqual,
+                "identityEqual", identityEqual, "equalsChecked", equalsChecked, "equal", equal);
         return equal;
     }
-    void visit(Node<K,V> node, int hash, Object key) {
+
+    void visit(Node<K, V> node, int hash, Object key) {
         emit("TREE_VISITED", "Сравниваем hash, equals и Comparable в узле дерева",
-             "nodeId", node.id, "nodeObjectId", node.objectId, "nodeHash", node.hash, "searchHash", hash,
-             "equal", node.hash == hash && Objects.equals(node.key, key));
+                "nodeId", node.id, "nodeObjectId", node.objectId, "nodeHash", node.hash, "searchHash", hash,
+                "equal", node.hash == hash && Objects.equals(node.key, key));
     }
+
     void select(int hash) {
         if (table != null) emit("BUCKET_SELECTED", "(capacity - 1) & hash выбирает бакет",
-            "bucketIndex", (table.length - 1) & hash, "capacity", table.length, "hash", hash,
-            "formula", "(" + table.length + " - 1) & " + hash + " = " + ((table.length - 1) & hash));
+                "bucketIndex", (table.length - 1) & hash, "capacity", table.length, "hash", hash,
+                "formula", "(" + table.length + " - 1) & " + hash + " = " + ((table.length - 1) & hash));
         else emit("TABLE_ABSENT", "Таблица ещё не выделена; поиск возвращает null");
     }
-    Node<K,V> newNode(int hash, K key, V value, Node<K,V> next) {
-        Node<K,V> node = new Node<>(hash, key, value, next);
-        node.id = ids.getAsLong(); node.objectId = objectIds.getAsLong(); node.owner = this; return node;
+
+    Node<K, V> newNode(int hash, K key, V value, Node<K, V> next) {
+        Node<K, V> node = new Node<>(hash, key, value, next);
+        node.id = ids.getAsLong();
+        node.objectId = objectIds.getAsLong();
+        node.owner = this;
+        return node;
     }
-    TreeNode<K,V> newTreeNode(int hash, K key, V value, Node<K,V> next) {
-        TreeNode<K,V> node = new TreeNode<>(hash, key, value, next);
-        node.id = ids.getAsLong(); node.objectId = objectIds.getAsLong(); node.owner = this; return node;
+
+    TreeNode<K, V> newTreeNode(int hash, K key, V value, Node<K, V> next) {
+        TreeNode<K, V> node = new TreeNode<>(hash, key, value, next);
+        node.id = ids.getAsLong();
+        node.objectId = objectIds.getAsLong();
+        node.owner = this;
+        return node;
     }
-    Node<K,V> replacementNode(Node<K,V> p, Node<K,V> next) {
-        Node<K,V> node = new Node<>(p.hash, p.key, p.value, next);
-        node.id=p.id; node.objectId=objectIds.getAsLong(); node.owner=this; return node;
+
+    Node<K, V> replacementNode(Node<K, V> p, Node<K, V> next) {
+        Node<K, V> node = new Node<>(p.hash, p.key, p.value, next);
+        node.id = p.id;
+        node.objectId = objectIds.getAsLong();
+        node.owner = this;
+        return node;
     }
-    TreeNode<K,V> replacementTreeNode(Node<K,V> p, Node<K,V> next) {
-        TreeNode<K,V> node = new TreeNode<>(p.hash, p.key, p.value, next);
-        node.id=p.id; node.objectId=objectIds.getAsLong(); node.owner=this; return node;
+
+    TreeNode<K, V> replacementTreeNode(Node<K, V> p, Node<K, V> next) {
+        TreeNode<K, V> node = new TreeNode<>(p.hash, p.key, p.value, next);
+        node.id = p.id;
+        node.objectId = objectIds.getAsLong();
+        node.owner = this;
+        return node;
     }
-    void afterNodeAccess(Node<K,V> p) {
-        emit("VALUE_UPDATED", "Значение заменено; size не изменяется", "nodeId", p.id, "nodeObjectId", p.objectId, "value", p.value);
+
+    void afterNodeAccess(Node<K, V> p) {
+        emit("VALUE_UPDATED", "Значение заменено; size не изменяется", "nodeId", p.id, "nodeObjectId", p.objectId,
+                "value", p.value);
     }
-    void afterNodeInsertion(boolean evict) { }
-    void afterNodeRemoval(Node<K,V> p) {
+
+    void afterNodeInsertion(boolean evict) {
+    }
+
+    void afterNodeRemoval(Node<K, V> p) {
         emit("NODE_REMOVED", "Узел удалён, ссылки перестроены", "nodeId", p.id, "nodeObjectId", p.objectId);
     }
-    static class Node<K,V> implements Map.Entry<K,V> {
+
+    static class Node<K, V> implements Map.Entry<K, V> {
         long id, objectId;
-        InstrumentedHashMap<K,V> owner;
+        InstrumentedHashMap<K, V> owner;
         final int hash;
         final K key;
         V value;
-        Node<K,V> next;
+        Node<K, V> next;
 
-        Node(int hash, K key, V value, Node<K,V> next) {
+        Node(int hash, K key, V value, Node<K, V> next) {
             this.hash = hash;
             this.key = key;
             this.value = value;
             this.next = next;
         }
 
-        public final K getKey()        { return key; }
-        public final V getValue()      { return value; }
-        public final String toString() { return key + "=" + value; }
+        public final K getKey() {
+            return key;
+        }
+
+        public final V getValue() {
+            return value;
+        }
+
+        public final String toString() {
+            return key + "=" + value;
+        }
 
         public final int hashCode() {
             return Objects.hashCode(key) ^ Objects.hashCode(value);
@@ -146,16 +185,18 @@ final class InstrumentedHashMap<K,V> {
 
     static Class<?> comparableClassFor(Object x) {
         if (x instanceof Comparable) {
-            Class<?> c; Type[] ts, as; ParameterizedType p;
+            Class<?> c;
+            Type[] ts, as;
+            ParameterizedType p;
             if ((c = x.getClass()) == String.class) // bypass checks
                 return c;
             if ((ts = c.getGenericInterfaces()) != null) {
                 for (Type t : ts) {
                     if ((t instanceof ParameterizedType) &&
-                        ((p = (ParameterizedType) t).getRawType() ==
-                         Comparable.class) &&
-                        (as = p.getActualTypeArguments()) != null &&
-                        as.length == 1 && as[0] == c) // type arg is c
+                            ((p = (ParameterizedType) t).getRawType() ==
+                                    Comparable.class) &&
+                            (as = p.getActualTypeArguments()) != null &&
+                            as.length == 1 && as[0] == c) // type arg is c
                         return c;
                 }
             }
@@ -165,7 +206,7 @@ final class InstrumentedHashMap<K,V> {
 
     static int compareComparables(Class<?> kc, Object k, Object x) {
         return (x == null || x.getClass() != kc ? 0 :
-                ((Comparable)k).compareTo(x));
+                ((Comparable) k).compareTo(x));
     }
 
     static final int tableSizeFor(int cap) {
@@ -173,15 +214,18 @@ final class InstrumentedHashMap<K,V> {
         return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
     }
 
-    final Node<K,V> getNode(Object key) {
-        Node<K,V>[] tab; Node<K,V> first, e; int n, hash; K k;
+    final Node<K, V> getNode(Object key) {
+        Node<K, V>[] tab;
+        Node<K, V> first, e;
+        int n, hash;
+        K k;
         if ((tab = table) != null && (n = tab.length) > 0 &&
-            (first = tab[(n - 1) & (hash = hash(key))]) != null) {
+                (first = tab[(n - 1) & (hash = hash(key))]) != null) {
             if (matches(first, hash, key))
                 return first;
             if ((e = first.next) != null) {
                 if (first instanceof TreeNode)
-                    return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+                    return ((TreeNode<K, V>) first).getTreeNode(hash, key);
                 do {
                     if (matches(e, hash, key))
                         return e;
@@ -193,26 +237,30 @@ final class InstrumentedHashMap<K,V> {
 
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
-        Node<K,V>[] tab; Node<K,V> p; int n, i;
+        Node<K, V>[] tab;
+        Node<K, V> p;
+        int n, i;
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
         select(hash);
         if ((p = tab[i = (n - 1) & hash]) == null) {
             tab[i] = newNode(hash, key, value, null);
-            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "nodeId", tab[i].id, "nodeObjectId", tab[i].objectId, "bucketIndex", i);
-        }
-        else {
-            Node<K,V> e; K k;
+            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "nodeId", tab[i].id, "nodeObjectId", tab[i].objectId,
+                    "bucketIndex", i);
+        } else {
+            Node<K, V> e;
+            K k;
             if (matches(p, hash, key))
                 e = p;
             else if (p instanceof TreeNode)
-                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+                e = ((TreeNode<K, V>) p).putTreeVal(this, tab, hash, key, value);
             else {
                 emit("COLLISION", "Бакет занят другим ключом; идём по цепочке", "bucketIndex", i);
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
-                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "nodeId", p.next.id, "nodeObjectId", p.next.objectId, "bucketIndex", i);
+                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "nodeId", p.next.id, "nodeObjectId",
+                                p.next.objectId, "bucketIndex", i);
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
@@ -241,57 +289,58 @@ final class InstrumentedHashMap<K,V> {
         return null;
     }
 
-    final Node<K,V>[] resize() {
-        Node<K,V>[] oldTab = table;
+    final Node<K, V>[] resize() {
+        Node<K, V>[] oldTab = table;
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
         int oldThr = threshold;
-        if (oldCap > 0) emit("RESIZE_STARTED", "Удваиваем таблицу и делим бакеты по hash & oldCapacity", "oldCapacity", oldCap, "newCapacity", oldCap * 2);
+        if (oldCap > 0)
+            emit("RESIZE_STARTED", "Удваиваем таблицу и делим бакеты по hash & oldCapacity", "oldCapacity", oldCap,
+                    "newCapacity", oldCap * 2);
         int newCap, newThr = 0;
         if (oldCap > 0) {
             if (oldCap >= MAXIMUM_CAPACITY) {
                 threshold = Integer.MAX_VALUE;
                 return oldTab;
-            }
-            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
-                     oldCap >= DEFAULT_INITIAL_CAPACITY)
+            } else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                    oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
-        }
-        else if (oldThr > 0) // initial capacity was placed in threshold
+        } else if (oldThr > 0) // initial capacity was placed in threshold
             newCap = oldThr;
         else {               // zero initial threshold signifies using defaults
             newCap = DEFAULT_INITIAL_CAPACITY;
-            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+            newThr = (int) (DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
         if (newThr == 0) {
-            float ft = (float)newCap * loadFactor;
-            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
-                      (int)ft : Integer.MAX_VALUE);
+            float ft = (float) newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float) MAXIMUM_CAPACITY ?
+                    (int) ft : Integer.MAX_VALUE);
         }
         threshold = newThr;
-        @SuppressWarnings({"rawtypes","unchecked"})
-        Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Node<K, V>[] newTab = (Node<K, V>[]) new Node[newCap];
         table = newTab;
         pendingTable = oldTab;
         emit(oldCap == 0 ? "TABLE_INITIALIZED" : "TABLE_EXPANDED",
-             oldCap == 0 ? "Таблица выделена при первой вставке" : "Новая таблица выделена; старые бакеты ждут переноса",
-             "capacity", newCap, "threshold", threshold, "oldCapacity", oldCap);
+                oldCap == 0 ? "Таблица выделена при первой вставке" :
+                        "Новая таблица выделена; старые бакеты ждут переноса",
+                "capacity", newCap, "threshold", threshold, "oldCapacity", oldCap);
         if (oldTab != null) {
             for (int j = 0; j < oldCap; ++j) {
-                Node<K,V> e;
+                Node<K, V> e;
                 if ((e = oldTab[j]) != null) {
-                    List<Node<K,V>> moving = new ArrayList<>();
-                    for (Node<K,V> m = e; m != null; m = m.next) moving.add(m);
+                    List<Node<K, V>> moving = new ArrayList<>();
+                    for (Node<K, V> m = e; m != null; m = m.next) moving.add(m);
                     inFlight = moving;
                     inFlightIndex = j;
                     oldTab[j] = null;
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
                     else if (e instanceof TreeNode)
-                        ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                        ((TreeNode<K, V>) e).split(this, newTab, j, oldCap);
                     else { // preserve order
-                        Node<K,V> loHead = null, loTail = null;
-                        Node<K,V> hiHead = null, hiTail = null;
-                        Node<K,V> next;
+                        Node<K, V> loHead = null, loTail = null;
+                        Node<K, V> hiHead = null, hiTail = null;
+                        Node<K, V> next;
                         do {
                             next = e.next;
                             if ((e.hash & oldCap) == 0) {
@@ -300,8 +349,7 @@ final class InstrumentedHashMap<K,V> {
                                 else
                                     loTail.next = e;
                                 loTail = e;
-                            }
-                            else {
+                            } else {
                                 if (hiTail == null)
                                     hiHead = e;
                                 else
@@ -319,32 +367,36 @@ final class InstrumentedHashMap<K,V> {
                         }
                     }
                     inFlight = List.of();
-                    for (Node<K,V> moved : moving) {
+                    for (Node<K, V> moved : moving) {
                         int target = (moved.hash & oldCap) == 0 ? j : j + oldCap;
                         emit("BUCKET_SPLIT", "hash & oldCapacity: узел остаётся или переходит на +oldCapacity",
-                             "nodeId", moved.id, "nodeObjectId", moved.objectId, "fromBucket", j, "toBucket", target,
-                             "oldCapacity", oldCap, "splitBit", moved.hash & oldCap,
-                             "formula", moved.hash + " & " + oldCap + " = " + (moved.hash & oldCap));
+                                "nodeId", moved.id, "nodeObjectId", moved.objectId, "fromBucket", j, "toBucket", target,
+                                "oldCapacity", oldCap, "splitBit", moved.hash & oldCap,
+                                "formula", moved.hash + " & " + oldCap + " = " + (moved.hash & oldCap));
                     }
                 }
             }
         }
         pendingTable = null;
-        if (oldCap > 0) emit("RESIZE_COMPLETED", "Перенос завершён; порядок внутри половин сохранён", "capacity", newCap, "threshold", threshold);
+        if (oldCap > 0)
+            emit("RESIZE_COMPLETED", "Перенос завершён; порядок внутри половин сохранён", "capacity", newCap,
+                    "threshold", threshold);
         return newTab;
     }
 
-    final void treeifyBin(Node<K,V>[] tab, int hash) {
-        int n, index; Node<K,V> e;
+    final void treeifyBin(Node<K, V>[] tab, int hash) {
+        int n, index;
+        Node<K, V> e;
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY) {
-            emit("TREEIFY_DEFERRED", "Длинная цепочка, но capacity < 64: resize вместо дерева", "minimumCapacity", 64, "capacity", tab == null ? 0 : tab.length);
+            emit("TREEIFY_DEFERRED", "Длинная цепочка, но capacity < 64: resize вместо дерева", "minimumCapacity", 64,
+                    "capacity", tab == null ? 0 : tab.length);
             resize();
-        }
-        else if ((e = tab[index = (n - 1) & hash]) != null) {
-            emit("TREEIFY_STARTED", "Не менее 9 узлов и capacity ≥ 64: строим красно-чёрное дерево", "bucketIndex", index);
-            TreeNode<K,V> hd = null, tl = null;
+        } else if ((e = tab[index = (n - 1) & hash]) != null) {
+            emit("TREEIFY_STARTED", "Не менее 9 узлов и capacity ≥ 64: строим красно-чёрное дерево", "bucketIndex",
+                    index);
+            TreeNode<K, V> hd = null, tl = null;
             do {
-                TreeNode<K,V> p = replacementTreeNode(e, null);
+                TreeNode<K, V> p = replacementTreeNode(e, null);
                 if (tl == null)
                     hd = p;
                 else {
@@ -359,17 +411,21 @@ final class InstrumentedHashMap<K,V> {
         }
     }
 
-    final Node<K,V> removeNode(int hash, Object key, Object value,
-                               boolean matchValue, boolean movable) {
-        Node<K,V>[] tab; Node<K,V> p; int n, index;
+    final Node<K, V> removeNode(int hash, Object key, Object value,
+                                boolean matchValue, boolean movable) {
+        Node<K, V>[] tab;
+        Node<K, V> p;
+        int n, index;
         if ((tab = table) != null && (n = tab.length) > 0 &&
-            (p = tab[index = (n - 1) & hash]) != null) {
-            Node<K,V> node = null, e; K k; V v;
+                (p = tab[index = (n - 1) & hash]) != null) {
+            Node<K, V> node = null, e;
+            K k;
+            V v;
             if (matches(p, hash, key))
                 node = p;
             else if ((e = p.next) != null) {
                 if (p instanceof TreeNode)
-                    node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
+                    node = ((TreeNode<K, V>) p).getTreeNode(hash, key);
                 else {
                     do {
                         if (matches(e, hash, key)) {
@@ -381,9 +437,9 @@ final class InstrumentedHashMap<K,V> {
                 }
             }
             if (node != null && (!matchValue || (v = node.value) == value ||
-                                 (value != null && value.equals(v)))) {
+                    (value != null && value.equals(v)))) {
                 if (node instanceof TreeNode)
-                    ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+                    ((TreeNode<K, V>) node).removeTreeNode(this, tab, movable);
                 else if (node == p)
                     tab[index] = node.next;
                 else
@@ -398,7 +454,7 @@ final class InstrumentedHashMap<K,V> {
     }
 
     public void clear() {
-        Node<K,V>[] tab;
+        Node<K, V>[] tab;
         modCount++;
         if ((tab = table) != null && size > 0) {
             size = 0;
@@ -407,21 +463,22 @@ final class InstrumentedHashMap<K,V> {
         }
     }
 
-    static final class TreeNode<K,V> extends Node<K,V> {
-        TreeNode<K,V> parent;  // red-black tree links
-        TreeNode<K,V> left;
-        TreeNode<K,V> right;
-        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+    static final class TreeNode<K, V> extends Node<K, V> {
+        TreeNode<K, V> parent;  // red-black tree links
+        TreeNode<K, V> left;
+        TreeNode<K, V> right;
+        TreeNode<K, V> prev;    // needed to unlink next upon deletion
         boolean red;
-        TreeNode(int hash, K key, V val, Node<K,V> next) {
+
+        TreeNode(int hash, K key, V val, Node<K, V> next) {
             super(hash, key, val, next);
         }
 
         /**
          * Returns root of tree containing this node.
          */
-        final TreeNode<K,V> root() {
-            for (TreeNode<K,V> r = this, p;;) {
+        final TreeNode<K, V> root() {
+            for (TreeNode<K, V> r = this, p; ; ) {
                 if ((p = r.parent) == null)
                     return r;
                 r = p;
@@ -431,17 +488,17 @@ final class InstrumentedHashMap<K,V> {
         /**
          * Ensures that the given root is the first node of its bin.
          */
-        static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
+        static <K, V> void moveRootToFront(Node<K, V>[] tab, TreeNode<K, V> root) {
             int n;
             if (root != null && tab != null && (n = tab.length) > 0) {
                 int index = (n - 1) & root.hash;
-                TreeNode<K,V> first = (TreeNode<K,V>)tab[index];
+                TreeNode<K, V> first = (TreeNode<K, V>) tab[index];
                 if (root != first) {
-                    Node<K,V> rn;
+                    Node<K, V> rn;
                     tab[index] = root;
-                    TreeNode<K,V> rp = root.prev;
+                    TreeNode<K, V> rp = root.prev;
                     if ((rn = root.next) != null)
-                        ((TreeNode<K,V>)rn).prev = rp;
+                        ((TreeNode<K, V>) rn).prev = rp;
                     if (rp != null)
                         rp.next = rn;
                     if (first != null)
@@ -458,12 +515,13 @@ final class InstrumentedHashMap<K,V> {
          * The kc argument caches comparableClassFor(key) upon first use
          * comparing keys.
          */
-        final TreeNode<K,V> find(int h, Object k, Class<?> kc) {
-            TreeNode<K,V> p = this;
+        final TreeNode<K, V> find(int h, Object k, Class<?> kc) {
+            TreeNode<K, V> p = this;
             do {
-                int ph, dir; K pk;
+                int ph, dir;
+                K pk;
                 owner.visit(p, h, k);
-                TreeNode<K,V> pl = p.left, pr = p.right, q;
+                TreeNode<K, V> pl = p.left, pr = p.right, q;
                 if ((ph = p.hash) > h)
                     p = pl;
                 else if (ph < h)
@@ -475,14 +533,13 @@ final class InstrumentedHashMap<K,V> {
                 else if (pr == null)
                     p = pl;
                 else if ((kc != null ||
-                          (kc = comparableClassFor(k)) != null) &&
-                         (dir = compareComparables(kc, k, pk)) != 0)
-                {
-                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "nodeId", p.id, "nodeObjectId", p.objectId,
-                        "compareResult", dir, "direction", dir < 0 ? "LEFT" : "RIGHT");
+                        (kc = comparableClassFor(k)) != null) &&
+                        (dir = compareComparables(kc, k, pk)) != 0) {
+                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "nodeId", p.id, "nodeObjectId",
+                            p.objectId,
+                            "compareResult", dir, "direction", dir < 0 ? "LEFT" : "RIGHT");
                     p = (dir < 0) ? pl : pr;
-                }
-                else if ((q = pr.find(h, k, kc)) != null)
+                } else if ((q = pr.find(h, k, kc)) != null)
                     return q;
                 else
                     p = pl;
@@ -493,7 +550,7 @@ final class InstrumentedHashMap<K,V> {
         /**
          * Calls find for root node.
          */
-        final TreeNode<K,V> getTreeNode(int h, Object k) {
+        final TreeNode<K, V> getTreeNode(int h, Object k) {
             return ((parent != null) ? root() : this).find(h, k, null);
         }
 
@@ -507,31 +564,30 @@ final class InstrumentedHashMap<K,V> {
         static int tieBreakOrder(Object a, Object b) {
             int d;
             if (a == null || b == null ||
-                (d = a.getClass().getName().
-                 compareTo(b.getClass().getName())) == 0)
+                    (d = a.getClass().getName().
+                            compareTo(b.getClass().getName())) == 0)
                 d = (System.identityHashCode(a) <= System.identityHashCode(b) ?
-                     -1 : 1);
+                        -1 : 1);
             return d;
         }
 
         /**
          * Forms tree of the nodes linked from this node.
          */
-        final void treeify(Node<K,V>[] tab) {
-            TreeNode<K,V> root = null;
-            for (TreeNode<K,V> x = this, next; x != null; x = next) {
-                next = (TreeNode<K,V>)x.next;
+        final void treeify(Node<K, V>[] tab) {
+            TreeNode<K, V> root = null;
+            for (TreeNode<K, V> x = this, next; x != null; x = next) {
+                next = (TreeNode<K, V>) x.next;
                 x.left = x.right = null;
                 if (root == null) {
                     x.parent = null;
                     x.red = false;
                     root = x;
-                }
-                else {
+                } else {
                     K k = x.key;
                     int h = x.hash;
                     Class<?> kc = null;
-                    for (TreeNode<K,V> p = root;;) {
+                    for (TreeNode<K, V> p = root; ; ) {
                         int dir, ph;
                         K pk = p.key;
                         if ((ph = p.hash) > h)
@@ -539,13 +595,14 @@ final class InstrumentedHashMap<K,V> {
                         else if (ph < h)
                             dir = 1;
                         else if ((kc == null &&
-                                  (kc = comparableClassFor(k)) == null) ||
-                                 (dir = compareComparables(kc, k, pk)) == 0)
+                                (kc = comparableClassFor(k)) == null) ||
+                                (dir = compareComparables(kc, k, pk)) == 0)
                             dir = tieBreakOrder(k, pk);
 
-                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "nodeId", p.id, "nodeObjectId", p.objectId,
-                            "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
-                        TreeNode<K,V> xp = p;
+                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "nodeId", p.id,
+                                "nodeObjectId", p.objectId,
+                                "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
+                        TreeNode<K, V> xp = p;
                         if ((p = (dir <= 0) ? p.left : p.right) == null) {
                             x.parent = xp;
                             if (dir <= 0)
@@ -565,10 +622,10 @@ final class InstrumentedHashMap<K,V> {
          * Returns a list of non-TreeNodes replacing those linked from
          * this node.
          */
-        final Node<K,V> untreeify(InstrumentedHashMap<K,V> map) {
-            Node<K,V> hd = null, tl = null;
-            for (Node<K,V> q = this; q != null; q = q.next) {
-                Node<K,V> p = map.replacementNode(q, null);
+        final Node<K, V> untreeify(InstrumentedHashMap<K, V> map) {
+            Node<K, V> hd = null, tl = null;
+            for (Node<K, V> q = this; q != null; q = q.next) {
+                Node<K, V> p = map.replacementNode(q, null);
                 if (tl == null)
                     hd = p;
                 else
@@ -581,13 +638,14 @@ final class InstrumentedHashMap<K,V> {
         /**
          * Tree version of putVal.
          */
-        final TreeNode<K,V> putTreeVal(InstrumentedHashMap<K,V> map, Node<K,V>[] tab,
-                                       int h, K k, V v) {
+        final TreeNode<K, V> putTreeVal(InstrumentedHashMap<K, V> map, Node<K, V>[] tab,
+                                        int h, K k, V v) {
             Class<?> kc = null;
             boolean searched = false;
-            TreeNode<K,V> root = (parent != null) ? root() : this;
-            for (TreeNode<K,V> p = root;;) {
-                int dir, ph; K pk;
+            TreeNode<K, V> root = (parent != null) ? root() : this;
+            for (TreeNode<K, V> p = root; ; ) {
+                int dir, ph;
+                K pk;
                 owner.visit(p, h, k);
                 if ((ph = p.hash) > h)
                     dir = -1;
@@ -596,26 +654,27 @@ final class InstrumentedHashMap<K,V> {
                 else if ((pk = p.key) == k || (k != null && k.equals(pk)))
                     return p;
                 else if ((kc == null &&
-                          (kc = comparableClassFor(k)) == null) ||
-                         (dir = compareComparables(kc, k, pk)) == 0) {
+                        (kc = comparableClassFor(k)) == null) ||
+                        (dir = compareComparables(kc, k, pk)) == 0) {
                     if (!searched) {
-                        TreeNode<K,V> q, ch;
+                        TreeNode<K, V> q, ch;
                         searched = true;
                         if (((ch = p.left) != null &&
-                             (q = ch.find(h, k, kc)) != null) ||
-                            ((ch = p.right) != null &&
-                             (q = ch.find(h, k, kc)) != null))
+                                (q = ch.find(h, k, kc)) != null) ||
+                                ((ch = p.right) != null &&
+                                        (q = ch.find(h, k, kc)) != null))
                             return q;
                     }
                     dir = tieBreakOrder(k, pk);
                 }
 
-                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "nodeId", p.id, "nodeObjectId", p.objectId,
-                    "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
-                TreeNode<K,V> xp = p;
+                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "nodeId", p.id,
+                        "nodeObjectId", p.objectId,
+                        "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
+                TreeNode<K, V> xp = p;
                 if ((p = (dir <= 0) ? p.left : p.right) == null) {
-                    Node<K,V> xpn = xp.next;
-                    TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);
+                    Node<K, V> xpn = xp.next;
+                    TreeNode<K, V> x = map.newTreeNode(h, k, v, xpn);
                     if (dir <= 0)
                         xp.left = x;
                     else
@@ -623,10 +682,12 @@ final class InstrumentedHashMap<K,V> {
                     xp.next = x;
                     x.parent = x.prev = xp;
                     if (xpn != null)
-                        ((TreeNode<K,V>)xpn).prev = x;
-                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "nodeId", x.id, "nodeObjectId", x.objectId);
+                        ((TreeNode<K, V>) xpn).prev = x;
+                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "nodeId", x.id,
+                            "nodeObjectId", x.objectId);
                     moveRootToFront(tab, balanceInsertion(root, x));
-                    map.emit("TREE_BALANCED", "Свойства красно-чёрного дерева восстановлены", "nodeId", x.id, "nodeObjectId", x.objectId);
+                    map.emit("TREE_BALANCED", "Свойства красно-чёрного дерева восстановлены", "nodeId", x.id,
+                            "nodeObjectId", x.objectId);
                     return null;
                 }
             }
@@ -642,14 +703,14 @@ final class InstrumentedHashMap<K,V> {
          * the bin is converted back to a plain bin. (The test triggers
          * somewhere between 2 and 6 nodes, depending on tree structure).
          */
-        final void removeTreeNode(InstrumentedHashMap<K,V> map, Node<K,V>[] tab,
+        final void removeTreeNode(InstrumentedHashMap<K, V> map, Node<K, V>[] tab,
                                   boolean movable) {
             int n;
             if (tab == null || (n = tab.length) == 0)
                 return;
             int index = (n - 1) & hash;
-            TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;
-            TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;
+            TreeNode<K, V> first = (TreeNode<K, V>) tab[index], root = first, rl;
+            TreeNode<K, V> succ = (TreeNode<K, V>) next, pred = prev;
             if (pred == null)
                 tab[index] = first = succ;
             else
@@ -661,28 +722,30 @@ final class InstrumentedHashMap<K,V> {
             if (root.parent != null)
                 root = root.root();
             if (root == null
-                || (movable
+                    || (movable
                     && (root.right == null
-                        || (rl = root.left) == null
-                        || rl.left == null))) {
+                    || (rl = root.left) == null
+                    || rl.left == null))) {
                 tab[index] = first.untreeify(map);  // too small
-                map.emit("UNTREEIFIED", "Форма дерева мала: root.right / root.left / root.left.left отсутствует", "bucketIndex", index, "reason", "REMOVAL_SHAPE");
+                map.emit("UNTREEIFIED", "Форма дерева мала: root.right / root.left / root.left.left отсутствует",
+                        "bucketIndex", index, "reason", "REMOVAL_SHAPE");
                 return;
             }
-            TreeNode<K,V> p = this, pl = left, pr = right, replacement;
+            TreeNode<K, V> p = this, pl = left, pr = right, replacement;
             if (pl != null && pr != null) {
-                TreeNode<K,V> s = pr, sl;
+                TreeNode<K, V> s = pr, sl;
                 while ((sl = s.left) != null) // find successor
                     s = sl;
-                boolean c = s.red; s.red = p.red; p.red = c; // swap colors
-                TreeNode<K,V> sr = s.right;
-                TreeNode<K,V> pp = p.parent;
+                boolean c = s.red;
+                s.red = p.red;
+                p.red = c; // swap colors
+                TreeNode<K, V> sr = s.right;
+                TreeNode<K, V> pp = p.parent;
                 if (s == pr) { // p was s's direct parent
                     p.parent = s;
                     s.right = p;
-                }
-                else {
-                    TreeNode<K,V> sp = s.parent;
+                } else {
+                    TreeNode<K, V> sp = s.parent;
                     if ((p.parent = sp) != null) {
                         if (s == sp.left)
                             sp.left = p;
@@ -707,15 +770,14 @@ final class InstrumentedHashMap<K,V> {
                     replacement = sr;
                 else
                     replacement = p;
-            }
-            else if (pl != null)
+            } else if (pl != null)
                 replacement = pl;
             else if (pr != null)
                 replacement = pr;
             else
                 replacement = p;
             if (replacement != p) {
-                TreeNode<K,V> pp = replacement.parent = p.parent;
+                TreeNode<K, V> pp = replacement.parent = p.parent;
                 if (pp == null)
                     (root = replacement).red = false;
                 else if (p == pp.left)
@@ -725,10 +787,10 @@ final class InstrumentedHashMap<K,V> {
                 p.left = p.right = p.parent = null;
             }
 
-            TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
+            TreeNode<K, V> r = p.red ? root : balanceDeletion(root, replacement);
 
             if (replacement == p) {  // detach
-                TreeNode<K,V> pp = p.parent;
+                TreeNode<K, V> pp = p.parent;
                 p.parent = null;
                 if (pp != null) {
                     if (p == pp.left)
@@ -747,19 +809,19 @@ final class InstrumentedHashMap<K,V> {
          * or untreeifies if now too small. Called only from resize;
          * see above discussion about split bits and indices.
          *
-         * @param map the map
-         * @param tab the table for recording bin heads
+         * @param map   the map
+         * @param tab   the table for recording bin heads
          * @param index the index of the table being split
-         * @param bit the bit of hash to split on
+         * @param bit   the bit of hash to split on
          */
-        final void split(InstrumentedHashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
-            TreeNode<K,V> b = this;
+        final void split(InstrumentedHashMap<K, V> map, Node<K, V>[] tab, int index, int bit) {
+            TreeNode<K, V> b = this;
             // Relink into lo and hi lists, preserving order
-            TreeNode<K,V> loHead = null, loTail = null;
-            TreeNode<K,V> hiHead = null, hiTail = null;
+            TreeNode<K, V> loHead = null, loTail = null;
+            TreeNode<K, V> hiHead = null, hiTail = null;
             int lc = 0, hc = 0;
-            for (TreeNode<K,V> e = b, next; e != null; e = next) {
-                next = (TreeNode<K,V>)e.next;
+            for (TreeNode<K, V> e = b, next; e != null; e = next) {
+                next = (TreeNode<K, V>) e.next;
                 e.next = null;
                 if ((e.hash & bit) == 0) {
                     if ((e.prev = loTail) == null)
@@ -768,8 +830,7 @@ final class InstrumentedHashMap<K,V> {
                         loTail.next = e;
                     loTail = e;
                     ++lc;
-                }
-                else {
+                } else {
                     if ((e.prev = hiTail) == null)
                         hiHead = e;
                     else
@@ -782,9 +843,9 @@ final class InstrumentedHashMap<K,V> {
             if (loHead != null) {
                 if (lc <= UNTREEIFY_THRESHOLD) {
                     tab[index] = loHead.untreeify(map);
-                    map.emit("UNTREEIFIED", "После split в нижней половине ≤ 6 узлов: список", "bucketIndex", index, "count", lc, "reason", "SPLIT_COUNT");
-                }
-                else {
+                    map.emit("UNTREEIFIED", "После split в нижней половине ≤ 6 узлов: список", "bucketIndex", index,
+                            "count", lc, "reason", "SPLIT_COUNT");
+                } else {
                     tab[index] = loHead;
                     if (hiHead != null) // (else is already treeified)
                         loHead.treeify(tab);
@@ -793,9 +854,9 @@ final class InstrumentedHashMap<K,V> {
             if (hiHead != null) {
                 if (hc <= UNTREEIFY_THRESHOLD) {
                     tab[index + bit] = hiHead.untreeify(map);
-                    map.emit("UNTREEIFIED", "После split в верхней половине ≤ 6 узлов: список", "bucketIndex", index + bit, "count", hc, "reason", "SPLIT_COUNT");
-                }
-                else {
+                    map.emit("UNTREEIFIED", "После split в верхней половине ≤ 6 узлов: список", "bucketIndex",
+                            index + bit, "count", hc, "reason", "SPLIT_COUNT");
+                } else {
                     tab[index + bit] = hiHead;
                     if (loHead != null)
                         hiHead.treeify(tab);
@@ -806,9 +867,9 @@ final class InstrumentedHashMap<K,V> {
         /* ------------------------------------------------------------ */
         // Red-black tree methods, all adapted from CLR
 
-        static <K,V> TreeNode<K,V> rotateLeft(TreeNode<K,V> root,
-                                              TreeNode<K,V> p) {
-            TreeNode<K,V> r, pp, rl;
+        static <K, V> TreeNode<K, V> rotateLeft(TreeNode<K, V> root,
+                                                TreeNode<K, V> p) {
+            TreeNode<K, V> r, pp, rl;
             if (p != null && (r = p.right) != null) {
                 if ((rl = p.right = r.left) != null)
                     rl.parent = p;
@@ -820,14 +881,15 @@ final class InstrumentedHashMap<K,V> {
                     pp.right = r;
                 r.left = p;
                 p.parent = r;
-                p.owner.emit("TREE_ROTATED", "Левое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId, "direction", "LEFT", "rootId", root.id, "rootObjectId", root.objectId);
+                p.owner.emit("TREE_ROTATED", "Левое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId,
+                        "direction", "LEFT", "rootId", root.id, "rootObjectId", root.objectId);
             }
             return root;
         }
 
-        static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root,
-                                               TreeNode<K,V> p) {
-            TreeNode<K,V> l, pp, lr;
+        static <K, V> TreeNode<K, V> rotateRight(TreeNode<K, V> root,
+                                                 TreeNode<K, V> p) {
+            TreeNode<K, V> l, pp, lr;
             if (p != null && (l = p.left) != null) {
                 if ((lr = p.left = l.right) != null)
                     lr.parent = p;
@@ -839,32 +901,33 @@ final class InstrumentedHashMap<K,V> {
                     pp.left = l;
                 l.right = p;
                 p.parent = l;
-                p.owner.emit("TREE_ROTATED", "Правое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId, "direction", "RIGHT", "rootId", root.id, "rootObjectId", root.objectId);
+                p.owner.emit("TREE_ROTATED", "Правое вращение вокруг узла", "nodeId", p.id, "nodeObjectId", p.objectId,
+                        "direction", "RIGHT", "rootId", root.id, "rootObjectId", root.objectId);
             }
             return root;
         }
 
-        static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
-                                                    TreeNode<K,V> x) {
+        static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root,
+                                                      TreeNode<K, V> x) {
             x.red = true;
             x.owner.emit("TREE_RECOLORED", "Новый узел окрашен в красный", "nodeId", x.id, "nodeObjectId", x.objectId);
-            for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {
+            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
                 if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId", x.objectId);
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId",
+                            x.objectId);
                     return x;
-                }
-                else if (!xp.red || (xpp = xp.parent) == null)
+                } else if (!xp.red || (xpp = xp.parent) == null)
                     return root;
                 if (xp == (xppl = xpp.left)) {
                     if ((xppr = xpp.right) != null && xppr.red) {
                         xppr.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id, "nodeObjectId", xpp.objectId);
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId",
+                                xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
-                    }
-                    else {
+                    } else {
                         if (x == xp.right) {
                             root = rotateLeft(root, x = xp);
                             xpp = (xp = x.parent) == null ? null : xp.parent;
@@ -877,16 +940,15 @@ final class InstrumentedHashMap<K,V> {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     if (xppl != null && xppl.red) {
                         xppl.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId", xpp.id, "nodeObjectId", xpp.objectId);
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId",
+                                xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
-                    }
-                    else {
+                    } else {
                         if (x == xp.left) {
                             root = rotateRight(root, x = xp);
                             xpp = (xp = x.parent) == null ? null : xp.parent;
@@ -903,21 +965,20 @@ final class InstrumentedHashMap<K,V> {
             }
         }
 
-        static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
-                                                   TreeNode<K,V> x) {
-            for (TreeNode<K,V> xp, xpl, xpr;;) {
+        static <K, V> TreeNode<K, V> balanceDeletion(TreeNode<K, V> root,
+                                                     TreeNode<K, V> x) {
+            for (TreeNode<K, V> xp, xpl, xpr; ; ) {
                 if (x == null || x == root)
                     return root;
                 else if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId", x.objectId);
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId",
+                            x.objectId);
                     return x;
-                }
-                else if (x.red) {
+                } else if (x.red) {
                     x.red = false;
                     return root;
-                }
-                else if ((xpl = xp.left) == x) {
+                } else if ((xpl = xp.left) == x) {
                     if ((xpr = xp.right) != null && xpr.red) {
                         xpr.red = false;
                         xp.red = true;
@@ -927,20 +988,19 @@ final class InstrumentedHashMap<K,V> {
                     if (xpr == null)
                         x = xp;
                     else {
-                        TreeNode<K,V> sl = xpr.left, sr = xpr.right;
+                        TreeNode<K, V> sl = xpr.left, sr = xpr.right;
                         if ((sr == null || !sr.red) &&
-                            (sl == null || !sl.red)) {
+                                (sl == null || !sl.red)) {
                             xpr.red = true;
                             x = xp;
-                        }
-                        else {
+                        } else {
                             if (sr == null || !sr.red) {
                                 if (sl != null)
                                     sl.red = false;
                                 xpr.red = true;
                                 root = rotateRight(root, xpr);
                                 xpr = (xp = x.parent) == null ?
-                                    null : xp.right;
+                                        null : xp.right;
                             }
                             if (xpr != null) {
                                 xpr.red = (xp == null) ? false : xp.red;
@@ -954,8 +1014,7 @@ final class InstrumentedHashMap<K,V> {
                             x = root;
                         }
                     }
-                }
-                else { // symmetric
+                } else { // symmetric
                     if (xpl != null && xpl.red) {
                         xpl.red = false;
                         xp.red = true;
@@ -965,20 +1024,19 @@ final class InstrumentedHashMap<K,V> {
                     if (xpl == null)
                         x = xp;
                     else {
-                        TreeNode<K,V> sl = xpl.left, sr = xpl.right;
+                        TreeNode<K, V> sl = xpl.left, sr = xpl.right;
                         if ((sl == null || !sl.red) &&
-                            (sr == null || !sr.red)) {
+                                (sr == null || !sr.red)) {
                             xpl.red = true;
                             x = xp;
-                        }
-                        else {
+                        } else {
                             if (sl == null || !sl.red) {
                                 if (sr != null)
                                     sr.red = false;
                                 xpl.red = true;
                                 root = rotateLeft(root, xpl);
                                 xpl = (xp = x.parent) == null ?
-                                    null : xp.left;
+                                        null : xp.left;
                             }
                             if (xpl != null) {
                                 xpl.red = (xp == null) ? false : xp.red;
@@ -999,9 +1057,9 @@ final class InstrumentedHashMap<K,V> {
         /**
          * Recursive invariant check
          */
-        static <K,V> boolean checkInvariants(TreeNode<K,V> t) {
-            TreeNode<K,V> tp = t.parent, tl = t.left, tr = t.right,
-                tb = t.prev, tn = (TreeNode<K,V>)t.next;
+        static <K, V> boolean checkInvariants(TreeNode<K, V> t) {
+            TreeNode<K, V> tp = t.parent, tl = t.left, tr = t.right,
+                    tb = t.prev, tn = (TreeNode<K, V>) t.next;
             if (tb != null && tb.next != t)
                 return false;
             if (tn != null && tn.prev != t)
