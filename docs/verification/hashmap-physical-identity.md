@@ -18,39 +18,47 @@ java -jar "$(sh scripts/backend-jar.sh)" --server.address=127.0.0.1
 npm --prefix frontend run dev -- --port 5173 --strictPort
 ```
 
-Open **http://127.0.0.1:5173/__dev/hashmap-split**. This separate Vite serve-only
-entry creates a capacity-64 Java session and executes real PUT commands:
+Open **http://127.0.0.1:5173/**. This is the standard application: ScenarioSidebar,
+Diagram, PlaybackPanel and TraceInspector are reused. The sidebar adds **Локально:
+split 6/7** and **Локально: split 2/7** only during Vite serve. The former
+`/__dev/hashmap-split` URL also opens this same application; its separate page,
+stylesheet, session connection and duplicate playback/details controls were removed.
+
+Preparation uses the existing session queue: the ordinary Java `treeify` scenario
+selects capacity 64, then CLEAR retains that table, followed by real PUT commands:
 L0…L5 (or L0…L1), hash=1; H0…H6, hash=65; filler F entries, hash=2+i%30,
-until size=49. Values are L/H/F. The final PUT resizes 64→128. No scenario or
-special mutation endpoint was added to the backend or the public scenario catalog.
-A preparation failure stops the sequence; unknown mutations are never replayed.
+until size=49. The original session constructor remains intact for RESET. Requests
+are paced during this dev-only preparation; errors stop it, without automatic retry.
+A collection switch stops remaining preparation commands. No public backend scenario
+or endpoint was added, and the server still owns every structural snapshot/event.
 
-1. Click **Загрузить split 6/7** or **Загрузить split 2/7**.
-2. Click **Кадр 11 (шаг 12)**. Indices are zero based; the regular counter is one based.
-   This TREE_DIRECTION frame used to lose 4→2, 4→8, 2→1, 2→3 (6/7) or
-   2→1, 2→3 (2/7), where these old labels were logical IDs.
-3. The duplicate-representation panel shows logical IDs with distinct objectIds.
-   For 6/7 inspect logical entry 4; for 2/7 inspect entry 2. Select both copies
-   independently; **К выбранному узлу** scrolls to the selected object. Dashed
-   nodes labelled **вне цепочки** are temporary objects. Their outgoing L/R edges
-   target physical objects, including objects in another area.
-4. The lab initially filters the diagram to areas 1/65 to keep both ends of
-   cross-area links nearby. The checkbox restores the complete snapshot view;
-   size always refers to the complete Map. The recorded trace is never filtered.
-5. Step backwards/forwards, seek to the end (49 logical entries), return to frame
-   11, select an earlier operation in history, and use **Прочитать сервер (GET)**.
-   Playback/history never send writes. Details fall back to a live replacement
-   when the preferred object disappears, then return to the preferred object on rewind.
+1. In **Готовые сценарии**, click **Локально: split 6/7** or **Локально: split 2/7**.
+2. Below the diagram, click **К проблемному кадру 11 (шаг 12)**. The timeline shows
+   the Java trace of the final PUT; only its history label identifies the local run.
+   Indices are zero based; the regular playback counter is one based.
+3. Select a visible **L3** node (6/7) or **L1** node (2/7). In the standard node
+   inspector, use **Физическое представление записи** to switch between objects
+   of this logical entry. The heading shows id; the fields show objectId and the
+   exact pointers. IDs depend on prior operations; they are not fixed fixture labels.
+4. **К выбранному узлу** in the standard diagram scrolls to either physical object.
+   Dashed nodes labelled **вне цепочки** are temporary objects. Outgoing L/R edges
+   retain physical targets, including cross-area links. The full unfiltered snapshot
+   is shown; temporary objects can be below the remaining old-table buckets.
+5. Use the ordinary forward/backward buttons, slider and history selector. Seek to
+   the end (49 logical entries), return to frame 11 and inspect the preferred object
+   again. Selection falls back to the live replacement while it is absent and
+   restores it on rewind. Public scenarios and commands remain available afterwards.
 
-Key boundaries: frame 0 is before the final PUT; frame 11 is the asymmetric
-working split; the final OPERATION_COMPLETED is the committed state. Intermediate
-red-black invariants are intentionally not required of every WORKING frame.
+Key boundaries: frame 0 is before the final PUT; frame 11 is the asymmetric split;
+frame 88 (6/7) / 86 (2/7) is OPERATION_COMPLETED. Intermediate red-black invariants
+are intentionally not required of every WORKING frame.
 
-The lab import is gated by both import.meta.env.DEV and a Vite command=serve
-constant. Any build (including a nonstandard NODE_ENV) excludes it. A
-`generateBundle` assertion rejects artifacts containing its route/module/marker.
-The preview browser test verifies that this URL serves the ordinary application,
-with no lab controls. Test fixtures and measurement scripts are not application assets.
+The small local data/runner module is imported dynamically only under both
+import.meta.env.DEV and a Vite command=serve constant. Any build, including a
+nonstandard NODE_ENV, excludes it. A generateBundle assertion rejects artifacts
+containing the scenario IDs/titles/module. Preview tests verify that neither local
+sidebar entries nor the jump button are published, including at the former URL.
+There is no separate local UI, scenario registry or backend implementation.
 
 ## Verification
 
@@ -130,9 +138,9 @@ is performed by this change.
 
 - Maven clean verify: 24 core + 44 backend tests passed.
 - Frontend: 73 unit tests passed; standard production build passed.
-- Desktop/mobile development E2E: 66 passed; strict lifecycle: 2 passed.
-- Production preview: 12 selected checks passed, including absence of lab controls,
-  the exact build version and all public Java demos at every constructor setting.
+- Desktop/mobile development E2E: 70 passed; strict lifecycle: 2 passed.
+- Production preview: 12 selected checks passed (4 dev execution cases skipped), including absence of local sidebar entries,
+  the jump button, the exact build version and all public Java demos at every constructor setting.
 - NODE_ENV=development build also passed the lab-exclusion assertion; normal build
   was restored afterwards. OpenAPI parsed and all local references resolved.
 - Python script suite: 14 passed; profiling clients migrated to the required query
@@ -143,3 +151,13 @@ network drops connections to closed localhost ports rather than refusing them;
 strict-suite auto-start used an external, temporary Node preload to bound ONLY
 initial GET health/root readiness probes. It changes no application behavior or
 test assertions and is not committed or needed in the normal CI environment.
+
+
+The standard-UI follow-up additionally verifies switching physical representations
+in TraceInspector, centering each copy, cancelling a preparation on collection
+switch and stopping after a lost preparation response. It removes the standalone
+page/CSS and duplicate session/playback/details components. CI runs these local
+cases in Vite development mode as well as checking exclusion in production preview.
+A response-admission refusal encountered during rapid local preparation motivated
+pacing between preparation requests; it does not retry refused/unknown writes or
+change backend quotas. Animation behavior and the Java algorithm are unchanged.

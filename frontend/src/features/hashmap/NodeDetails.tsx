@@ -7,9 +7,13 @@ import { keyLabel, valueLabel } from "./presentation";
 export function NodeDetails({
   node,
   onClose,
+  representations = [],
+  onSelect,
 }: {
   node: MapNode;
   onClose: () => void;
+  representations?: MapNode[];
+  onSelect?: (selection: NodeSelection) => void;
 }) {
   return (
     <>
@@ -23,6 +27,27 @@ export function NodeDetails({
       <div className="step-op">
         {keyLabel(node.key)} → {valueLabel(node.value)}
       </div>
+      {representations.length > 1 && onSelect && (
+        <label className="field">
+          <span>Физическое представление записи</span>
+          <select
+            aria-label="Физическое представление записи"
+            value={objectId(node)}
+            onChange={(e) =>
+              onSelect({
+                logicalId: node.id,
+                preferredObjectId: Number(e.target.value),
+              })
+            }
+          >
+            {representations.map((n) => (
+              <option key={objectId(n)} value={objectId(n)}>
+                obj {objectId(n)} · {n.linked ? "в цепочке" : "вне цепочки"}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <dl>
         {Object.entries({
           objectId: objectId(node),
@@ -57,13 +82,27 @@ export function selectedDetails(
   snapshot: CollectionSnapshot | undefined,
   id: NodeSelection | undefined,
   close: () => void,
+  onSelect?: (selection: NodeSelection) => void,
 ) {
   const node =
     snapshot && !isArray(snapshot) ? resolveSelection(snapshot, id) : undefined;
   return node
     ? {
         title: `NODE #${node.id}`,
-        content: <NodeDetails node={node} onClose={close} />,
+        content: (
+          <NodeDetails
+            node={node}
+            onClose={close}
+            onSelect={onSelect}
+            representations={
+              snapshot && !isArray(snapshot)
+                ? [...snapshot.buckets, ...snapshot.pendingBuckets]
+                    .flatMap((b) => b.nodes)
+                    .filter((n) => n.id === node.id)
+                : []
+            }
+          />
+        ),
       }
     : undefined;
 }

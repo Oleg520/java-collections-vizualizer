@@ -49,6 +49,7 @@ interface CollectionView {
     snapshot: CollectionSnapshot | undefined,
     id: NodeSelection | undefined,
     close: () => void,
+    onSelect?: (selection: NodeSelection) => void,
   ) => { title: string; content: ReactNode } | undefined;
 }
 

@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ command }) => ({
   define: {
-    __LOCAL_SPLIT_LAB__: JSON.stringify(command === "serve"),
+    __LOCAL_SPLIT_SCENARIOS__: JSON.stringify(command === "serve"),
     __APP_VERSION__: JSON.stringify(
       execFileSync(
         "sh",
@@ -21,17 +21,13 @@ export default defineConfig(({ command }) => ({
     react(),
     tailwindcss(),
     {
-      name: "exclude-local-split-lab",
+      name: "exclude-local-split-scenarios",
       generateBundle(_options, bundle) {
         for (const item of Object.values(bundle)) {
           const content =
             item.type === "chunk" ? item.code : String(item.source);
-          if (
-            /HashMapSplitLab|hashmap-split|HashMap split laboratory/.test(
-              content,
-            )
-          )
-            this.error("Local HashMap laboratory must never be published");
+          if (/splitScenarios|local-split-[26]-7|Локально: split/.test(content))
+            this.error("Local split scenarios must never be published");
         }
       },
     },
