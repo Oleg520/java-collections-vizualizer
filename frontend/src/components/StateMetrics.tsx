@@ -2,12 +2,14 @@ import type { Session, CollectionSnapshot } from "../api/types";
 export function StateMetrics({
   snapshot,
   session,
+  stale = false,
   metrics,
   result,
   resultCaption,
 }: {
   snapshot?: CollectionSnapshot;
   session: Session | null;
+  stale?: boolean;
   metrics: { label: string; value: string | number; caption: string }[];
   result: string;
   resultCaption: string;
@@ -21,13 +23,15 @@ export function StateMetrics({
               snapshot?.phase === "WORKING" ? "working-dot" : "committed-dot"
             }
           />
-          {snapshot?.phase === "WORKING"
-            ? "Рабочий снимок шага"
-            : "Зафиксированное состояние"}
+          {stale
+            ? "Последнее известное состояние"
+            : snapshot?.phase === "WORKING"
+              ? "Рабочий снимок шага"
+              : "Зафиксированное состояние"}
         </span>
         {session && (
           <span>
-            На сервере: size{" "}
+            {stale ? "Последнее чтение: size" : "На сервере: size"}{" "}
             <b data-testid="committed-size">{session.state.size}</b> · revision{" "}
             {session.revision}
           </span>

@@ -15,37 +15,82 @@ export class ApiError extends Error {
     message: string,
     public status: number,
     public code: string,
+    public retryAt = 0,
   ) {
     super(message);
   }
 }
+export function retryDeadline(value: string | null, now = Date.now()): number {
+  if (!value) return 0;
+  const seconds = /^\d+$/.test(value.trim()) ? Number(value) : NaN;
+  const deadline = Number.isFinite(seconds)
+    ? now + seconds * 1000
+    : Date.parse(value);
+  return Number.isFinite(deadline) ? Math.max(now, deadline) : 0;
+}
+
+function apiMessage(status: number, code: string, message: unknown): string {
+  if (status === 409)
+    return "Состояние изменилось. Получаем актуальную версию; команда не повторяется.";
+  if (code === "SESSION_NOT_FOUND")
+    return "Сессия истекла или Java-сервис перезапущен. Создайте новую сессию. Прежнее состояние сервера недоступно.";
+  if (status === 429)
+    return code === "CLIENT_SESSION_LIMIT"
+      ? "Достигнут лимит активных сессий. Дождитесь освобождения сессий; команда не выполнена."
+      : "Слишком много запросов или Java-сервис занят. Подождите перед следующим действием; команда не выполнена.";
+  if (status === 503)
+    return code === "SESSION_LIMIT"
+      ? "Java-сервис занят: достигнут лимит сессий. Попробуйте подключиться позже."
+      : "Java-сервис временно недоступен. Обновите состояние перед продолжением.";
+  if (status === 404)
+    return "Маршрут API недоступен. Проверьте совместимость версий frontend/backend и адрес API. Существующая сессия сохранена.";
+  return typeof message === "string"
+    ? message
+    : `Ошибка API: ${status}. Попробуйте обновить состояние.`;
+}
+
 async function request<T>(path: string, data?: unknown): Promise<T> {
-  let response: Response;
   try {
-    response = await fetch(`${base}/api/v1${path}`, {
+    const response = await fetch(`${base}/api/v1${path}`, {
       method: data === undefined ? "GET" : "POST",
       headers:
         data === undefined ? undefined : { "Content-Type": "application/json" },
       body: data === undefined ? undefined : JSON.stringify(data),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(15000),
     });
-  } catch {
+    // The same deadline covers headers AND the response body.
+    const body = await response.text();
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      payload = null;
+    }
+    if (!response.ok) {
+      const code =
+        typeof payload?.code === "string" ? payload.code : "HTTP_ERROR";
+      throw new ApiError(
+        apiMessage(response.status, code, payload?.message),
+        response.status,
+        code,
+        retryDeadline(response.headers.get("Retry-After")),
+      );
+    }
+    if (payload === null)
+      throw new ApiError(
+        "API вернул некорректный JSON. Обновите состояние перед продолжением.",
+        0,
+        "INVALID_RESPONSE",
+      );
+    return payload as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError(
-      "Нет ответа от Java-сервиса. Проверьте соединение и адрес API. Первый запуск сервиса может занять до минуты.",
+      "Нет ответа от Java-сервиса. Проверьте соединение и обновите состояние. Результат операции может быть неизвестен; она не будет повторена автоматически.",
       0,
       "NETWORK_ERROR",
     );
   }
-  const payload = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new ApiError(
-      payload?.message ?? `Ошибка API: ${response.status}`,
-      response.status,
-      payload?.code ?? "HTTP_ERROR",
-    );
-  if (payload === null)
-    throw new ApiError("API вернул некорректный JSON", 0, "INVALID_RESPONSE");
-  return payload as T;
 }
 export const api = {
   create: (collection: CollectionType = "HASH_MAP", initialCapacity?: number) =>

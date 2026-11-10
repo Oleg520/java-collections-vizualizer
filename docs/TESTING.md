@@ -21,7 +21,9 @@ Playwright также может использовать уже запущен�
 для CI требуется свободная пара 8080/4173 (production preview).
 `--with-deps` устанавливает системные
 библиотеки Chromium и на Linux может требовать административных прав.
-Тесты работают с настоящим Java API, без подмены ответов.
+Тесты работают с настоящим Java API. В recovery/compatibility регрессиях Playwright
+контролируемо прерывает доставку ответов или подменяет ошибки proxy/API; штатные
+команды и восстановление читают настоящий backend.
 
 Покрыты детерминированные случаи и 2400 псевдослучайных операций против
 `java.util.HashMap` на Java 21. После каждой проверяются уникальность ключей/ID,
@@ -123,3 +125,23 @@ load test is required.
 и full/compact trace обеих коллекций с `backend/src/test/resources/contracts/wire-v1.json`.
 Эталон получен на main после PR #38 (`350b653`) и проверен до и после переноса типов.
 Сравнение JSON учитывает значения, null и порядок массивов; порядок полей объектов свободный.
+
+## Frontend error recovery (#27)
+
+`api.test.ts` checks Russian error messages, non-JSON failures, Retry-After seconds
+and HTTP dates, invalid JSON, and a deadline covering a stalled response body.
+`sessionConnection.test.ts` checks failed reconciliation after network/409/5xx,
+blocking further mutations until GET succeeds, cooldowns including recovery GET,
+retaining known UUIDs, and suppressing queued creation after a lost create response.
+
+`session-recovery.spec.ts` runs on desktop and mobile for both HashMap and ArrayList:
+committed POST delivery loss plus failed GET, explicit non-destructive refresh,
+409 while old playback exists, 429/503 cooldown without automatic requests, retained
+history/state, and exact creation/reset/command counts. Additional cases cover
+initial backend failure, SESSION_NOT_FOUND (expiry or restart), and a real 15-second
+browser timeout after Java commits. `session-compatibility.spec.ts` continues to
+check generic route 404 versus confirmed expiry. UI errors are inspected at desktop
+and mobile sizes; command blocking must not leave a loading spinner running.
+
+Run the normal Vitest/build, complete production-preview E2E, and strict lifecycle
+commands above. These regressions run in the existing GitHub Actions verify job.

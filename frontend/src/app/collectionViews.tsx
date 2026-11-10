@@ -18,6 +18,7 @@ import * as arraylist from "../features/arraylist/presentation";
 
 type CommandsProps = {
   busy: boolean;
+  blocked?: boolean;
   session: Session | null;
   onCommand: (operation: Operation) => void;
   onError: (message: string) => void;

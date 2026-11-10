@@ -201,3 +201,72 @@ it("retires a UUID on confirmed expiry during command recovery", async () => {
   expect(c.session).toBeNull();
   expect(t.create).toHaveBeenCalledTimes(1);
 });
+
+it.each([0, 409, 502, 503])(
+  "blocks mutations after %s and failed reconciliation until explicit GET succeeds",
+  async (status) => {
+    const t = transport(),
+      c = new SessionConnection(t);
+    await c.change("HASH_MAP", undefined, () => true);
+    t.get.mockRejectedValueOnce(new ApiError("offline", 0, "NETWORK_ERROR"));
+    const mutation = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError("uncertain", status, "ERROR"));
+    await expect(c.execute(mutation)).rejects.toThrow("uncertain");
+    expect(c.needsRefresh).toBe(true);
+    expect(c.session?.id).toBe("tab");
+    await expect(c.execute(mutation)).rejects.toThrow("Сначала обновите");
+    expect(mutation).toHaveBeenCalledTimes(1);
+    await c.refresh();
+    expect(c.needsRefresh).toBe(false);
+    expect(c.session?.revision).toBe(10);
+    expect(t.reset).not.toHaveBeenCalled();
+    expect(t.create).toHaveBeenCalledTimes(1);
+  },
+);
+
+it("honors Retry-After on mutation and recovery GET without queueing automatic work", async () => {
+  vi.useFakeTimers();
+  try {
+    const t = transport(),
+      c = new SessionConnection(t);
+    await c.change("HASH_MAP", undefined, () => true);
+    const mutation = vi
+      .fn()
+      .mockRejectedValue(new ApiError("busy", 503, "ERROR", Date.now() + 5000));
+    await expect(c.execute(mutation)).rejects.toThrow("busy");
+    expect(t.get).not.toHaveBeenCalled();
+    await expect(c.refresh()).rejects.toThrow("Подождите");
+    await expect(c.change("ARRAY_LIST", 0, () => true)).rejects.toThrow(
+      "Подождите",
+    );
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(t.get).not.toHaveBeenCalled();
+    t.get.mockRejectedValueOnce(
+      new ApiError("limit", 429, "RATE_LIMITED", Date.now() + 2000),
+    );
+    await expect(c.refresh()).rejects.toThrow("limit");
+    await expect(c.refresh()).rejects.toThrow("Подождите");
+    await vi.advanceTimersByTimeAsync(2000);
+    await c.refresh();
+    expect(c.needsRefresh).toBe(false);
+    expect(t.reset).not.toHaveBeenCalled();
+    expect(t.create).toHaveBeenCalledTimes(1);
+    expect(mutation).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("does not turn a queued switch into another creation after a lost create", async () => {
+  const t = transport(),
+    c = new SessionConnection(t);
+  t.create.mockRejectedValueOnce(new ApiError("lost", 0, "NETWORK_ERROR"));
+  const initial = c.change("HASH_MAP", undefined, () => true);
+  const queued = c.change("ARRAY_LIST", 0, () => true);
+  await expect(initial).rejects.toThrow("lost");
+  await expect(queued).rejects.toThrow("явным действием");
+  expect(t.create).toHaveBeenCalledTimes(1);
+  await c.change("ARRAY_LIST", 0, () => true);
+  expect(t.create).toHaveBeenCalledTimes(2);
+});

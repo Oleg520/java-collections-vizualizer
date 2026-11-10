@@ -20,12 +20,14 @@ const commands: [ArrayCommand, string][] = [
 ];
 export function ArrayCommandPanel({
   busy,
+  blocked = false,
   session,
   onCommand,
   onError,
   onCreate,
 }: {
   busy: boolean;
+  blocked?: boolean;
   session: Session | null;
   onCommand: (op: Operation) => void;
   onError: (error: string) => void;
@@ -86,7 +88,7 @@ export function ArrayCommandPanel({
         </label>
         <button
           className="subtle-button"
-          disabled={busy}
+          disabled={busy || blocked}
           onClick={() =>
             onCreate(
               constructor === "default" ? undefined : Number(constructor),
@@ -163,7 +165,7 @@ export function ArrayCommandPanel({
         <button
           type="submit"
           className="primary-button"
-          disabled={busy || !session}
+          disabled={busy || blocked || !session}
         >
           Выполнить {commands.find(([id]) => id === mode)?.[1]}
         </button>

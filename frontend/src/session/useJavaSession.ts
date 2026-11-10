@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api } from "../api/api";
+import { api, ApiError } from "../api/api";
 import { SessionConnection } from "./sessionConnection";
 import type {
   CollectionType,
@@ -20,6 +20,11 @@ interface PlaybackActions {
 /** Owns committed Java state and serializes requests, including explicit session recovery. */
 export function useJavaSession(playback: PlaybackActions) {
   const [session, setSession] = useState<Session | null>(null);
+  const [lastKnownSession, setLastKnownSession] = useState<Session | null>(
+    null,
+  );
+  const [retryAt, setRetryAt] = useState(0);
+  const [now, setNow] = useState(Date.now());
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
@@ -32,18 +37,40 @@ export function useJavaSession(playback: PlaybackActions) {
   });
   const [collection, setCollection] = useState<CollectionType>("HASH_MAP");
 
+  const reportError = (e: unknown) => {
+    if (e instanceof ApiError)
+      connection.current.retryAt = Math.max(
+        connection.current.retryAt,
+        e.retryAt,
+      );
+    const message =
+      session && !connection.current.session
+        ? "Сессия истекла или Java-сервис перезапущен. Создайте новую сессию. Прежнее состояние сервера недоступно."
+        : errorMessage(e);
+    setError(
+      message +
+        (connection.current.needsRefresh
+          ? " Актуальное состояние пока не получено. Обновите состояние перед следующей командой."
+          : ""),
+    );
+  };
+
   const startSession = async (
     next = config.current.collection,
     capacity: number | null | undefined = next === config.current.collection
       ? config.current.capacity
       : undefined,
   ) => {
+    if (Date.now() < connection.current.retryAt) return;
+    const changedCollection = next !== config.current.collection;
     const generation = ++epoch.current;
     config.current = { collection: next, capacity: capacity ?? undefined };
     setCollection(next);
-    setSession(null);
-    setScenarios([]);
-    playback.reset();
+    if (changedCollection) {
+      setSession(null);
+      setScenarios([]);
+      playback.reset();
+    }
     busyRef.current = true;
     setBusy(true);
     setError(null);
@@ -63,11 +90,16 @@ export function useJavaSession(playback: PlaybackActions) {
       playback.reset();
     } catch (e) {
       if (generation !== epoch.current) return;
-      setError(errorMessage(e));
-      if (connection.current.session?.collection === next)
-        setSession(connection.current.session);
+      reportError(e);
+      setSession(
+        connection.current.session?.collection === next
+          ? connection.current.session
+          : null,
+      );
+      playback.showCommitted();
     } finally {
       if (generation === epoch.current) {
+        setRetryAt(connection.current.retryAt);
         busyRef.current = false;
         setBusy(false);
       }
@@ -81,6 +113,15 @@ export function useJavaSession(playback: PlaybackActions) {
     };
   }, []);
   useEffect(() => {
+    if (session) setLastKnownSession(session);
+  }, [session]);
+  useEffect(() => {
+    if (retryAt <= Date.now()) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [retryAt, retryAt > now]);
+  useEffect(() => {
     if (!busy) {
       setSlow(false);
       return;
@@ -92,7 +133,13 @@ export function useJavaSession(playback: PlaybackActions) {
   const execute = async (
     request: (session: Session) => Promise<SessionTrace>,
   ) => {
-    if (busyRef.current || !session) return;
+    if (
+      busyRef.current ||
+      !session ||
+      connection.current.needsRefresh ||
+      Date.now() < connection.current.retryAt
+    )
+      return;
     const generation = epoch.current;
     busyRef.current = true;
     setBusy(true);
@@ -105,11 +152,17 @@ export function useJavaSession(playback: PlaybackActions) {
       playback.accept(response.trace);
     } catch (e) {
       if (generation !== epoch.current) return;
-      setError(errorMessage(e));
-      setSession(connection.current.session);
-      playback.showCommitted();
+      reportError(e);
+      const current = connection.current.session;
+      setSession(current);
+      if (current && current.collection !== config.current.collection) {
+        config.current = { collection: current.collection as CollectionType };
+        setCollection(current.collection as CollectionType);
+        playback.reset();
+      } else playback.showCommitted();
     } finally {
       if (generation === epoch.current) {
+        setRetryAt(connection.current.retryAt);
         busyRef.current = false;
         setBusy(false);
       }
@@ -122,8 +175,64 @@ export function useJavaSession(playback: PlaybackActions) {
     if (session) void execute((current) => api.scenario(current, name));
   };
 
+  const recoverSession = async () => {
+    if (busyRef.current || Date.now() < connection.current.retryAt) return;
+    // A failed initial connection or a requested collection switch is explicit.
+    if (
+      !connection.current.session ||
+      connection.current.session.collection !== collection
+    ) {
+      await startSession();
+      return;
+    }
+    const generation = epoch.current;
+    busyRef.current = true;
+    setBusy(true);
+    setError(null);
+    playback.pause();
+    try {
+      const current = await connection.current.refresh();
+      if (generation !== epoch.current) return;
+      setSession(current);
+      if (current && current.collection !== collection) {
+        config.current = { collection: current.collection as CollectionType };
+        setCollection(current.collection as CollectionType);
+        playback.reset();
+      } else playback.showCommitted();
+      const demos = await api.scenarios(
+        (current?.collection ?? collection) as CollectionType,
+      );
+      if (generation === epoch.current) setScenarios(demos);
+    } catch (e) {
+      if (generation !== epoch.current) return;
+      setSession(
+        connection.current.session?.collection === config.current.collection
+          ? connection.current.session
+          : null,
+      );
+      playback.showCommitted();
+      reportError(e);
+    } finally {
+      if (generation === epoch.current) {
+        setRetryAt(connection.current.retryAt);
+        busyRef.current = false;
+        setBusy(false);
+      }
+    }
+  };
+
   return {
     collection,
+    lastKnownSession,
+    recoverSession,
+    recoveryLabel: !connection.current.session
+      ? "Новая сессия"
+      : connection.current.session.collection !== collection
+        ? "Повторить подключение"
+        : "Обновить состояние",
+    retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)),
+    uncertain: connection.current.needsRefresh,
+    blocked: connection.current.needsRefresh || now < retryAt,
     switchCollection: (next: CollectionType) => void startSession(next, null),
     session,
     scenarios,
