@@ -3,6 +3,7 @@ import { operationLabel } from "../presentation/operationLabel";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, ChevronRight, Code2, Terminal } from "lucide-react";
 import { type Step, type Trace } from "../api/types/index";
+import { DetailValue } from "./DetailValue";
 export function TraceInspector({
   history,
   algorithm,
@@ -222,14 +223,17 @@ export function TraceInspector({
               <div className="step-op">{operationLabel(step.operation)}</div>
               <dl>
                 {Object.entries(step.details).map(([k, v]) => (
-                  <div key={k}>
+                  <div
+                    key={k}
+                    className={
+                      v !== null && typeof v === "object"
+                        ? "structured-detail"
+                        : undefined
+                    }
+                  >
                     <dt>{k}</dt>
                     <dd>
-                      {v === null
-                        ? "null"
-                        : typeof v === "object"
-                          ? JSON.stringify(v)
-                          : String(v)}
+                      <DetailValue value={v} />
                     </dd>
                   </div>
                 ))}

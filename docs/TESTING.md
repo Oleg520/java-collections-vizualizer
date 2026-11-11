@@ -185,3 +185,24 @@ and mobile sizes; command blocking must not leave a loading spinner running.
 
 Run the normal Vitest/build, complete production-preview E2E, and strict lifecycle
 commands above. These regressions run in the existing GitHub Actions verify job.
+
+## Компактный workbench и селекторы (#52)
+
+`workbench-polish.spec.ts` проверяет единственный selector в breadcrumbs Map/List,
+sidebar со сценариями, ссылки OpenJDK активной коллекции только в Algorithm,
+сброс содержимого/истории через отдельный конструктор, вложенные BOOLEAN/ELEMENT
+результаты и ELEMENT_READ с длинными строками/null без горизонтального overflow.
+Проверяются mouse/touch, выбор клавиатурой, Escape без смены значения, видимый
+клавиатурный фокус и отсутствие оставшейся mouse-подсветки, accessible names и
+descriptions. Подсказка проверяется при уходе мыши, внешнем клике, Escape,
+переходе Tab и touch, а конструктор — как постоянно видимая строка.
+Viewports: 1440×900, 412×839 и 320×740. `DetailValue.test.tsx`
+проверяет false/zero/null, типизированные результаты, массивы и HTML escaping.
+Существующие workspace/playback/session suites сохраняют проверки прокрутки,
+сворачивания и session/revision semantics.
+
+```bash
+E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- workbench-polish.spec.ts
+```
+
+[Скриншоты, результаты и ограничения проверки](verification/workbench-polish/).

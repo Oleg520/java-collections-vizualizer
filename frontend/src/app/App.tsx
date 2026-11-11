@@ -6,10 +6,10 @@ import {
   statePresentation,
 } from "./collectionViews";
 import { useState } from "react";
+import type { CollectionType } from "../api/types";
 import {
   ArrowUpRight,
   ChevronRight,
-  GitBranch,
   Github,
   Info,
   LoaderCircle,
@@ -20,6 +20,7 @@ import { OperationHistory, PlaybackPanel } from "../playback/PlaybackPanel";
 import { ScenarioSidebar } from "../components/ScenarioSidebar";
 import { StateMetrics } from "../components/StateMetrics";
 import { TraceInspector } from "../components/TraceInspector";
+import { CollectionHelp } from "../components/CollectionHelp";
 import { useJavaSession } from "../session/useJavaSession";
 import { useTracePlayback } from "../playback/useTracePlayback";
 
@@ -114,9 +115,6 @@ export default function App({
             <span>GitHub</span>
             <ArrowUpRight size={14} />
           </a>
-          <a href={view.sourceUrl} target="_blank" rel="noreferrer">
-            OpenJDK 21 <ArrowUpRight size={14} />
-          </a>
         </div>
       </header>
       <div
@@ -125,9 +123,6 @@ export default function App({
         <ScenarioSidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((value) => !value)}
-          collection={collection}
-          collections={collectionOptions}
-          onCollection={switchCollection}
           scenarios={scenarios}
           trace={trace}
           busy={busy || blocked}
@@ -135,24 +130,36 @@ export default function App({
           onDemo={demo}
         />
         <main>
-          <div className="page-heading">
-            <div>
-              <div className="breadcrumbs">
-                Collections <ChevronRight size={12} /> {view.family}{" "}
-                <ChevronRight size={12} /> <span>{view.name}</span>
-              </div>
-              <h1>
-                Понять, что внутри<span>.</span>
-              </h1>
-              <p>{view.description}</p>
+          <header className="collection-heading">
+            <h1 className="sr-only">Лаборатория {view.name}</h1>
+            <nav
+              className="breadcrumbs"
+              aria-label="Java Collections Framework"
+            >
+              <span title="Java Collections Framework">Collections</span>
+              <ChevronRight size={12} aria-hidden="true" />
+              <span>{view.family}</span>
+              <ChevronRight size={12} aria-hidden="true" />
+              <select
+                aria-label="Коллекция"
+                aria-describedby="collection-switch-hint"
+                value={collection}
+                onChange={(event) =>
+                  switchCollection(event.target.value as CollectionType)
+                }
+              >
+                {collectionOptions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </nav>
+            <div className="collection-context">
+              <span>Учебная модель · OpenJDK 21</span>
+              <CollectionHelp description={view.description} />
             </div>
-            <div className="model-badge">
-              <GitBranch size={16} />
-              <div>
-                Учебная модель<span>по алгоритмам OpenJDK 21</span>
-              </div>
-            </div>
-          </div>
+          </header>
           {error && (
             <div className="error-banner" role="alert">
               <Info size={18} />

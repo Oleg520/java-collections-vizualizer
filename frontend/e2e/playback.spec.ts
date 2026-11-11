@@ -82,7 +82,12 @@ async function contentIsReachable(page: Page, target: Locator) {
 async function pageEndIsReachable(page: Page) {
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   const viewport = page.viewportSize()!;
-  const details = page.locator(".technical-details > :last-child");
+  // A structured result can exceed the details pane. Reach its final value,
+  // rather than requiring the entire nested description list to fit at once.
+  const lastField = page.locator(".technical-details dd").last();
+  const details = (await lastField.count())
+    ? lastField
+    : page.locator(".technical-details > :last-child");
   await contentIsReachable(page, details);
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
   if (viewport.width > 680) {
@@ -370,6 +375,14 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await playerIsAvailable(page);
     // Responsive reflow keeps the player attached and the final content reachable.
     await page.setViewportSize({ width: 844, height: 390 });
+    // Mobile emulation applies the new CSS viewport on the next rendering frame.
+    // Finish that reflow before scrolling the player into view.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     await playerIsAvailable(page);
     await pageEndIsReachable(page);
     expect(
