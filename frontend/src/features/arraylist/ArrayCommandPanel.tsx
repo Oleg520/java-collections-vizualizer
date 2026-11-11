@@ -72,7 +72,7 @@ export function ArrayCommandPanel({
       <div
         className="array-constructor"
         role="group"
-        aria-label="Создание нового списка"
+        aria-label="Создание новой коллекции"
       >
         <label className="field" htmlFor="array-constructor">
           <span>Конструктор</span>
