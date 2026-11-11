@@ -2970,3 +2970,10 @@ summary:focus-visible {
     max-height: 140px;
   }
 }
+.hashmap-diagram .map-node.changed:not(.highlighted) {
+  stroke: #e6bd78;
+  stroke-width: 2;
+}
+.hashmap-diagram .physical-edge.changed:not(.selected) > path:not(.edge-hit) {
+  stroke: #cbb07c;
+}

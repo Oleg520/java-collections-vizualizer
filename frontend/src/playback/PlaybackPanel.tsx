@@ -57,7 +57,7 @@ export function PlaybackPanel({
             className="icon-button"
             aria-label="Шаг назад"
             disabled={!trace || cursor === 0}
-            onClick={() => navigate(cursor - 1)}
+            onClick={() => navigate(cursor - 1, "step")}
           >
             <StepBack size={19} />
           </button>
@@ -77,7 +77,7 @@ export function PlaybackPanel({
             className="icon-button"
             aria-label="Шаг вперёд"
             disabled={!trace || cursor === trace.steps.length - 1}
-            onClick={() => navigate(cursor + 1)}
+            onClick={() => navigate(cursor + 1, "step")}
           >
             <StepForward size={19} />
           </button>

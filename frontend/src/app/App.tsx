@@ -231,6 +231,9 @@ export default function App({
                 <view.Diagram
                   playing={playing}
                   trace={trace}
+                  cursor={cursor}
+                  speed={playback.speed}
+                  navigation={playback.navigation}
                   snapshot={snapshot}
                   step={step}
                   selectedId={selectedNodeId}

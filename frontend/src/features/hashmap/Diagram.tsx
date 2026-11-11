@@ -1,18 +1,10 @@
 import { resolveSelection, type NodeSelection } from "./identity";
-import { keyLabel, valueLabel } from "./presentation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Boxes, Maximize, Minus, Plus, ScanLine } from "lucide-react";
-import {
-  layoutSnapshot,
-  type Diagram as DiagramLayout,
-  type PlacedNode,
-} from "./layout";
-import {
-  areaLabel,
-  snapshotGraph,
-  type Edge,
-  type SnapshotGraph,
-} from "./graph";
+import { layoutSnapshot } from "./layout";
+import { snapshotGraph, type Edge } from "./graph";
+import { HashMapGraph } from "./HashMapGraph";
+import type { PlaybackNavigation } from "../../playback/useTracePlayback";
 import { traceLayoutBounds } from "./traceLayout";
 import {
   type MapNode,
@@ -25,12 +17,20 @@ export function Diagram({
   state,
   step,
   trace,
+  cursor = 0,
+  navigation = "seek",
+  speed = 1,
+  playing = false,
   onSelect,
   selectedId,
 }: {
   state: Snapshot;
   step?: Step;
   trace?: Trace;
+  cursor?: number;
+  navigation?: PlaybackNavigation;
+  speed?: number;
+  playing?: boolean;
   onSelect: (node: MapNode) => void;
   selectedId?: NodeSelection;
 }) {
@@ -39,6 +39,10 @@ export function Diagram({
   const selected = resolveSelection(state, selectedId);
   const [focus, setFocus] = useState<{
     trace?: Trace;
+    cursor?: number;
+    navigation?: PlaybackNavigation;
+    speed?: number;
+    playing?: boolean;
     group: number | "auto" | "all";
   }>({ group: "auto" });
   const focusChoice = focus.trace === trace ? focus.group : "auto";
@@ -472,159 +476,24 @@ export function Diagram({
             </p>
           </div>
         )}
-        <svg
-          width={cameraWidth * scale}
-          height={layout.height * scale}
-          viewBox={`0 0 ${cameraWidth} ${layout.height}`}
-          role="img"
-          aria-label="Узлы, цепочки и красно-чёрные деревья HashMap"
-        >
-          <defs>
-            <marker
-              id="arrow"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="5"
-              markerHeight="5"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
-            </marker>
-          </defs>
-          {layout.bands.map((b) => (
-            <g key={b.id} data-area={b.id}>
-              <rect
-                x="14"
-                y={b.y}
-                width={cameraWidth - 28}
-                height={b.height}
-                rx="12"
-                className={`band ${b.area.source}`}
-              />
-              <text x="30" y={b.y + 27} className="svg-bucket">
-                {b.area.source === "transfer"
-                  ? "ВРЕМЕННЫЕ"
-                  : b.area.source === "old" || graph.starting
-                    ? "СТАРАЯ"
-                    : graph.expanding
-                      ? "НОВАЯ"
-                      : "БАКЕТ"}{" "}
-                [{b.index}]
-              </text>
-              <text x="30" y={b.y + 45} className="svg-kind">
-                {b.kind === "TREE"
-                  ? "RB TREE"
-                  : b.kind === "TRANSFER"
-                    ? "PHYSICAL OBJECTS"
-                    : "LINKED LIST"}
-              </text>
-              <title>
-                {areaLabel(b.area, graph)}; размещение объектов snapshot
-              </title>
-            </g>
-          ))}
-          {layout.edges.map((edge) => {
-            const geometry = edgeGeometry(edge, positions, layout, cameraWidth);
-            if (!geometry) return null;
-            const active = selectedEdge?.id === edge.id;
-            return (
-              <g
-                key={edge.id}
-                data-edge={edge.id}
-                className={`physical-edge ${active ? "selected" : ""} ${edge.tree || edge.field === "next" ? "structural" : "secondary"}`}
-              >
-                <path d={geometry.path} markerEnd="url(#arrow)" />
-                {physical && (
-                  <path
-                    d={geometry.path}
-                    className="edge-hit"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${edge.from === null ? edge.areaId : `obj ${edge.from}`} ${edge.field} → obj ${edge.to}${geometry.external ? ", вне фокуса" : ""}`}
-                    onClick={() => chooseEdge(edge)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        chooseEdge(edge);
-                      }
-                    }}
-                  />
-                )}
-                <text
-                  x={geometry.labelX}
-                  y={geometry.labelY}
-                  className="svg-edge-label"
-                >
-                  {geometry.external
-                    ? `${edge.label} → obj ${edge.to} · вне фокуса`
-                    : edge.label}
-                </text>
-                <title>
-                  {edge.from === null ? edge.areaId : `obj ${edge.from}`} ·{" "}
-                  {edge.field} → obj {edge.to}
-                </title>
-              </g>
-            );
-          })}
-          {layout.nodes.map(({ node, x, y, pending, areaId }) => (
-            <g
-              key={node.objectId}
-              transform={`translate(${x} ${y})`}
-              data-object-id={node.objectId}
-              data-entry-id={node.id}
-              data-linked={node.linked}
-              role="button"
-              tabIndex={0}
-              aria-label={`Узел ${keyLabel(node.key)}, запись ${node.id}, объект ${node.objectId}, ${areaId}, ${node.red === null ? "список" : node.red ? "красный" : "чёрный"}${node.linked ? "" : ", вне цепочки"}`}
-              onClick={() => onSelect(node)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect(node);
-                }
-              }}
-              style={{ cursor: "pointer" }}
-              opacity={
-                pending &&
-                selected?.objectId !== node.objectId &&
-                selectedEdge?.from !== node.objectId &&
-                selectedEdge?.to !== node.objectId
-                  ? 0.8
-                  : 1
-              }
-            >
-              <title>{`${keyLabel(node.key)} → ${valueLabel(node.value)}\nid: ${node.id}; objectId: ${node.objectId}\nparent=${node.parent}; left=${node.left}; right=${node.right}; next=${node.next}; prev=${node.prev}`}</title>
-              <rect
-                width="116"
-                height="65"
-                rx="9"
-                strokeDasharray={!node.linked ? "4 3" : undefined}
-                className={`map-node ${step?.details.nodeObjectId === node.objectId || selected?.objectId === node.objectId || selectedEdge?.from === node.objectId || selectedEdge?.to === node.objectId ? "highlighted" : ""} ${node.red === true ? "red-node" : node.red === false ? "black-node" : ""}`}
-              />
-              <line x1="0" y1="35" x2="116" y2="35" stroke="#35483c" />
-              {node.red !== null && (
-                <text x="102" y="15" textAnchor="middle" className="node-color">
-                  {node.red ? "R" : "B"}
-                </text>
-              )}
-              <text x="12" y="23" className="svg-key">
-                {short(keyLabel(node.key), 12)}
-              </text>
-              <text x="12" y="54" className="svg-value">
-                {short(valueLabel(node.value), 13)}
-              </text>
-              <text x="57" y="81" textAnchor="middle" className="svg-node-id">
-                #{node.id} · obj {node.objectId}
-              </text>
-              {!node.linked && (
-                <text x="57" y="95" textAnchor="middle" className="svg-node-id">
-                  вне цепочки
-                </text>
-              )}
-            </g>
-          ))}
-        </svg>
+        <HashMapGraph
+          layout={layout}
+          graph={graph}
+          cameraWidth={cameraWidth}
+          scale={scale}
+          physical={physical}
+          selected={selected}
+          selectedEdge={selectedEdge}
+          step={step}
+          onSelect={onSelect}
+          onEdge={chooseEdge}
+          trace={trace}
+          cursor={cursor}
+          navigation={navigation}
+          speed={speed}
+          playing={playing}
+          view={`${group ?? "all"}:${physical}:${scale}`}
+        />
       </div>
       <div className="diagram-legend">
         <span>
@@ -642,50 +511,4 @@ export function Diagram({
       </div>
     </section>
   );
-}
-
-export function edgeGeometry(
-  edge: Edge,
-  positions: Map<number, PlacedNode>,
-  layout: DiagramLayout,
-  width: number,
-) {
-  const from = edge.from === null ? undefined : positions.get(edge.from),
-    to = positions.get(edge.to);
-  const band = edge.areaId
-    ? layout.bands.find((b) => b.id === edge.areaId)
-    : undefined;
-  if (!from && !band) return;
-  const cross =
-    !to || (from ? from.areaId !== to.areaId : band?.id !== to.areaId);
-  const x1 = from
-    ? from.x + (edge.tree ? 58 : edge.field === "parent" ? 58 : 116)
-    : 112;
-  const y1 = from
-    ? from.y + (edge.tree ? 65 : edge.field === "parent" ? 0 : 32)
-    : band!.y + (edge.field === "head" ? 64 : 85);
-  const x2 = to
-    ? to.x + (edge.tree || edge.field === "parent" ? 58 : 0)
-    : width - 30;
-  const y2 = to
-    ? to.y + (edge.tree ? 0 : edge.field === "parent" ? 65 : 32)
-    : y1 + 26;
-  const routeX =
-    132 -
-    ["left", "right", "parent", "next", "prev", "head", "root"].indexOf(
-      edge.field,
-    ) *
-      7;
-  const path = cross
-    ? `M ${x1} ${y1} H ${routeX} V ${y2} H ${x2}`
-    : `M ${x1} ${y1} L ${x2} ${y2}`;
-  return {
-    path,
-    labelX: cross ? routeX + 3 : (x1 + x2) / 2 + 6,
-    labelY: cross ? (y1 + y2) / 2 - 5 : (y1 + y2) / 2 - 6,
-    external: !to,
-  };
-}
-function short(value: string, length: number) {
-  return value.length > length ? value.slice(0, length - 1) + "…" : value;
 }
