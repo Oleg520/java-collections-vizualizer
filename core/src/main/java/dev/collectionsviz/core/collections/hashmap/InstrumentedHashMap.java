@@ -260,7 +260,8 @@ final class InstrumentedHashMap<K, V> {
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
-                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "nodeId", p.next.id, "nodeObjectId",
+                        emit("NODE_INSERTED", "Узел добавлен в конец цепочки", "context", "CHAIN_APPEND", "nodeId",
+                                p.next.id, "nodeObjectId",
                                 p.next.objectId, "bucketIndex", i);
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
@@ -538,7 +539,8 @@ final class InstrumentedHashMap<K, V> {
                 else if ((kc != null ||
                         (kc = comparableClassFor(k)) != null) &&
                         (dir = compareComparables(kc, k, pk)) != 0) {
-                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "nodeId", p.id, "nodeObjectId",
+                    owner.emit("TREE_DIRECTION", "Comparable определяет ветвь поиска", "context", "SEARCH", "nodeId",
+                            p.id, "nodeObjectId",
                             p.objectId,
                             "compareResult", dir, "direction", dir < 0 ? "LEFT" : "RIGHT");
                     p = (dir < 0) ? pl : pr;
@@ -602,7 +604,8 @@ final class InstrumentedHashMap<K, V> {
                                 (dir = compareComparables(kc, k, pk)) == 0)
                             dir = tieBreakOrder(k, pk);
 
-                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "nodeId", p.id,
+                        owner.emit("TREE_DIRECTION", "Выбрана ветвь для узла при treeify", "context", "TREEIFY",
+                                "nodeId", p.id,
                                 "nodeObjectId", p.objectId,
                                 "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
                         TreeNode<K, V> xp = p;
@@ -671,7 +674,8 @@ final class InstrumentedHashMap<K, V> {
                     dir = tieBreakOrder(k, pk);
                 }
 
-                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "nodeId", p.id,
+                owner.emit("TREE_DIRECTION", "Выбрана ветвь вставки по hash и Comparable", "context", "INSERT",
+                        "nodeId", p.id,
                         "nodeObjectId", p.objectId,
                         "compareResult", dir, "direction", dir <= 0 ? "LEFT" : "RIGHT");
                 TreeNode<K, V> xp = p;
@@ -686,7 +690,8 @@ final class InstrumentedHashMap<K, V> {
                     x.parent = x.prev = xp;
                     if (xpn != null)
                         ((TreeNode<K, V>) xpn).prev = x;
-                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "nodeId", x.id,
+                    map.emit("NODE_INSERTED", "Узел присоединён к дереву; начинаем балансировку", "context",
+                            "TREE_INSERT", "nodeId", x.id,
                             "nodeObjectId", x.objectId);
                     moveRootToFront(tab, balanceInsertion(root, x));
                     map.emit("TREE_BALANCED", "Свойства красно-чёрного дерева восстановлены", "nodeId", x.id,
@@ -913,11 +918,13 @@ final class InstrumentedHashMap<K, V> {
         static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root,
                                                       TreeNode<K, V> x) {
             x.red = true;
-            x.owner.emit("TREE_RECOLORED", "Новый узел окрашен в красный", "nodeId", x.id, "nodeObjectId", x.objectId);
+            x.owner.emit("TREE_RECOLORED", "Новый узел окрашен в красный", "reason", "NEW_NODE", "nodeId", x.id,
+                    "nodeObjectId", x.objectId);
             for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
                 if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId",
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "reason", "ROOT_BLACK", "nodeId", x.id,
+                            "nodeObjectId",
                             x.objectId);
                     return x;
                 } else if (!xp.red || (xpp = xp.parent) == null)
@@ -927,7 +934,8 @@ final class InstrumentedHashMap<K, V> {
                         xppr.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId",
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "reason",
+                                "RED_UNCLE", "nodeId",
                                 xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
                     } else {
@@ -948,7 +956,8 @@ final class InstrumentedHashMap<K, V> {
                         xppl.red = false;
                         xp.red = false;
                         xpp.red = true;
-                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "nodeId",
+                        x.owner.emit("TREE_RECOLORED", "Красный дядя: родитель и дядя чёрные, дед красный", "reason",
+                                "RED_UNCLE", "nodeId",
                                 xpp.id, "nodeObjectId", xpp.objectId);
                         x = xpp;
                     } else {
@@ -975,7 +984,8 @@ final class InstrumentedHashMap<K, V> {
                     return root;
                 else if ((xp = x.parent) == null) {
                     x.red = false;
-                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "nodeId", x.id, "nodeObjectId",
+                    x.owner.emit("TREE_RECOLORED", "Корень окрашен в чёрный", "reason", "ROOT_BLACK", "nodeId", x.id,
+                            "nodeObjectId",
                             x.objectId);
                     return x;
                 } else if (x.red) {

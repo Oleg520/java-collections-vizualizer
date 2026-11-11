@@ -1,6 +1,7 @@
 package dev.collectionsviz.api.web;
 
 import dev.collectionsviz.api.dto.ErrorResponse;
+import dev.collectionsviz.core.protocol.InputException;
 import dev.collectionsviz.api.error.ApiException;
 import dev.collectionsviz.api.observability.ApiMetrics;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +28,10 @@ public class ApiErrors {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> invalid(IllegalArgumentException e) {
+        var input = e instanceof InputException typed ? typed : null;
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse(ErrorResponse.SCHEMA_VERSION, "INVALID_INPUT", e.getMessage()));
+                .body(new ErrorResponse(ErrorResponse.SCHEMA_VERSION, "INVALID_INPUT", e.getMessage(),
+                        input == null ? null : input.reason(), input == null ? null : input.params()));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})

@@ -26,6 +26,7 @@
 package dev.collectionsviz.core.collections.arraylist;
 
 import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.InputException;
 import dev.collectionsviz.core.protocol.Trace;
 import dev.collectionsviz.core.protocol.Scenario;
 import dev.collectionsviz.core.protocol.command.Operation;
@@ -66,8 +67,9 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
 
     public ArrayListEngine(Integer capacity) {
         if (capacity != null && (capacity < 0 || capacity > MAX_CAPACITY))
-            throw new IllegalArgumentException(
-                    "Начальная ёмкость: 0.." + MAX_CAPACITY + "; отсутствие — default constructor");
+            throw new InputException("ARRAY_INITIAL_CAPACITY",
+                    "Начальная ёмкость: 0.." + MAX_CAPACITY + "; отсутствие — default constructor", "limit",
+                    MAX_CAPACITY);
         initialCapacity = capacity;
         fresh(capacity);
     }
@@ -83,18 +85,19 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
 
     private static Object value(Element element) {
         if (element == null || element.type() == null)
-            throw new IllegalArgumentException("Укажите element с типом STRING, INTEGER или NULL");
+            throw new InputException("ELEMENT_TYPE_REQUIRED", "Укажите element с типом STRING, INTEGER или NULL");
         if (element.type() == ElementType.NULL) {
-            if (element.value() != null) throw new IllegalArgumentException("NULL не имеет значения");
+            if (element.value() != null) throw new InputException("NULL_ELEMENT_VALUE", "NULL не имеет значения");
             return null;
         }
         if (element.value() == null || element.value().length() > MAX_VALUE_LENGTH)
-            throw new IllegalArgumentException("Значение: до " + MAX_VALUE_LENGTH + " символов");
+            throw new InputException("VALUE_LENGTH", "Значение: до " + MAX_VALUE_LENGTH + " символов", "limit",
+                    MAX_VALUE_LENGTH);
         if (element.type() == ElementType.STRING) return element.value();
         try {
             return Integer.valueOf(element.value());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Integer: целое число от −2147483648 до 2147483647");
+            throw new InputException("INTEGER_RANGE", "Integer: целое число от −2147483648 до 2147483647");
         }
     }
 
@@ -103,8 +106,9 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
         long length = defaultEmpty ? Math.max(DEFAULT_CAPACITY, minimum)
                 : (long) elementData.length + Math.max(minimum - elementData.length, elementData.length >> 1);
         if (length > MAX_CAPACITY)
-            throw new IllegalArgumentException(
-                    "Учебный лимит capacity: " + MAX_CAPACITY + "; вычисленный рост: " + length);
+            throw new InputException("CAPACITY_LIMIT",
+                    "Учебный лимит capacity: " + MAX_CAPACITY + "; вычисленный рост: " + length, "limit", MAX_CAPACITY,
+                    "capacity", length);
         return (int) length;
     }
 
@@ -114,29 +118,34 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
     }
 
     private Trace<ArrayListSnapshot> execute(Operation op, Integer resetCapacity) {
-        if (op == null || op.type() == null) throw new IllegalArgumentException("Укажите операцию ArrayList");
+        if (op == null || op.type() == null) throw new InputException("ARRAY_OPERATION", "Укажите операцию ArrayList");
         if (op.key() != null || op.value() != null)
-            throw new IllegalArgumentException("ArrayList использует index и element, а не key/value");
+            throw new InputException("ARRAY_ARGUMENTS", "ArrayList использует index и element, а не key/value");
         Object input = null;
         switch (op.type()) {
             case ADD, ADD_AT, SET_AT, INDEX_OF -> input = value(op.element());
             case GET_AT, REMOVE_AT, CLEAR, RESET, ENSURE_CAPACITY, TRIM_TO_SIZE -> {
-                if (op.element() != null) throw new IllegalArgumentException("Эта операция не принимает element");
+                if (op.element() != null)
+                    throw new InputException("UNEXPECTED_ELEMENT", "Эта операция не принимает element");
             }
-            default -> throw new IllegalArgumentException("Операция недоступна для ArrayList");
+            default -> throw new InputException("ARRAY_OPERATION", "Операция недоступна для ArrayList");
         }
         boolean indexed = Set.of(OperationType.ADD_AT, OperationType.GET_AT, OperationType.SET_AT,
                 OperationType.REMOVE_AT).contains(op.type());
-        if (!indexed && op.index() != null) throw new IllegalArgumentException("Эта операция не принимает index");
+        if (!indexed && op.index() != null)
+            throw new InputException("UNEXPECTED_INDEX", "Эта операция не принимает index");
         if (indexed && (op.index() == null || op.index() < 0 ||
                 op.index() > (op.type() == OperationType.ADD_AT ? size : size - 1)))
-            throw new IllegalArgumentException("Индекс вне диапазона: " + op.index() + "; size = " + size);
+            throw new InputException("INDEX_RANGE", "Индекс вне диапазона: " + op.index() + "; size = " + size, "index",
+                    op.index(), "size", size);
         if (op.type() == OperationType.ADD || op.type() == OperationType.ADD_AT) {
-            if (size == MAX_SIZE) throw new IllegalArgumentException("Учебный лимит: " + MAX_SIZE + " элементов");
+            if (size == MAX_SIZE)
+                throw new InputException("SIZE_LIMIT", "Учебный лимит: " + MAX_SIZE + " элементов", "limit", MAX_SIZE);
             if (size == elementData.length) grownCapacity(size + 1);
         }
         if (op.type() == OperationType.ENSURE_CAPACITY) {
-            if (op.minCapacity() == null) throw new IllegalArgumentException("Укажите minCapacity (Java int)");
+            if (op.minCapacity() == null)
+                throw new InputException("MIN_CAPACITY_REQUIRED", "Укажите minCapacity (Java int)");
             if (op.minCapacity() > elementData.length && !(defaultEmpty && op.minCapacity() <= DEFAULT_CAPACITY))
                 grownCapacity(op.minCapacity());
         }
@@ -302,7 +311,7 @@ public final class ArrayListEngine implements CollectionEngine<ArrayListSnapshot
     @Override
     public Trace<ArrayListSnapshot> scenario(String name) {
         if (SCENARIOS.stream().noneMatch(s -> s.id().equals(name)))
-            throw new IllegalArgumentException("Неизвестный сценарий ArrayList");
+            throw new InputException("UNKNOWN_SCENARIO", "Неизвестный сценарий ArrayList");
         var before = snapshot();
         var steps = new ArrayList<Step<ArrayListSnapshot>>();
         append(steps, execute(Operation.array(OperationType.RESET, null, null, null),

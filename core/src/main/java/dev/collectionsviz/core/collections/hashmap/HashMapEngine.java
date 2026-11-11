@@ -1,6 +1,7 @@
 package dev.collectionsviz.core.collections.hashmap;
 
 import dev.collectionsviz.core.protocol.Step;
+import dev.collectionsviz.core.protocol.InputException;
 import dev.collectionsviz.core.protocol.Trace;
 import dev.collectionsviz.core.protocol.Scenario;
 import dev.collectionsviz.core.protocol.command.Operation;
@@ -34,7 +35,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
     public HashMapEngine(int initialCapacity) {
         // API constructor choices are a teaching policy, not OpenJDK limits.
         if (initialCapacity != 0 && initialCapacity != 16 && initialCapacity != 32 && initialCapacity != 64)
-            throw new IllegalArgumentException("Начальная ёмкость: 16, 32 или 64 (0 — стандартный конструктор)");
+            throw new InputException("HASHMAP_INITIAL_CAPACITY",
+                    "Начальная ёмкость: 16, 32 или 64 (0 — стандартный конструктор)");
         this.initialCapacity = initialCapacity;
         fresh(initialCapacity);
     }
@@ -61,36 +63,40 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
     }
 
     private Object key(KeySpec spec) {
-        if (spec == null || spec.type() == null) throw new IllegalArgumentException("Укажите тип ключа");
+        if (spec == null || spec.type() == null) throw new InputException("KEY_TYPE_REQUIRED", "Укажите тип ключа");
         if (spec.type() == KeyType.NULL) {
             if (spec.value() != null || spec.hashCodeOverride() != null)
-                throw new IllegalArgumentException("NULL-ключ не имеет value/hashCode");
+                throw new InputException("NULL_KEY_FIELDS", "NULL-ключ не имеет value/hashCode");
             return null;
         }
         if (spec.value() == null || spec.value().length() > MAX_KEY_LENGTH)
-            throw new IllegalArgumentException("Ключ должен содержать до " + MAX_KEY_LENGTH + " символов");
+            throw new InputException("KEY_LENGTH", "Ключ должен содержать до " + MAX_KEY_LENGTH + " символов", "limit",
+                    MAX_KEY_LENGTH);
         if (spec.type() != KeyType.COLLISION && spec.hashCodeOverride() != null)
-            throw new IllegalArgumentException("hashCode задаётся только для учебного ключа");
+            throw new InputException("HASH_OVERRIDE_TYPE", "hashCode задаётся только для учебного ключа");
         return switch (spec.type()) {
             case STRING -> spec.value();
             case INTEGER -> {
                 try {
                     yield Integer.valueOf(spec.value());
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Integer: целое число от −2147483648 до 2147483647");
+                    throw new InputException("INTEGER_RANGE", "Integer: целое число от −2147483648 до 2147483647");
                 }
             }
             case COLLISION -> {
                 if (spec.value().isBlank() || spec.hashCodeOverride() == null)
-                    throw new IllegalArgumentException("Учебному ключу нужны ID и hashCode");
+                    throw new InputException("TEACHING_KEY_REQUIRED", "Учебному ключу нужны ID и hashCode");
                 Integer previous = collisionHashes.get(spec.value());
-                if (previous != null && !previous.equals(spec.hashCodeOverride())) throw new IllegalArgumentException(
-                        "hashCode этого ID уже закреплён: " + previous + ". Выполните reset для смены.");
+                if (previous != null && !previous.equals(spec.hashCodeOverride()))
+                    throw new InputException("HASH_ALREADY_ASSIGNED",
+                            "hashCode этого ID уже закреплён: " + previous + ". Выполните reset для смены.", "hashCode",
+                            previous);
                 if (previous == null && collisionHashes.size() >= MAX_TEACHING_IDS)
-                    throw new IllegalArgumentException("Лимит " + MAX_TEACHING_IDS + " учебных ID; выполните reset");
+                    throw new InputException("TEACHING_ID_LIMIT",
+                            "Лимит " + MAX_TEACHING_IDS + " учебных ID; выполните reset", "limit", MAX_TEACHING_IDS);
                 yield new TeachingKey(spec.value(), spec.hashCodeOverride());
             }
-            default -> throw new IllegalArgumentException("Неизвестный ключ");
+            default -> throw new InputException("UNKNOWN_KEY", "Неизвестный ключ");
         };
     }
 
@@ -103,11 +109,12 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         if (operation == null || operation.type() == null ||
                 !Set.of(OperationType.PUT, OperationType.GET, OperationType.REMOVE, OperationType.CLEAR,
                         OperationType.RESET).contains(operation.type()))
-            throw new IllegalArgumentException("Допустимые операции: PUT, GET, REMOVE, CLEAR, RESET");
+            throw new InputException("HASHMAP_OPERATION", "Допустимые операции: PUT, GET, REMOVE, CLEAR, RESET");
         if (operation.index() != null || operation.element() != null || operation.minCapacity() != null)
-            throw new IllegalArgumentException("HashMap не принимает поля ArrayList");
+            throw new InputException("HASHMAP_ARGUMENTS", "HashMap не принимает поля ArrayList");
         if (operation.value() != null && operation.value().length() > MAX_VALUE_LENGTH)
-            throw new IllegalArgumentException("Значение: до " + MAX_VALUE_LENGTH + " символов");
+            throw new InputException("VALUE_LENGTH", "Значение: до " + MAX_VALUE_LENGTH + " символов", "limit",
+                    MAX_VALUE_LENGTH);
         Object key = switch (operation.type()) {
             case PUT, GET, REMOVE -> key(operation.key());
             default -> null;
@@ -117,7 +124,8 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
         if (operation.type() == OperationType.PUT) {
             existing = map.getNode(key);
             if (existing == null && map.size >= MAX_ENTRIES)
-                throw new IllegalArgumentException("Учебный лимит: " + MAX_ENTRIES + " элементов");
+                throw new InputException("SIZE_LIMIT", "Учебный лимит: " + MAX_ENTRIES + " элементов", "limit",
+                        MAX_ENTRIES);
         }
         if (key instanceof TeachingKey k) collisionHashes.putIfAbsent(k.id(), k.hashCode());
         var before = snapshot();
@@ -166,7 +174,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
                             "initialCapacity", resetCapacity, "sessionInitialCapacity", initialCapacity);
                     result = new Result(false, null, null);
                 }
-                default -> throw new IllegalArgumentException("Неизвестная операция");
+                default -> throw new InputException("HASHMAP_OPERATION", "Неизвестная операция");
             }
             map.emit("OPERATION_COMPLETED", "Операция завершена; состояние зафиксировано", "size", map.size);
             return new Trace<>(HashMapSnapshot.SCHEMA_VERSION, "HASH_MAP", operation, result, before,
@@ -205,7 +213,7 @@ public final class HashMapEngine implements CollectionEngine<HashMapSnapshot> {
 
     public Trace<HashMapSnapshot> scenario(String name) {
         if (SCENARIOS.stream().noneMatch(s -> s.id().equals(name)))
-            throw new IllegalArgumentException("Неизвестный сценарий");
+            throw new InputException("UNKNOWN_SCENARIO", "Неизвестный сценарий");
         var before = snapshot();
         var steps = new ArrayList<Step<HashMapSnapshot>>();
         // Demonstrations own their constructor choice. The session's reset setting stays intact.
