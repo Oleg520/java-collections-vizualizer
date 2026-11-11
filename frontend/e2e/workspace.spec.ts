@@ -79,9 +79,9 @@ for (const compact of [false, true]) {
       // Include allocation, working/committed labels, tree growth and both detail sizes.
       for (const index of [0, two, seven, steps.length - 1, seven, two]) {
         await page.locator(".event-row").nth(index).click();
-        await expect(page.locator(".technical-details dt")).toHaveCount(
-          Object.keys(steps[index].details).length,
-        );
+        await expect(
+          page.locator(".technical-details > dl > div > dt"),
+        ).toHaveCount(Object.keys(steps[index].details).length);
         expect(await geometry(page)).toEqual(baseline);
       }
       await page.getByRole("button", { name: /Algorithm/ }).click();
@@ -141,6 +141,22 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
     name: "Свернуть боковую панель",
     exact: true,
   });
+  const heading = page.getByRole("heading", {
+    name: "Готовые сценарии",
+    exact: true,
+  });
+  await expect(page.locator(".sidebar-title").getByRole("button")).toHaveCount(
+    1,
+  );
+  await expect(collapse).toHaveText("");
+  const titleBox = (await heading.boundingBox())!;
+  const toggleBox = (await collapse.boundingBox())!;
+  expect(
+    Math.abs(
+      titleBox.y + titleBox.height / 2 - toggleBox.y - toggleBox.height / 2,
+    ),
+  ).toBeLessThan(1);
+  expect(toggleBox.x).toBeGreaterThan(titleBox.x + titleBox.width);
   await collapse.focus();
   await page.keyboard.press("Enter");
   const expand = page.getByRole("button", {
@@ -149,7 +165,8 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   });
   await expect(expand).toBeFocused();
   await expect(expand).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByLabel("Коллекция", { exact: true })).toBeHidden();
+  await expect(heading).toBeHidden();
+  await expect(page.getByLabel("Коллекция", { exact: true })).toBeVisible();
   expect(
     (await page.locator(".canvas-column").boundingBox())!.width,
   ).toBeGreaterThan(before + 150);
@@ -157,19 +174,22 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
     .poll(async () => {
       const player = (await page.locator(".playback").boundingBox())!;
       const canvas = (await page.locator(".canvas-column").boundingBox())!;
-      return Math.abs(player.x + player.width / 2 - canvas.x - canvas.width / 2);
+      return Math.abs(
+        player.x + player.width / 2 - canvas.x - canvas.width / 2,
+      );
     })
     .toBeLessThan(1);
   await expect(page.getByTestId("step-number")).toHaveText(position);
   await expect(page.getByLabel("История операций")).toHaveValue(history);
   await expect(page.locator(".zoom-controls > span")).toHaveText("100%");
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("Коллекция", { exact: true })).not.toBeFocused();
+  await expect(page.getByLabel("Коллекция", { exact: true })).toBeFocused();
   await page.getByLabel("Скорость воспроизведения").selectOption("0.5");
   await page
     .getByRole("button", { name: "Воспроизвести", exact: true })
     .click();
   await expand.click();
+  await expect(heading).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Пауза", exact: true }),
   ).toBeVisible();

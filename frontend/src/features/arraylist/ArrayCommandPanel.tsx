@@ -69,12 +69,17 @@ export function ArrayCommandPanel({
       className="command-panel panel"
       aria-label="Панель операций ArrayList"
     >
-      <div className="command-topline array-constructor">
-        <span className="eyebrow">ARRAYLIST · OBJECT[]</span>
-        <label>
-          Конструктор{" "}
+      <div
+        className="array-constructor"
+        role="group"
+        aria-label="Создание новой коллекции"
+      >
+        <label className="field" htmlFor="array-constructor">
+          <span>Конструктор</span>
           <select
+            id="array-constructor"
             aria-label="Конструктор ArrayList"
+            aria-describedby="constructor-replacement-hint"
             value={constructor}
             onChange={(e) => setConstructor(e.target.value)}
           >
@@ -87,7 +92,8 @@ export function ArrayCommandPanel({
           </select>
         </label>
         <button
-          className="subtle-button"
+          className="secondary-button"
+          aria-describedby="constructor-replacement-hint"
           disabled={busy || blocked}
           onClick={() =>
             onCreate(
@@ -95,8 +101,11 @@ export function ArrayCommandPanel({
             )
           }
         >
-          Создать список
+          Создать
         </button>
+        <p id="constructor-replacement-hint">
+          Создание новой коллекции заменит текущую и очистит историю операций
+        </p>
       </div>
       <form className="command-form array-command-form" onSubmit={submit}>
         <label className="field">

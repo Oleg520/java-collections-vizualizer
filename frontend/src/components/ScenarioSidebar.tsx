@@ -1,23 +1,8 @@
-import {
-  BookOpen,
-  Braces,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
-  RotateCcw,
-} from "lucide-react";
-import type {
-  CollectionType,
-  Scenario,
-  Session,
-  Trace,
-} from "../api/types/index";
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import type { Scenario, Session, Trace } from "../api/types/index";
 export function ScenarioSidebar({
   collapsed,
   onToggle,
-  collection,
-  collections,
-  onCollection,
   scenarios,
   trace,
   busy,
@@ -26,9 +11,6 @@ export function ScenarioSidebar({
 }: {
   collapsed: boolean;
   onToggle: () => void;
-  collection: CollectionType;
-  collections: { id: CollectionType; name: string; number: string }[];
-  onCollection: (collection: CollectionType) => void;
   scenarios: Scenario[];
   trace?: Trace;
   busy: boolean;
@@ -36,59 +18,34 @@ export function ScenarioSidebar({
   onDemo: (name: string) => void;
 }) {
   return (
-    <aside className="sidebar" aria-label="Коллекция и сценарии">
-      <button
-        className="sidebar-toggle icon-button"
-        aria-label={
-          collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
-        }
-        aria-expanded={!collapsed}
-        aria-controls="sidebar-content"
-        title={
-          collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
-        }
-        onClick={onToggle}
-      >
-        {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
-        <span>Свернуть</span>
-      </button>
+    <aside className="sidebar" aria-label="Готовые сценарии коллекции">
+      <div className="sidebar-title">
+        <h2>Готовые сценарии</h2>
+        <button
+          className="sidebar-toggle icon-button"
+          aria-label={
+            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+          }
+          aria-expanded={!collapsed}
+          aria-controls="sidebar-content"
+          title={
+            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+          }
+          onClick={onToggle}
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={19} />
+          ) : (
+            <PanelLeftClose size={19} />
+          )}
+        </button>
+      </div>
       <div className="sidebar-content" id="sidebar-content">
-        <div className="sidebar-section">
-          <span className="eyebrow">КОЛЛЕКЦИЯ</span>
-          <label className="sr-only" htmlFor="collection">
-            Коллекция
-          </label>
-          <div className="collection-selector">
-            <Braces size={19} />
-            <select
-              id="collection"
-              value={collection}
-              onChange={(e) => onCollection(e.target.value as CollectionType)}
-            >
-              {collections.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <span>
-              {collections.find((item) => item.id === collection)?.number}
-            </span>
-          </div>
-          <p className="sidebar-note">
-            Java Collections Framework
-            <br />
-            Интерактивная лаборатория
-          </p>
-        </div>
         <div className="sidebar-section scenarios">
-          <div className="sidebar-title">
-            <span className="eyebrow">ГОТОВЫЕ СЦЕНАРИИ</span>
-            <BookOpen size={14} />
-          </div>
-          <p className="sidebar-description">
-            Один запуск — весь путь алгоритма.
-          </p>
+          <span id="scenario-reset-hint" className="sr-only">
+            Запуск сценария заменяет содержимое коллекции своим начальным
+            состоянием.
+          </span>
           <div
             className="scenario-list"
             role="region"
@@ -101,7 +58,8 @@ export function ScenarioSidebar({
                 className={`scenario-button ${trace?.operation.value === s.id && trace.operation.type === "SCENARIO" ? "selected" : ""}`}
                 onClick={() => demo(s.id)}
                 disabled={busy || !session}
-                title={s.description}
+                title={`${s.description} Запуск заменяет содержимое коллекции.`}
+                aria-describedby="scenario-reset-hint"
               >
                 <span className="scenario-number">
                   {String(i + 1).padStart(2, "0")}
@@ -113,10 +71,6 @@ export function ScenarioSidebar({
                 <ChevronRight size={14} />
               </button>
             ))}
-            <p className="scenario-reset-note">
-              <RotateCcw size={12} /> Каждый сценарий начинает с пустой
-              коллекции.
-            </p>
           </div>
         </div>
         <div className="sidebar-bottom">
