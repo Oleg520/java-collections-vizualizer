@@ -87,7 +87,7 @@ Before every Java PR, including agent-authored changes:
 The `java.format` property activates a Maven profile that runs once for both
 modules in `validate`. CI always runs `-Djava.format=check`; `-DskipTests` does not
 skip this check. IDEA's native `-dry` mode never rewrites sources. Ordinary Maven
-builds and Docker builds do not activate the tooling profile or download the IDE.
+builds do not activate the tooling profile or download the IDE.
 Run the formatting commands from the root, without `-pl` exclusions.
 
 ### IntelliJ IDEA
