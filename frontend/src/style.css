@@ -2979,7 +2979,7 @@ summary:focus-visible {
 }
 /* Retain a useful canvas on short screens; the document can scroll normally. */
 .canvas-column > .hashmap-diagram {
-  min-height: 520px;
+  min-height: 512px;
 }
 .canvas-column > .hashmap-diagram.has-physical {
   min-height: 640px;

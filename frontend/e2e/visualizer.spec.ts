@@ -64,7 +64,7 @@ test("real Java session, put/get/remove, null and immutable playback", async ({
   await expect(page.getByTestId("metric-size")).toHaveText("1");
   await expect(page.getByTestId("metric-capacity")).toHaveText("16");
   await expect(
-    page.getByRole("button", { name: 'Узел "Java", список' }),
+    page.getByRole("button", { name: /^Узел "Java",.*список/ }),
   ).toBeVisible();
   const number = await page.getByTestId("step-number").textContent();
   await page.getByRole("button", { name: "Шаг назад", exact: true }).click();
@@ -95,7 +95,7 @@ test("real Java session, put/get/remove, null and immutable playback", async ({
   await expectServerSize(page, 1);
   await finish(page);
   await expect(
-    page.getByRole("button", { name: "Узел null, список" }),
+    page.getByRole("button", { name: /^Узел null,.*список/ }),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
