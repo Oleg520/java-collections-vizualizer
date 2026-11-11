@@ -67,23 +67,18 @@ export function CommandPanel({
     >
       <div className="controls-top">{metrics}</div>
       <form onSubmit={submit} className="command-form">
-        <div className="field operation-field">
+        <label className="field">
           <span>Операция</span>
-          <div className="operation-tabs">
-            {(["PUT", "GET", "REMOVE"] as const).map((t) => (
-              <button
-                type="button"
-                key={t}
-                className={mode === t ? "active" : ""}
-                onClick={() => setMode(t)}
-                aria-pressed={mode === t}
-              >
-                {t.toLowerCase()}
-                <span>()</span>
-              </button>
-            ))}
-          </div>
-        </div>
+          <select
+            aria-label="Операция"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as typeof mode)}
+          >
+            <option value="PUT">put(K, V)</option>
+            <option value="GET">get(K)</option>
+            <option value="REMOVE">remove(K)</option>
+          </select>
+        </label>
         <label className="field key-type">
           <span>Тип ключа</span>
           <select

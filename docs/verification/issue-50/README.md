@@ -14,7 +14,9 @@ The header groups Visualizer, version and collection navigation at the left;
 mobile hides breadcrumb ancestors and 320 px hides the brand word. Constructor,
 centered metrics and command inputs share one panel. HashMap reuses the layout
 without a constructor placeholder. The visible action is `Выполнить`, retaining
-operation context in its accessible name.
+operation context in its accessible name. Both collections use a native operation
+dropdown; HashMap offers put/get/remove while retaining separate clear/reset
+actions. Changing the selection preserves input values and sends no command.
 
 `Результат операции` contains a neutral `—` until the selected trace's **last**
 frame. Earlier `OPERATION_COMPLETED` frames inside a scenario do not reveal its
@@ -40,6 +42,8 @@ the complete keyboard-readable text and inspector information.
 - [Desktop HashMap](desktop-hashmap.png)
 - [412 px mobile](mobile-412.png)
 - [320 px mobile](mobile-320.png)
+- HashMap dropdown controls: [412 px](mobile-412-hashmap-commands.png),
+  [320 px](mobile-320-hashmap-commands.png)
 
 These are a curated evidence set; raw investigation recordings and transient local
 harnesses are deliberately excluded.
@@ -73,3 +77,12 @@ the repository Playwright configs. Temporary configs only redirect ports/origins
 no production limits or live infrastructure were modified. The user preview on
 :5173/:8080 is retained separately. Physical devices, Firefox/Safari and manual
 screen-reader testing were not performed.
+
+## HashMap dropdown follow-up
+
+The final selector change was validated with a fresh production frontend build,
+94 unit tests, and focused Chromium command/recovery/keyboard checks: 7 passed,
+1 intentional desktop-sidebar skip on mobile. The checks exercise pointer/touch
+and keyboard selection, no submission on selection, Java put/get/remove values,
+retained form input and 320 px overflow. The full branch validation above predates
+this final selector-only follow-up; Java and session logic are unchanged.

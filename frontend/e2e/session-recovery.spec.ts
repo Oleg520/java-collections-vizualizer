@@ -55,7 +55,7 @@ test("a lost committed response recovers state without retrying rapid commands",
   await response.dispose();
 
   // Recovery has released the lock and refreshed revision for an explicit next command.
-  await page.getByRole("button", { name: "get()", exact: true }).click();
+  await page.getByLabel("Операция", { exact: true }).selectOption("GET");
   await page.getByRole("button", { name: "Выполнить get" }).click();
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.getByRole("button", { name: "В конец", exact: true }).click();

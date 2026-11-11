@@ -428,26 +428,6 @@ main {
   border-bottom: 1px solid var(--line);
   margin-bottom: 10px;
 }
-.operation-tabs {
-  display: flex;
-  gap: 22px;
-}
-.operation-tabs button {
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: #91a18f;
-  padding: 13px 2px 11px;
-  font: 12px var(--mono);
-}
-.operation-tabs button.active {
-  color: var(--lime);
-  border-bottom-color: var(--lime);
-}
-.operation-tabs button span {
-  opacity: 0.55;
-  margin-left: 2px;
-}
 .reset-actions {
   display: flex;
   gap: 15px;
@@ -1735,12 +1715,6 @@ main {
   .command-topline {
     gap: 12px;
   }
-  .operation-tabs {
-    gap: 15px;
-  }
-  .operation-tabs button {
-    font-size: 10px;
-  }
   .reset-actions {
     gap: 10px;
   }
@@ -2627,17 +2601,6 @@ summary:focus-visible {
 .workbench-controls .command-form .field {
   flex: 1 1 110px;
 }
-.workbench-controls .command-form .operation-field {
-  flex: 0 1 154px;
-}
-.workbench-controls .operation-tabs {
-  height: 34px;
-  gap: 14px;
-}
-.workbench-controls .operation-tabs button {
-  padding: 5px 0;
-  font-size: 11px;
-}
 .workbench-controls .input-caption {
   flex-wrap: wrap;
   padding-top: 8px;
@@ -2833,9 +2796,6 @@ summary:focus-visible {
     flex: 1 1 40%;
     min-width: 0;
   }
-  .workbench-controls .command-form .operation-field {
-    flex-basis: 100%;
-  }
   .workbench-controls .primary-button {
     flex: 1 1 40%;
     min-height: 44px;
@@ -2846,9 +2806,6 @@ summary:focus-visible {
   .workbench-controls .secondary-button {
     min-height: 44px;
     height: 44px;
-  }
-  .workbench-controls .operation-tabs {
-    min-height: 40px;
   }
   .workbench-controls .reset-actions {
     gap: 12px;
