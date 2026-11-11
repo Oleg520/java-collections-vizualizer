@@ -36,7 +36,7 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
       .getByLabel("Конструктор ArrayList")
       .selectOption(i % 2 ? "default" : "0");
     await page
-      .getByRole("button", { name: "Создать список", exact: true })
+      .getByRole("button", { name: "Создать", exact: true })
       .click();
     await ready();
     await expect(page.getByTestId("committed-size")).toHaveText("0");
@@ -77,7 +77,7 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
     { times: 1 },
   );
   await page
-    .getByRole("button", { name: "Создать список", exact: true })
+    .getByRole("button", { name: "Создать", exact: true })
     .click();
   await ready();
   await expect(page.getByRole("alert")).toContainText("Нет ответа");

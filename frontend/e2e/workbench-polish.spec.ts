@@ -223,7 +223,7 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
     .locator('label[for="array-constructor"] > span')
     .boundingBox())!;
   const create = page.getByRole("button", {
-    name: "Создать список",
+    name: "Создать",
     exact: true,
   });
   const createBox = (await create.boundingBox())!;
@@ -243,14 +243,14 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
     );
   }
   await expect(constructor).toHaveAccessibleDescription(
-    "Создание нового списка заменяет текущий и очищает историю операций",
+    "Создание новой коллекции заменит текущую и очистит историю операций",
   );
   await expect(
     page.locator(".array-command-form").getByRole("button"),
   ).toHaveCount(1);
   await constructor.selectOption("5");
   await page
-    .getByRole("button", { name: "Создать список", exact: true })
+    .getByRole("button", { name: "Создать", exact: true })
     .click();
   await expect(page.getByTestId("committed-size")).toHaveText("0");
   await expect(page.getByTestId("metric-capacity")).toHaveText("5");

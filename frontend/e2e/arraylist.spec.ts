@@ -92,13 +92,13 @@ test("ArrayList commands, typed null, rewind and constructor configuration", asy
   await expect(page.getByTestId("metric-capacity")).toHaveText("1");
   await page.getByLabel("Конструктор ArrayList").selectOption("0");
   await page
-    .getByRole("button", { name: "Создать список", exact: true })
+    .getByRole("button", { name: "Создать", exact: true })
     .click();
   await command(page, "ADD");
   await expect(page.getByTestId("metric-capacity")).toHaveText("1");
   await page.getByLabel("Конструктор ArrayList").selectOption("default");
   await page
-    .getByRole("button", { name: "Создать список", exact: true })
+    .getByRole("button", { name: "Создать", exact: true })
     .click();
   await command(page, "ADD");
   await expect(page.getByTestId("metric-capacity")).toHaveText("10");

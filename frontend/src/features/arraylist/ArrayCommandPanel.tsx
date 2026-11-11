@@ -75,7 +75,7 @@ export function ArrayCommandPanel({
         aria-label="Создание нового списка"
       >
         <label className="field" htmlFor="array-constructor">
-          <span>Новый список</span>
+          <span>Конструктор</span>
           <select
             id="array-constructor"
             aria-label="Конструктор ArrayList"
@@ -101,10 +101,10 @@ export function ArrayCommandPanel({
             )
           }
         >
-          Создать список
+          Создать
         </button>
         <p id="constructor-replacement-hint">
-          Создание нового списка заменяет текущий и очищает историю операций
+          Создание новой коллекции заменит текущую и очистит историю операций
         </p>
       </div>
       <form className="command-form array-command-form" onSubmit={submit}>
