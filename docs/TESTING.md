@@ -189,8 +189,8 @@ commands above. These regressions run in the existing GitHub Actions verify job.
 ## Компактный workbench и селекторы (#52)
 
 `workbench-polish.spec.ts` проверяет единственный selector в breadcrumbs Map/List
-слева под глобальным header и подпись модели справа в том же контейнере,
-отсутствие selector в глобальном header,
+слева под глобальным header, небольшой промежуток перед dropdown,
+подсказку модели рядом с GitHub и отсутствие selector в глобальном header,
 sidebar со сценариями, ссылки OpenJDK активной коллекции только в Algorithm,
 сброс содержимого/истории через отдельный конструктор, вложенные BOOLEAN/ELEMENT
 результаты и ELEMENT_READ с длинными строками/null без горизонтального overflow.

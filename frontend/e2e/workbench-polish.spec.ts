@@ -45,9 +45,11 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(
     page.locator("main > .collection-heading > .breadcrumbs"),
   ).toHaveCount(1);
-  await expect(
-    page.locator("main > .collection-heading > .collection-context"),
-  ).toHaveCount(1);
+  await expect(page.locator(".app-header .collection-help")).toHaveCount(1);
+  await expect(page.locator("main .collection-help")).toHaveCount(0);
+  await expect(page.locator(".model-help-title")).toHaveText(
+    "Учебная модель · OpenJDK 21",
+  );
   await expect(nav.getByRole("combobox")).toHaveCount(1);
   await expect(page.locator(".app-header")).toHaveCSS("position", "sticky");
   const header = (await page.locator(".app-header").boundingBox())!;
@@ -57,14 +59,7 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   ).toBeCloseTo(isMobile ? 540 : 576, 0);
   if (!isMobile) {
     const navigation = (await nav.boundingBox())!;
-    const context = (await page.locator(".collection-context").boundingBox())!;
     expect(navigation.y).toBeGreaterThanOrEqual(header.y + header.height);
-    expect(navigation.x + navigation.width).toBeLessThan(context.x);
-    expect(
-      Math.abs(
-        navigation.y + navigation.height / 2 - context.y - context.height / 2,
-      ),
-    ).toBeLessThan(1);
   }
   await expect(page.locator(".sidebar select")).toHaveCount(0);
   for (const caption of [
@@ -101,7 +96,7 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await noHorizontalOverflow(nav);
 });
 
-test("compact workbench navigation and model help share a responsive row below the header", async ({
+test("collection dropdown stays beside the breadcrumbs in one compact left-aligned group", async ({
   page,
 }) => {
   await ready(page);
@@ -127,14 +122,13 @@ test("compact workbench navigation and model help share a responsive row below t
     await expect(nav).toBeInViewport({ ratio: 1 });
     await expect(collection).toBeInViewport({ ratio: 1 });
     await expect(github).toBeInViewport({ ratio: 1 });
-    const navigation = (await nav.boundingBox())!;
-    const model = (await page.locator(".collection-context").boundingBox())!;
+    const family = (await nav.locator(":scope > span").nth(1).boundingBox())!;
+    const selector = (await collection.boundingBox())!;
     expect(
-      Math.abs(
-        navigation.y + navigation.height / 2 - model.y - model.height / 2,
-      ),
+      Math.abs(family.y + family.height / 2 - selector.y - selector.height / 2),
     ).toBeLessThan(1);
-    expect(navigation.x + navigation.width).toBeLessThanOrEqual(model.x);
+    expect(selector.x).toBeGreaterThan(family.x + family.width);
+    expect(selector.x - family.x - family.width).toBeLessThanOrEqual(40);
     await noHorizontalOverflow(page.locator("html"));
     await noHorizontalOverflow(page.locator(".app-header"));
   }
@@ -148,7 +142,9 @@ test("compact workbench navigation and model help share a responsive row below t
   await expect(page.getByTestId("committed-size")).toHaveText("0");
   await collection.focus();
   await page.keyboard.press("Tab");
-  await expect(page.locator(".collection-help summary")).toBeFocused();
+  await expect(
+    page.getByRole("combobox", { name: "Конструктор ArrayList" }),
+  ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(collection).toBeFocused();
   await expect(collection).toHaveCSS("outline-style", "solid");
@@ -249,9 +245,7 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
     page.locator(".array-command-form").getByRole("button"),
   ).toHaveCount(1);
   await constructor.selectOption("5");
-  await page
-    .getByRole("button", { name: "Создать", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Создать", exact: true }).click();
   await expect(page.getByTestId("committed-size")).toHaveText("0");
   await expect(page.getByTestId("metric-capacity")).toHaveText("5");
   await expect(page.getByTestId("step-number")).toHaveText("0");

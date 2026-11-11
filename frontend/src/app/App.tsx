@@ -115,6 +115,7 @@ export default function App({
             <span>GitHub</span>
             <ArrowUpRight size={14} />
           </a>
+          <CollectionHelp description={view.description} />
         </div>
       </header>
       <div
@@ -141,6 +142,7 @@ export default function App({
               <span>{view.family}</span>
               <ChevronRight size={12} aria-hidden="true" />
               <select
+                className="collection-select"
                 aria-label="Коллекция"
                 aria-describedby="collection-switch-hint"
                 value={collection}
@@ -155,10 +157,6 @@ export default function App({
                 ))}
               </select>
             </nav>
-            <div className="collection-context">
-              <span>Учебная модель · OpenJDK 21</span>
-              <CollectionHelp description={view.description} />
-            </div>
           </header>
           {error && (
             <div className="error-banner" role="alert">

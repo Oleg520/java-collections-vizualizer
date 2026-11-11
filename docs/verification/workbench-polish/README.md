@@ -4,16 +4,16 @@ Verified locally on 2026-11-11 against the real Java 21 backend and the producti
 Vite bundle, with Chromium desktop/mobile projects. No production service or
 production configuration was changed.
 
-The compact workbench row below the global header contains
-`Collections → Map → HashMap ▾` or `Collections → List → ArrayList ▾` on the left,
-with the model label/help on the right in the same flex container. Collections
-means Java Collections Framework. Narrow screens wrap breadcrumb content and model text inside their own areas
-without horizontal overflow; the model label stays on the right of that same row. The source
-link remains in Algorithm.
+The compact workbench row below the global header contains one left-aligned
+navigation group: `Collections › Map/List › [HashMap/ArrayList ▾]`. The dropdown
+follows the family directly, without distributing spare space between segments.
+The information icon sits beside GitHub in the global header; its popup contains
+`Учебная модель · OpenJDK 21`, the active collection description and the switching
+warning. The OpenJDK source action remains in Algorithm.
 
 The global sticky header retains brand/version on the left and connection/GitHub
 on the right, with its original 76 px desktop / 62 px phone height. No collection
-navigation or decoration fills its center. The initial 1440×900 HashMap diagram
+navigation fills its center. The initial 1440×900 HashMap diagram
 and Events inspector start at 428 px. The diagram remains 832×576 px;
 visualization/inspector sizing and animation behavior are unchanged.
 The sidebar starts with one row containing a 12 px scenario heading and an
@@ -21,6 +21,25 @@ icon-only collapse button. The collapsed rail keeps its accessible expand button
 Independent list scrolling and the educational footer are preserved. Mobile
 retains the horizontal scenario strip and ordinary page scrolling. Empty-state
 balance and canvas navigation remain separate work in #50 and #65.
+
+## Approved visual iteration
+
+| Collection | Desktop 1440×900 | Mobile 320×740 | Mobile 412×839 |
+| --- | --- | --- | --- |
+| HashMap | [Desktop](local-visual-iteration/desktop.png) | [320 px](local-visual-iteration/mobile-320.png) | [412 px](local-visual-iteration/mobile-412.png) |
+| ArrayList | [Desktop](local-visual-iteration/desktop-arraylist.png) | [320 px](local-visual-iteration/mobile-320-arraylist.png) | [412 px](local-visual-iteration/mobile-412-arraylist.png) |
+
+Help popup: [desktop](local-visual-iteration/desktop-help.png),
+[320 px](local-visual-iteration/mobile-320-help.png),
+[412 px](local-visual-iteration/mobile-412-help.png).
+
+This iteration was checked with TypeScript and local Chromium visual/interaction
+checks at the three sizes: compact row without overflow, collection switching,
+Escape, outside click, mouse leave and emulated touch. The full suites were not
+rerun after this iteration; the earlier baseline below and the PR CI checks record
+broader verification.
+
+## Earlier verification snapshots
 
 | View | Screenshot |
 | --- | --- |
@@ -34,8 +53,8 @@ balance and canvas navigation remain separate work in #50 and #65.
 | 412 px, nested result and quoted string | [Mobile technical details](mobile-details.png) |
 
 The ArrayList constructor is always visible in a compact row above ordinary
-operations: a standard New list label sits above the 230 px dropdown, with
-Create list to its right. Controls wrap on phones. The muted caption below the
+operations: a standard Конструктор label sits above the 230 px dropdown, with
+Создать to its right. Controls wrap on phones. The muted caption below the
 constructor row explains that creation replaces the current list and clears
 history. Scenario reset guidance is available in button tooltips and accessible
 descriptions; collection replacement guidance is in a compact help disclosure

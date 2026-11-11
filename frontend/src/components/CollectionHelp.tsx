@@ -51,6 +51,9 @@ export function CollectionHelp({ description }: { description: string }) {
         <Info size={16} aria-hidden="true" />
       </summary>
       <p>
+        <strong className="model-help-title">
+          Учебная модель · OpenJDK 21
+        </strong>
         {description}{" "}
         <span id="collection-switch-hint">
           Смена коллекции заменяет её содержимое и очищает историю операций.
