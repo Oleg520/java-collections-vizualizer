@@ -8,7 +8,7 @@
 npm --prefix frontend test            # Vitest: transport, layout, presentation, session
 npm --prefix frontend run build       # strict TypeScript + Vite production
 cd frontend
-npx playwright install --with-deps chromium
+npx playwright install --only-shell chromium
 npm run test:e2e                       # backend и Vite запускаются автоматически
 E2E_PREVIEW=1 npm run test:e2e          # тот же E2E против production dist, порт 4173
 ```
@@ -19,8 +19,10 @@ Playwright запускает исполняемый JAR из `backend/target` �
 Для этих тестов установка модулей через `install` не требуется.
 Playwright также может использовать уже запущенные серверы на 8080/5173;
 для CI требуется свободная пара 8080/4173 (production preview).
-`--with-deps` устанавливает системные
-библиотеки Chromium и на Linux может требовать административных прав.
+`--only-shell` скачивает только Chromium headless shell для текущих headless-тестов.
+Если на локальной Linux-машине не хватает системных библиотек, один раз выполните
+`npx playwright install-deps chromium` (может требовать административных прав).
+Для headed/debug-запуска установите полный браузер: `npx playwright install chromium`.
 Тесты работают с настоящим Java API. В recovery/compatibility регрессиях Playwright
 контролируемо прерывает доставку ответов или подменяет ошибки proxy/API; штатные
 команды и восстановление читают настоящий backend.
@@ -32,9 +34,6 @@ Playwright также может использовать уже запущен�
 переходы list/tree, split на две половины, видимость узлов в рабочих снимках,
 стабильность ID, сохранность предыдущих снимков и результат trace.
 
-GitHub Actions запускает `Build and verify` только при pull request.
-Отдельный job собирает Docker image, запускает Compose и проверяет health и
-Git-версию backend с настройками приложения по умолчанию.
 Все восемь сценариев HashMap проверяются при initialCapacity 0/16/32/64. E2E также
 проверяет большой split на 97-й вставке, конфликт revision и offline-воспроизведение.
 Обычный прогон не меняет скриншоты документации; для их обновления:
@@ -211,3 +210,35 @@ E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- workbench-polish.spec.ts
 ```
 
 [Скриншоты, результаты и ограничения проверки](verification/workbench-polish/).
+
+## CI для pull request
+
+`Build and verify` запускает один job `verify` на `ubuntu-24.04`. Новый коммит
+отменяет устаревший прогон того же PR. Проверки выполняются без сокращения E2E:
+
+- Python fixtures: Git-версии, formatter tooling и контракт релизных артефактов.
+- Один `./mvnw -B -Djava.format=check verify`: форматирование, Git-версия,
+  все Java algorithm/API/session/observability tests и исполняемый JAR.
+- `npm ci --no-audit --no-fund`, TypeScript/Vite build и все Vitest tests.
+- `playwright install --only-shell chromium`, без `apt` и полного headed-браузера.
+- Dev E2E локальных split-сценариев; полный production E2E обеих коллекций
+  на desktop/mobile (responsive, animation/playback, recovery); отдельный
+  lifecycle-прогон со свежим backend и строгими квотами.
+
+Удалены неиспользуемая контейнерная сборка и её health smoke job. Реальный JAR,
+health и точная Git-версия по-прежнему проверяются Java integration tests и
+`visualizer.spec.ts`. Отдельный Maven `validate` объединён с `verify`; `clean`
+не нужен на свежем checkout CI. Ключ кэша IntelliJ зависит только от OS,
+архитектуры и VERSION/BUILD: правки скрипта не вызывают повторную загрузку IDE.
+Убраны негейтящие audit/funding-запросы `npm ci`;
+Vitest/build и release-contract fixtures сохранены. Setup Java/Node и кэши
+Maven/npm/IntelliJ оставлены: они выбирают нужные версии и ускоряют зависимости.
+
+Браузерная загрузка имеет connection timeout 15 секунд и общий предел 3 минуты;
+job ограничен 25 минутами, включая холодный кэш IntelliJ (~1.6 GB). Ошибки загрузки
+или отсутствующие библиотеки завершают CI с ошибкой. При падении сохраняются
+Surefire reports и отдельные HTML reports/traces/screenshots всех E2E-прогонов
+на 7 дней. Сетевые ограничения перечислены в [RELIABILITY.md](RELIABILITY.md#зависимости-ci).
+Ручной release workflow продолжает собирать JAR и frontend assets; его проверки
+и публикация артефактов не изменены. Замеры GitHub Actions фиксируются в PR,
+связанном с [Issue #72](https://github.com/Oleg520/java-collections-vizualizer/issues/72).

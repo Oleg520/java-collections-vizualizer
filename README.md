@@ -107,7 +107,7 @@ Python 3 нужен только для проверок Git-версий и у�
 Для E2E установите Chromium:
 
 ```bash
-npm --prefix frontend exec -- playwright install --with-deps chromium
+npm --prefix frontend exec -- playwright install --only-shell chromium
 npm --prefix frontend run test:e2e
 npm --prefix frontend run test:e2e:lifecycle
 ```
@@ -116,23 +116,7 @@ Playwright запускает собранный JAR и Vite сам; после 
 повторите `./mvnw clean verify`. Перед lifecycle-прогоном освободите порты
 8080/5173. [Полная проверка, E2E и измерение ресурсов](docs/TESTING.md).
 
-## Docker
-
-Docker Compose запускает только backend; JDK на хосте не требуется:
-
-```bash
-docker compose up --build
-# В другом терминале:
-npm --prefix frontend ci
-npm --prefix frontend run dev
-```
-
-Backend доступен на **http://127.0.0.1:8080**, интерфейс — на
-**http://127.0.0.1:5173**. Остановка: `docker compose down`.
-Не запускайте одновременно Java backend и Compose на одном порту.
-Docker требует обычный Git clone с каталогом `.git`; ZIP и Git worktree
-для контейнерной сборки не подходят. Контейнер запускает тесты при сборке,
-содержит JRE и JAR и работает без root. Management-порт не публикуется.
+## Отдельный статический hosting
 
 Для отдельного статического hosting задайте `VITE_API_URL` до сборки frontend
 и точные `ALLOWED_ORIGINS` у backend. Локально оставьте

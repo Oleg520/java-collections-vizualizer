@@ -32,7 +32,7 @@ Backend получает версию через Spring Boot `build-info` из �
 `frontend/package.json` и lock file содержат техническую версию приватного npm-пакета;
 она не определяет версию приложения и не обновляется при релизах.
 
-## Локально, CI и Docker
+## Локально и CI
 
 Нужны Git, POSIX shell, Java 21 и Node согласно `frontend/package.json`.
 Используйте Git checkout с тегами, а не ZIP исходников:
@@ -57,12 +57,8 @@ java -jar "$(sh scripts/backend-jar.sh)"
 несколько устаревших JAR или симлинки. `.jar.original` не выбирается.
 
 Actions checkout получает полную историю и теги; release workflow собирает
-неизменяемый dispatch SHA. Docker также использует `.git` и те же правила:
-запускайте `docker build -t collections-viz .` из обычного клона с каталогом `.git`.
-Для Git worktree, где `.git` — ссылка-файл на внешний каталог, сначала сделайте
-отдельный обычный клон. Локальные Git config, hooks и reflogs исключены из build context; объекты и refs
-сохранены для Git-based versioning. История объектов всё ещё передаётся сборщику:
-используйте доверенный builder и чистый клон. Финальный Docker image содержит только JRE и готовый JAR.
+неизменяемый dispatch SHA. Backend запускается как Java 21 JAR, frontend
+публикуется отдельно как статические файлы.
 
 Если IDE не может импортировать multi-module проект с расширением, официальный
 workaround qoomon — Maven importer VM option `-Dversioning.disable=true`.
