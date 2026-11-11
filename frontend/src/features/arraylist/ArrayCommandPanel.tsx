@@ -74,21 +74,23 @@ export function ArrayCommandPanel({
         role="group"
         aria-label="Создание нового списка"
       >
-        <label htmlFor="array-constructor">Новый список</label>
-        <select
-          id="array-constructor"
-          aria-label="Конструктор ArrayList"
-          aria-describedby="constructor-replacement-hint"
-          value={constructor}
-          onChange={(e) => setConstructor(e.target.value)}
-        >
-          <option value="default">new ArrayList&lt;&gt;()</option>
-          {[0, 1, 5, 10, 16, 128, 256].map((n) => (
-            <option key={n} value={n}>
-              new ArrayList&lt;&gt;({n})
-            </option>
-          ))}
-        </select>
+        <label className="field" htmlFor="array-constructor">
+          <span>Новый список</span>
+          <select
+            id="array-constructor"
+            aria-label="Конструктор ArrayList"
+            aria-describedby="constructor-replacement-hint"
+            value={constructor}
+            onChange={(e) => setConstructor(e.target.value)}
+          >
+            <option value="default">new ArrayList&lt;&gt;()</option>
+            {[0, 1, 5, 10, 16, 128, 256].map((n) => (
+              <option key={n} value={n}>
+                new ArrayList&lt;&gt;({n})
+              </option>
+            ))}
+          </select>
+        </label>
         <button
           className="secondary-button"
           aria-describedby="constructor-replacement-hint"
@@ -102,7 +104,7 @@ export function ArrayCommandPanel({
           Создать список
         </button>
         <p id="constructor-replacement-hint">
-          Заменит текущий список и очистит историю операций.
+          Создание нового списка заменяет текущий и очищает историю операций
         </p>
       </div>
       <form className="command-form array-command-form" onSubmit={submit}>

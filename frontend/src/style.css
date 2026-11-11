@@ -2019,16 +2019,15 @@ main {
 }
 .array-constructor {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 7px 12px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 12px;
   padding: 12px 0;
 }
-.array-constructor label {
-  font-size: 12px;
-  color: #dce7d8;
+.array-constructor .field {
+  flex: 0 1 230px;
 }
 .array-constructor select {
   width: 230px;
@@ -2036,10 +2035,10 @@ main {
   min-height: 39px;
 }
 .array-constructor p {
-  flex: 1 1 220px;
-  font-size: 10px;
+  flex: 1 0 100%;
+  font-size: 9px;
   line-height: 1.6;
-  color: #a4b3a8;
+  color: #798d79;
   margin: 0;
 }
 .secondary-button {

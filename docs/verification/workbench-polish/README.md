@@ -22,8 +22,9 @@ footer. Mobile retains the horizontal scenario strip and ordinary page scrolling
 | 412 px, nested result and quoted string | [Mobile technical details](mobile-details.png) |
 
 The ArrayList constructor is always visible in a compact row above ordinary
-operations: New list → 230 px dropdown → Create list. Controls wrap on phones.
-A short warning explains that creation replaces the current list and clears
+operations: a standard New list label sits above the 230 px dropdown, with
+Create list to its right. Controls wrap on phones. The muted caption below the
+constructor row explains that creation replaces the current list and clears
 history. Scenario reset guidance is available in button tooltips and accessible
 descriptions; collection replacement guidance is in a compact help disclosure
 and the selector's accessible description. The help closes on mouse leave, an
@@ -55,6 +56,13 @@ or collection algorithms were added.
   replies and constructor changes. The existing lifecycle config/test was used
   with server management disabled and isolated local ports 18080/4183; only that
   test process allowed its specific local origin.
+
+After the final constructor label/caption placement adjustment, the unit suite
+(89 passed), production build, Prettier/diff checks and affected ArrayList,
+workbench, workspace and playback suites were rerun (39 passed, 1 intentional
+mobile sidebar skip). The full production suite and strict lifecycle results
+above predate that placement-only follow-up. Updated ArrayList screenshots show
+the final label and muted caption positions at desktop and 320 px.
 
 The new Playwright coverage checks pointer/touch and keyboard selection,
 Escape cancellation, focus after closing, accessible names/descriptions,

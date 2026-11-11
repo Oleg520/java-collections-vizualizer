@@ -141,20 +141,32 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
     name: "Конструктор ArrayList",
   });
   await expect(constructor).toBeVisible();
-  expect((await constructor.boundingBox())!.width).toBeLessThanOrEqual(240);
+  const constructorBox = (await constructor.boundingBox())!;
+  const labelBox = (await page
+    .locator('label[for="array-constructor"] > span')
+    .boundingBox())!;
+  const create = page.getByRole("button", {
+    name: "Создать список",
+    exact: true,
+  });
+  const createBox = (await create.boundingBox())!;
+  const hint = page.locator("#constructor-replacement-hint");
+  expect(constructorBox.width).toBeLessThanOrEqual(240);
+  expect(labelBox.y + labelBox.height).toBeLessThan(constructorBox.y);
+  expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(
+    Math.max(
+      constructorBox.y + constructorBox.height,
+      createBox.y + createBox.height,
+    ),
+  );
   if (!isMobile) {
-    const create = page.getByRole("button", {
-      name: "Создать список",
-      exact: true,
-    });
-    expect(
-      Math.abs(
-        (await constructor.boundingBox())!.y - (await create.boundingBox())!.y,
-      ),
-    ).toBeLessThan(1);
+    expect(Math.abs(constructorBox.y - createBox.y)).toBeLessThan(1);
+    expect(createBox.x).toBeGreaterThan(
+      constructorBox.x + constructorBox.width,
+    );
   }
   await expect(constructor).toHaveAccessibleDescription(
-    /Заменит текущий список/,
+    "Создание нового списка заменяет текущий и очищает историю операций",
   );
   await expect(
     page.locator(".array-command-form").getByRole("button"),
