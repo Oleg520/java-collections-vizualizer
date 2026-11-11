@@ -67,7 +67,20 @@ jobs:
           npm ci
           npm run build
           npm test
-          npx playwright install --with-deps chromium
+      # GitHub's ubuntu-24.04 runner already provides the Chromium libraries.
+      # Do not install system packages through apt for every release build.
+      - name: Install Chromium headless shell
+        timeout-minutes: 3
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '15000'
+        run: npx playwright install --only-shell chromium
+      - name: Verify frontend against local backend (desktop/mobile and lifecycle)
+        working-directory: frontend
+        env:
+          VITE_API_URL: ''
+          E2E_PREVIEW: '1'
+        run: |
           npm run test:e2e
           npm run test:e2e:lifecycle
       - name: Build release assets
