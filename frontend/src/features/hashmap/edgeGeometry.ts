@@ -1,27 +1,37 @@
 import type { Edge } from "./graph";
-import type { Diagram as DiagramLayout, PlacedNode } from "./layout";
+import type { Band, PlacedNode } from "./layout";
 export function edgeGeometry(
   edge: Edge,
   positions: { get(id: number): PlacedNode | undefined },
-  layout: DiagramLayout,
+  bands: Map<string, Band>,
   width: number,
 ) {
   const from = edge.from === null ? undefined : positions.get(edge.from),
     to = positions.get(edge.to);
-  const band = edge.areaId
-    ? layout.bands.find((b) => b.id === edge.areaId)
-    : undefined;
+  const band = edge.areaId ? bands.get(edge.areaId) : undefined;
   if (!from && !band) return;
   const cross =
     !to || (from ? from.areaId !== to.areaId : band?.id !== to.areaId);
   const x1 = from
-    ? from.x + (edge.tree ? 58 : edge.field === "parent" ? 58 : 116)
+    ? from.x +
+      (edge.tree
+        ? 58
+        : edge.field === "parent"
+          ? 58
+          : edge.field === "prev"
+            ? 0
+            : 116)
     : 112;
   const y1 = from
     ? from.y + (edge.tree ? 65 : edge.field === "parent" ? 0 : 32)
     : band!.y + (edge.field === "head" ? 64 : 85);
   const x2 = to
-    ? to.x + (edge.tree || edge.field === "parent" ? 58 : 0)
+    ? to.x +
+      (edge.tree || edge.field === "parent"
+        ? 58
+        : edge.field === "prev"
+          ? 116
+          : 0)
     : width - 30;
   const y2 = to
     ? to.y + (edge.tree ? 0 : edge.field === "parent" ? 65 : 32)

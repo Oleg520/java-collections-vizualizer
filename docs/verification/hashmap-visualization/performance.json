@@ -1,0 +1,22 @@
+{
+  "steps": 992,
+  "frameSamples": 198,
+  "medianFrameMs": 16.699999999999818,
+  "p95FrameMs": 33.30000000000018,
+  "maxFrameMs": 133.39999999999964,
+  "longTasks": [
+    97,
+    92,
+    75
+  ],
+  "renderedNodes": 97,
+  "renderedEdges": 384,
+  "documentOverflow": false,
+  "canvasHeight": 282,
+  "functions": {
+    "frames": 1315,
+    "decodeMs": 11.200000002980232,
+    "boundsMs": 75.09999999403954,
+    "physicalLayoutMs": 80.80000000447035
+  }
+}

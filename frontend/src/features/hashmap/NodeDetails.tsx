@@ -9,10 +9,12 @@ export function NodeDetails({
   onClose,
   representations = [],
   onSelect,
+  references,
 }: {
   node: MapNode;
   onClose: () => void;
   representations?: MapNode[];
+  references?: Map<number, MapNode>;
   onSelect?: (selection: NodeSelection) => void;
 }) {
   return (
@@ -65,11 +67,30 @@ export function NodeDetails({
           <div key={k}>
             <dt>{k}</dt>
             <dd>
-              {v === null
-                ? "null"
-                : typeof v === "object"
-                  ? JSON.stringify(v)
-                  : String(v)}
+              {onSelect &&
+              ["next", "prev", "parent", "left", "right"].includes(k) &&
+              typeof v === "number" &&
+              references?.has(v) ? (
+                <button
+                  className="node-reference"
+                  aria-label={`${k} → obj ${v}, перейти к записи ${references.get(v)!.id}`}
+                  onClick={() => {
+                    const target = references.get(v)!;
+                    onSelect({
+                      logicalId: target.id,
+                      preferredObjectId: target.objectId,
+                    });
+                  }}
+                >
+                  {v} ↗
+                </button>
+              ) : v === null ? (
+                "null"
+              ) : typeof v === "object" ? (
+                JSON.stringify(v)
+              ) : (
+                String(v)
+              )}
             </dd>
           </div>
         ))}
@@ -92,6 +113,15 @@ export function selectedDetails(
         content: (
           <NodeDetails
             node={node}
+            references={
+              snapshot && !isArray(snapshot)
+                ? new Map(
+                    [...snapshot.buckets, ...snapshot.pendingBuckets]
+                      .flatMap((b) => b.nodes)
+                      .map((n) => [n.objectId, n]),
+                  )
+                : undefined
+            }
             onClose={close}
             onSelect={onSelect}
             representations={

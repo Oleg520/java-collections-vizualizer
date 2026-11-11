@@ -242,3 +242,25 @@ Surefire reports и отдельные HTML reports/traces/screenshots всех 
 Ручной release workflow продолжает собирать JAR и frontend assets; его проверки
 и публикация артефактов не изменены. Замеры GitHub Actions фиксируются в PR,
 связанном с [Issue #72](https://github.com/Oleg520/java-collections-vizualizer/issues/72).
+
+## HashMap visualization (#47 / #61)
+
+Focused checks during visual iteration (from the repository root):
+
+```bash
+cd frontend
+npx tsc --noEmit
+npx vitest run src/features/hashmap/graph.test.ts src/features/hashmap/layout.test.ts src/features/hashmap/identity.test.ts src/features/hashmap/transitions.test.ts
+npx playwright test hashmap-transitions.spec.ts
+```
+
+The new browser checks cover real split 6/7 and 2/7 occupancy/focus, all physical
+links, both copies and rewind, intermediate SVG endpoints during forward/back
+rotations, live reduced-motion and usable short/narrow viewports. The resize
+preparations remain dev-only and are included in the development CI grep;
+production runs the tree/navigation checks. Fixtures in
+`features/hashmap/fixtures/transitions.json` are exact decoded Java research frames,
+including right and removal rotations, not generated algorithm states.
+
+[Visual review materials and limits of local validation](verification/hashmap-visualization/README.md).
+Full final validation follows owner visual approval.

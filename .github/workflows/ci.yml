@@ -58,7 +58,7 @@ jobs:
           PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '15000'
       - name: Verify local split demos in the standard development UI
         timeout-minutes: 3
-        run: npm run test:e2e -- --output test-results/development --grep 'local splits use|local preparation'
+        run: npm run test:e2e -- --output test-results/development --grep 'local splits use|local preparation|resize focus explains'
         working-directory: frontend
         env:
           E2E_PREVIEW: '0'

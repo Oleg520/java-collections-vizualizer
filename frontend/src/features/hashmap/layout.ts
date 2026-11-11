@@ -127,7 +127,6 @@ export function layoutSnapshot(
     }
     const reserved = options.bounds?.get(groupIndex);
     if (reserved) {
-      width = Math.max(width, reserved.width);
       top = groupTop + Math.max(top - groupTop, reserved.height);
     }
   }

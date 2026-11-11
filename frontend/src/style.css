@@ -2977,3 +2977,47 @@ summary:focus-visible {
 .hashmap-diagram .physical-edge.changed:not(.selected) > path:not(.edge-hit) {
   stroke: #cbb07c;
 }
+/* Retain a useful canvas on short screens; the document can scroll normally. */
+.canvas-column > .hashmap-diagram {
+  min-height: 520px;
+}
+.canvas-column > .hashmap-diagram.has-physical {
+  min-height: 640px;
+}
+.hashmap-diagram.has-physical .physical-tools {
+  height: 96px;
+  max-height: 96px;
+  align-content: start;
+}
+.node-reference {
+  color: var(--lime);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.node-reference:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+@media (max-width: 680px) {
+  .canvas-column > .hashmap-diagram {
+    min-height: 580px;
+  }
+  .canvas-column > .hashmap-diagram.has-physical {
+    min-height: 720px;
+  }
+  .hashmap-diagram .diagram-navigation {
+    gap: 6px 12px;
+  }
+  .hashmap-diagram .diagram-navigation .icon-button,
+  .resize-focus button {
+    min-height: 32px;
+  }
+  .hashmap-diagram .check-label {
+    min-height: 28px;
+  }
+}

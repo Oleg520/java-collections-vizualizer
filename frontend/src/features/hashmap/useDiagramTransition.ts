@@ -88,5 +88,5 @@ export function useDiagramTransition(
       y: from.y + (to.y - from.y) * fraction,
     };
   };
-  return { progress, positionAt, changed: pair.changed };
+  return { progress, positionAt, changed: pair.changed, to: pair.to };
 }

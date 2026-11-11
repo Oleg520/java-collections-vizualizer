@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { motion, useTransform, type MotionValue } from "motion/react";
+import { useLayoutEffect, useMemo, useRef } from "react";
+
 import type { MapNode, Step, Trace } from "../../api/types";
 import type { PlaybackNavigation } from "../../playback/useTracePlayback";
 import { areaLabel, type Edge, type SnapshotGraph } from "./graph";
@@ -8,12 +8,9 @@ import { edgeGeometry } from "./edgeGeometry";
 import { keyLabel, valueLabel } from "./presentation";
 import { useDiagramTransition } from "./useDiagramTransition";
 
-type MovingPositions = {
-  progress: MotionValue<number>;
-  positionAt: (id: number, fraction: number) => PlacedNode | undefined;
-};
 export function HashMapGraph({
   layout,
+  focusedBucket,
   graph,
   cameraWidth,
   scale,
@@ -31,6 +28,7 @@ export function HashMapGraph({
   view,
 }: {
   layout: Diagram;
+  focusedBucket: number | null;
   graph: SnapshotGraph;
   cameraWidth: number;
   scale: number;
@@ -66,6 +64,46 @@ export function HashMapGraph({
       ]),
     [selected, selectedEdge, step],
   );
+  const nodeElements = useRef(new Map<number, SVGGElement>());
+  const edgeElements = useRef(
+    new Map<
+      string,
+      {
+        path: SVGPathElement;
+        hit: SVGPathElement | null;
+        label: SVGTextElement;
+      }
+    >(),
+  );
+  const bands = useMemo(
+    () => new Map(layout.bands.map((b) => [b.id, b])),
+    [layout],
+  );
+  useLayoutEffect(() => {
+    const draw = (fraction: number) => {
+      const positions = new Map(
+        layout.nodes.map((n) => [
+          n.node.objectId,
+          transition.positionAt(n.node.objectId, fraction)!,
+        ]),
+      );
+      for (const [id, node] of positions)
+        nodeElements.current
+          .get(id)
+          ?.setAttribute("transform", `translate(${node.x} ${node.y})`);
+      for (const edge of layout.edges) {
+        const elements = edgeElements.current.get(edge.id),
+          geometry = edgeGeometry(edge, positions, bands, cameraWidth);
+        if (!elements || !geometry) continue;
+        elements.path.setAttribute("d", geometry.path);
+        elements.hit?.setAttribute("d", geometry.path);
+        elements.label.setAttribute("x", String(geometry.labelX));
+        elements.label.setAttribute("y", String(geometry.labelY));
+      }
+    };
+    draw(transition.progress.get());
+    return transition.progress.on("change", draw);
+  }, [layout, bands, cameraWidth, transition.progress, transition.positionAt]);
   return (
     <svg
       width={cameraWidth * scale}
@@ -88,7 +126,13 @@ export function HashMapGraph({
         </marker>
       </defs>
       {layout.bands.map((b) => (
-        <g key={b.id} data-area={b.id}>
+        <g
+          key={b.id}
+          data-area={b.id}
+          opacity={
+            focusedBucket !== null && focusedBucket !== b.index ? 0.3 : 1
+          }
+        >
           <rect
             x="14"
             y={b.y}
@@ -119,113 +163,92 @@ export function HashMapGraph({
           </title>
         </g>
       ))}
-      {layout.edges.map((edge) => (
-        <MovingEdge
-          key={edge.id}
-          edge={edge}
-          layout={layout}
-          width={cameraWidth}
-          physical={physical}
-          selected={selectedEdge?.id === edge.id}
-          changed={edge.from !== null && transition.changed.has(edge.from)}
-          onChoose={onEdge}
-          progress={transition.progress}
-          positionAt={transition.positionAt}
-        />
-      ))}
+      {layout.edges.map((edge) => {
+        const geometry = edgeGeometry(edge, transition.to, bands, cameraWidth)!;
+        const title = `${edge.from === null ? `${edge.areaId} snapshot` : `obj ${edge.from}`} · ${edge.field} → obj ${edge.to}${geometry.external ? ", вне фокуса" : ""}`;
+        return (
+          <g
+            key={edge.id}
+            data-edge={edge.id}
+            ref={(element) => {
+              if (element)
+                edgeElements.current.set(edge.id, {
+                  path: element.querySelector("path")!,
+                  hit: element.querySelector(".edge-hit"),
+                  label: element.querySelector("text")!,
+                });
+              else edgeElements.current.delete(edge.id);
+            }}
+            className={`physical-edge ${selectedEdge?.id === edge.id ? "selected" : ""} ${edge.from !== null && transition.changed.has(edge.from) ? "changed" : ""} ${edge.tree || edge.field === "next" ? "structural" : "secondary"}`}
+          >
+            <path d={geometry.path} markerEnd="url(#arrow)" />
+            {physical && (
+              <path
+                d={geometry.path}
+                className="edge-hit"
+                role="button"
+                tabIndex={0}
+                aria-label={title}
+                onClick={() => onEdge(edge)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onEdge(edge);
+                  }
+                }}
+              />
+            )}
+            <text
+              x={geometry.labelX}
+              y={geometry.labelY}
+              className="svg-edge-label"
+            >
+              {geometry.external
+                ? `${edge.label} → obj ${edge.to} · вне фокуса`
+                : edge.label}
+            </text>
+            <title>{title}</title>
+          </g>
+        );
+      })}
       {layout.nodes.map((placed) => (
-        <MovingNode
+        <Node
           key={placed.node.objectId}
           placed={placed}
           active={highlighted.has(placed.node.objectId)}
+          dimmed={focusedBucket !== null && focusedBucket !== placed.bucket}
           changed={transition.changed.has(placed.node.objectId)}
           onSelect={onSelect}
-          progress={transition.progress}
-          positionAt={transition.positionAt}
+          register={(element) => {
+            if (element)
+              nodeElements.current.set(placed.node.objectId, element);
+            else nodeElements.current.delete(placed.node.objectId);
+          }}
         />
       ))}
     </svg>
   );
 }
-function MovingEdge({
-  edge,
-  layout,
-  width,
-  physical,
-  selected,
-  changed,
-  onChoose,
-  progress,
-  positionAt,
-}: MovingPositions & {
-  edge: Edge;
-  layout: Diagram;
-  width: number;
-  physical: boolean;
-  selected: boolean;
-  changed: boolean;
-  onChoose: (edge: Edge) => void;
-}) {
-  const geometryAt = (fraction: number) =>
-    edgeGeometry(
-      edge,
-      { get: (id) => positionAt(id, fraction) },
-      layout,
-      width,
-    )!;
-  // Every endpoint, node and label reads the same progress value, including new edges.
-  const path = useTransform(progress, (p) => geometryAt(p).path);
-  const labelX = useTransform(progress, (p) => geometryAt(p).labelX);
-  const labelY = useTransform(progress, (p) => geometryAt(p).labelY);
-  const external = !positionAt(edge.to, 1);
-  const title = `${edge.from === null ? edge.areaId : `obj ${edge.from}`} · ${edge.field} → obj ${edge.to}${external ? ", вне фокуса" : ""}`;
-  return (
-    <g
-      data-edge={edge.id}
-      className={`physical-edge ${selected ? "selected" : ""} ${changed ? "changed" : ""} ${edge.tree || edge.field === "next" ? "structural" : "secondary"}`}
-    >
-      <motion.path d={path} markerEnd="url(#arrow)" />
-      {physical && (
-        <motion.path
-          d={path}
-          className="edge-hit"
-          role="button"
-          tabIndex={0}
-          aria-label={title}
-          onClick={() => onChoose(edge)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onChoose(edge);
-            }
-          }}
-        />
-      )}
-      <motion.text x={labelX} y={labelY} className="svg-edge-label">
-        {external ? `${edge.label} → obj ${edge.to} · вне фокуса` : edge.label}
-      </motion.text>
-      <title>{title}</title>
-    </g>
-  );
-}
-function MovingNode({
-  placed: { node, pending, areaId },
+function Node({
+  placed: { node, pending, areaId, x, y },
   active,
+  dimmed,
   changed,
   onSelect,
-  progress,
-  positionAt,
-}: MovingPositions & {
+  register,
+}: {
   placed: PlacedNode;
   active: boolean;
+  dimmed: boolean;
   changed: boolean;
   onSelect: (node: MapNode) => void;
+  register: (element: SVGGElement | null) => void;
 }) {
-  const x = useTransform(progress, (p) => positionAt(node.objectId, p)!.x);
-  const y = useTransform(progress, (p) => positionAt(node.objectId, p)!.y);
   return (
-    <motion.g
-      style={{ x, y, cursor: "pointer" }}
+    <g
+      ref={register}
+      transform={`translate(${x} ${y})`}
+      style={{ cursor: "pointer" }}
       data-object-id={node.objectId}
       data-entry-id={node.id}
       data-linked={node.linked}
@@ -239,7 +262,7 @@ function MovingNode({
           onSelect(node);
         }
       }}
-      opacity={pending && !active ? 0.8 : 1}
+      opacity={!active && dimmed ? 0.3 : pending && !active ? 0.8 : 1}
     >
       <title>{`${keyLabel(node.key)} → ${valueLabel(node.value)}\nid: ${node.id}; objectId: ${node.objectId}\nparent=${node.parent}; left=${node.left}; right=${node.right}; next=${node.next}; prev=${node.prev}`}</title>
       <rect
@@ -269,7 +292,7 @@ function MovingNode({
           вне цепочки
         </text>
       )}
-    </motion.g>
+    </g>
   );
 }
 function short(value: string, length: number) {

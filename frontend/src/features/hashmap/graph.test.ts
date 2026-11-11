@@ -102,3 +102,84 @@ describe("HashMap migration presentation", () => {
     }
   });
 });
+
+describe("additional Java tree rotations", () => {
+  for (const name of ["right-rotation", "remove-rotation"]) {
+    it(`${name}: preserves in-order slots and exact physical links`, () => {
+      const [before, after] = cases[name];
+      const first = layoutSnapshot(before.snapshot),
+        last = layoutSnapshot(after.snapshot);
+      const positions = new Map(first.nodes.map((n) => [n.node.objectId, n.x]));
+      for (const node of last.nodes)
+        expect(node.x).toBe(positions.get(node.node.objectId));
+      expect(after.event).toBe("TREE_ROTATED");
+      const graph = snapshotGraph(after.snapshot, after);
+      for (const edge of graph.edges)
+        expect(graph.nodes.has(edge.to)).toBe(true);
+    });
+  }
+});
+
+it("keeps the completed split grouped when seeking directly to the final frame", async () => {
+  const { resizeGroupingCapacity, traceLayoutBounds } = await import(
+    "./traceLayout"
+  );
+  const trace = {
+    steps: cases["split-6-7"],
+  } as import("../../api/types").Trace;
+  const index = trace.steps.length - 1;
+  const final = cases["split-6-7"][index];
+  const capacity = resizeGroupingCapacity(trace, index);
+  expect(capacity).toBe(64);
+  const graph = snapshotGraph(final.snapshot, final, capacity);
+  expect(graph.expanding).toBe(false);
+  expect(
+    graph.locations.get(
+      [...graph.nodes.values()].find((n) => n.key.value === "H0")!.objectId,
+    )?.group,
+  ).toBe(1);
+  const bounds = traceLayoutBounds(trace);
+  const first = cases["split-6-7"].find((s) => s.index === 11)!;
+  const before = layoutSnapshot(first.snapshot, {
+    graph: snapshotGraph(first.snapshot, first),
+    bounds,
+  });
+  const after = layoutSnapshot(final.snapshot, { graph, bounds });
+  expect(after.bands.find((b) => b.id === "table-65")!.y).toBe(
+    before.bands.find((b) => b.id === "table-65")!.y,
+  );
+});
+
+it.each([
+  [7, 6],
+  [7, 2],
+  [6, 6],
+  [7, 7],
+  [0, 9],
+  [9, 0],
+])(
+  "renders real split %i/%i without assuming which half is a list",
+  (low, high) => {
+    const step = cases[`split-${low}-${high}`][0];
+    const graph = snapshotGraph(step.snapshot, step);
+    const before = JSON.stringify(step.snapshot);
+    const diagram = layoutSnapshot(step.snapshot, {
+      graph,
+      group: 1,
+      physical: true,
+    });
+    expect(step.snapshot.size).toBe(49);
+    for (const [index, count] of [
+      [1, low],
+      [65, high],
+    ]) {
+      const bucket = step.snapshot.buckets.find((b) => b.index === index);
+      if (count === 0) expect(bucket).toBeUndefined();
+      else expect(bucket?.kind).toBe(count <= 6 ? "LIST" : "TREE");
+    }
+    const ids = diagram.nodes.map((n) => n.node.objectId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const edge of graph.edges) expect(graph.nodes.has(edge.to)).toBe(true);
+    expect(JSON.stringify(step.snapshot)).toBe(before);
+  },
+);

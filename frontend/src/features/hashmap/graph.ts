@@ -26,7 +26,11 @@ export interface Edge {
 }
 
 /** Areas describe snapshot placement, never inferred Java ownership. */
-export function snapshotGraph(state: Snapshot, step?: Step) {
+export function snapshotGraph(
+  state: Snapshot,
+  step?: Step,
+  groupingCapacity = state.pendingCapacity,
+) {
   const expanding = state.pendingCapacity > 0;
   const starting = step?.event === "RESIZE_STARTED";
   const oldCapacity = expanding
@@ -38,7 +42,8 @@ export function snapshotGraph(state: Snapshot, step?: Step) {
     ...state.buckets.map((bucket) => ({
       id: `table-${bucket.index}`,
       source: "table" as const,
-      group: expanding ? bucket.index % oldCapacity : bucket.index,
+      group:
+        groupingCapacity > 0 ? bucket.index % groupingCapacity : bucket.index,
       bucket,
     })),
     ...state.pendingBuckets.map((bucket) => ({

@@ -5,7 +5,7 @@ import { layoutSnapshot } from "./layout";
 import { snapshotGraph, type Edge } from "./graph";
 import { HashMapGraph } from "./HashMapGraph";
 import type { PlaybackNavigation } from "../../playback/useTracePlayback";
-import { traceLayoutBounds } from "./traceLayout";
+import { traceLayoutBounds, resizeGroupingCapacity } from "./traceLayout";
 import {
   type MapNode,
   type Snapshot,
@@ -34,7 +34,12 @@ export function Diagram({
   onSelect: (node: MapNode) => void;
   selectedId?: NodeSelection;
 }) {
-  const graph = useMemo(() => snapshotGraph(state, step), [state, step]);
+  const groupingCapacity =
+    resizeGroupingCapacity(trace, cursor) || state.pendingCapacity;
+  const graph = useMemo(
+    () => snapshotGraph(state, step, groupingCapacity),
+    [state, step, groupingCapacity],
+  );
   const bounds = useMemo(() => traceLayoutBounds(trace), [trace]);
   const selected = resolveSelection(state, selectedId);
   const [focus, setFocus] = useState<{
@@ -62,12 +67,29 @@ export function Diagram({
     () => layoutSnapshot(state, { graph, group, physical, bounds }),
     [state, graph, group, physical, bounds],
   );
-  const cameraWidth = Math.max(
-    layout.width,
-    ...(group === null
-      ? [...bounds.values()].map((b) => b.width)
-      : [bounds.get(group)?.width ?? 0]),
-  );
+  const cameraWidth = layout.width;
+  const fitWidth =
+    bounds.size === 0
+      ? layout.width
+      : Math.max(
+          650,
+          ...(group === null
+            ? [...new Set(layout.bands.map((b) => b.group))].map(
+                (g) =>
+                  bounds.get(g)?.treeWidth ??
+                  bounds.get(g)?.width ??
+                  layout.width,
+              )
+            : [
+                bounds.get(group)?.treeWidth ??
+                  bounds.get(group)?.width ??
+                  layout.width,
+              ]),
+        );
+  const [fitReference, setFitReference] = useState<{
+    trace?: Trace;
+    width: number;
+  }>();
   const [zoom, setZoom] = useState<number | "fit" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingCenter = useRef<number | null>(null);
@@ -90,7 +112,13 @@ export function Diagram({
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
   }, []);
-  const fitScale = Math.min(1, viewportWidth / cameraWidth);
+  const fitScale = Math.min(
+    1,
+    viewportWidth /
+      (zoom === "fit" && fitReference && fitReference.trace === trace
+        ? fitReference.width
+        : fitWidth),
+  );
   const scale = zoom === "fit" ? fitScale : (zoom ?? (mobile ? 1 : fitScale));
   const positions = useMemo(
     () => new Map(layout.nodes.map((n) => [n.node.objectId, n])),
@@ -114,6 +142,9 @@ export function Diagram({
     }
   };
   useLayoutEffect(() => {
+    scrollRef.current?.scrollTo({ left: 0, top: 0, behavior: "instant" });
+  }, [trace, group]);
+  useLayoutEffect(() => {
     if (
       pendingCenter.current !== null &&
       positions.has(pendingCenter.current)
@@ -124,6 +155,11 @@ export function Diagram({
   });
   const [hideEmpty, setHideEmpty] = useState(false);
   const [focusedBucket, setFocusedBucket] = useState<number | null>(null);
+  useEffect(() => {
+    setFocusedBucket((index) =>
+      index !== null && index >= state.capacity ? null : index,
+    );
+  }, [state.capacity]);
   const [tablesOpen, setTablesOpen] = useState(false);
   const [relationship, setRelationship] = useState<{
     state: Snapshot;
@@ -158,7 +194,7 @@ export function Diagram({
   };
   return (
     <section
-      className={`visualization panel hashmap-diagram ${graph.expanding ? "is-resizing" : ""}`}
+      className={`visualization panel hashmap-diagram ${physical ? "has-physical" : ""} ${graph.expanding ? "is-resizing" : ""}`}
       aria-label="Визуализация HashMap"
     >
       <div className="panel-heading">
@@ -196,6 +232,7 @@ export function Diagram({
             aria-label="Вместить по ширине"
             title="Вместить по ширине"
             onClick={() => {
+              setFitReference({ trace, width: cameraWidth });
               setZoom("fit");
               scrollRef.current?.scrollTo({
                 left: 0,
@@ -268,14 +305,9 @@ export function Diagram({
             </div>
             <div className="resize-progress">
               {graph.transferObjects > 0
-                ? `Временные объекты: ${graph.transferObjects} · вне табличных цепочек; перенос ещё выполняется`
+                ? `Временные объекты: ${graph.transferObjects} · вне табличных цепочек`
                 : "Старые бакеты сохраняют записи до переноса"}
-              {group !== null && (
-                <span>
-                  {" "}
-                  · фокус [{group}] · остальные области доступны в «Все бакеты»
-                </span>
-              )}
+              {group !== null && <span> · фокус [{group}]</span>}
             </div>
           </div>
         ) : (
@@ -477,6 +509,7 @@ export function Diagram({
           </div>
         )}
         <HashMapGraph
+          focusedBucket={graph.expanding ? null : focusedBucket}
           layout={layout}
           graph={graph}
           cameraWidth={cameraWidth}
