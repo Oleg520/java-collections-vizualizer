@@ -1,3 +1,4 @@
+import { LanguageSelect, useI18n } from "../i18n/LocaleProvider";
 import type { LocalSplits } from "../dev/splitScenarios";
 import type { NodeSelection } from "../features/hashmap/identity";
 import {
@@ -27,6 +28,7 @@ import { useTracePlayback } from "../playback/useTracePlayback";
 export default function App({
   localSplits,
 }: { localSplits?: LocalSplits } = {}) {
+  const { t } = useI18n();
   const playback = useTracePlayback();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<NodeSelection>();
@@ -135,6 +137,7 @@ export default function App({
           </nav>
         </div>
         <div className="header-right">
+          <LanguageSelect />
           <span className={`connection ${session ? "online" : ""}`}>
             <i />
             {busy
@@ -142,7 +145,7 @@ export default function App({
               : error
                 ? "Ошибка запроса"
                 : session
-                  ? "Java engine connected"
+                  ? t("connected")
                   : "Подключение к Java"}
           </span>
           <a

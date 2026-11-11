@@ -3021,3 +3021,5 @@ summary:focus-visible {
     min-height: 28px;
   }
 }
+
+.language-select { width: 66px; min-height: 40px; flex-shrink: 0; }
