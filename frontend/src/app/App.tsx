@@ -92,26 +92,6 @@ export default function App({
           </span>
           <span className="version">{__APP_VERSION__}</span>
         </a>
-        <nav className="breadcrumbs" aria-label="Java Collections Framework">
-          <span title="Java Collections Framework">Collections</span>
-          <ChevronRight size={12} aria-hidden="true" />
-          <span>{view.family}</span>
-          <ChevronRight size={12} aria-hidden="true" />
-          <select
-            aria-label="Коллекция"
-            aria-describedby="collection-switch-hint"
-            value={collection}
-            onChange={(event) =>
-              switchCollection(event.target.value as CollectionType)
-            }
-          >
-            {collectionOptions.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </nav>
         <div className="header-right">
           <span className={`connection ${session ? "online" : ""}`}>
             <i />
@@ -150,11 +130,36 @@ export default function App({
           onDemo={demo}
         />
         <main>
-          <h1 className="sr-only">Лаборатория {view.name}</h1>
-          <div className="collection-context">
-            <span>Учебная модель · OpenJDK 21</span>
-            <CollectionHelp description={view.description} />
-          </div>
+          <header className="collection-heading">
+            <h1 className="sr-only">Лаборатория {view.name}</h1>
+            <nav
+              className="breadcrumbs"
+              aria-label="Java Collections Framework"
+            >
+              <span title="Java Collections Framework">Collections</span>
+              <ChevronRight size={12} aria-hidden="true" />
+              <span>{view.family}</span>
+              <ChevronRight size={12} aria-hidden="true" />
+              <select
+                aria-label="Коллекция"
+                aria-describedby="collection-switch-hint"
+                value={collection}
+                onChange={(event) =>
+                  switchCollection(event.target.value as CollectionType)
+                }
+              >
+                {collectionOptions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </nav>
+            <div className="collection-context">
+              <span>Учебная модель · OpenJDK 21</span>
+              <CollectionHelp description={view.description} />
+            </div>
+          </header>
           {error && (
             <div className="error-banner" role="alert">
               <Info size={18} />

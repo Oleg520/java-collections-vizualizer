@@ -183,7 +183,7 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   await expect(page.getByLabel("История операций")).toHaveValue(history);
   await expect(page.locator(".zoom-controls > span")).toHaveText("100%");
   await page.keyboard.press("Tab");
-  await expect(page.locator(".collection-help summary")).toBeFocused();
+  await expect(page.getByLabel("Коллекция", { exact: true })).toBeFocused();
   await page.getByLabel("Скорость воспроизведения").selectOption("0.5");
   await page
     .getByRole("button", { name: "Воспроизвести", exact: true })

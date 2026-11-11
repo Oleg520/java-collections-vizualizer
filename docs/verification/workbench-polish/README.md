@@ -4,16 +4,18 @@ Verified locally on 2026-11-11 against the real Java 21 backend and the producti
 Vite bundle, with Chromium desktop/mobile projects. No production service or
 production configuration was changed.
 
-The global sticky application header contains `Collections → Map → HashMap ▾`
-or `Collections → List → ArrayList ▾` between the brand and connection/GitHub
-controls. Collections means Java Collections Framework. There is no duplicate
-breadcrumb row in main or collection selector in the sidebar. The model label/help
-sits compactly above the operation controls; the source link remains in Algorithm.
+The compact workbench row below the global header contains
+`Collections → Map → HashMap ▾` or `Collections → List → ArrayList ▾` on the left,
+with the model label/help on the right in the same flex container. Collections
+means Java Collections Framework. Narrow screens wrap breadcrumb content and model text inside their own areas
+without horizontal overflow; the model label stays on the right of that same row. The source
+link remains in Algorithm.
 
-Desktop header height remains 76 px. On phones the same header uses two rows
-(106 px) so navigation, brand and GitHub remain accessible at 320 px. The initial
-1440×900 HashMap diagram and Events inspector start at 417 px. The diagram remains
-832×576 px; visualization/inspector sizing and animation behavior are unchanged.
+The global sticky header retains brand/version on the left and connection/GitHub
+on the right, with its original 76 px desktop / 62 px phone height. No collection
+navigation or decoration fills its center. The initial 1440×900 HashMap diagram
+and Events inspector start at 428 px. The diagram remains 832×576 px;
+visualization/inspector sizing and animation behavior are unchanged.
 The sidebar starts with one row containing a 12 px scenario heading and an
 icon-only collapse button. The collapsed rail keeps its accessible expand button.
 Independent list scrolling and the educational footer are preserved. Mobile
@@ -23,7 +25,7 @@ balance and canvas navigation remain separate work in #50 and #65.
 | View | Screenshot |
 | --- | --- |
 | 1440×900, initial HashMap | [Desktop workbench](desktop-hashmap.png) |
-| Global-header collection picker | [Desktop menu](desktop-menu.png) |
+| Compact workbench collection picker | [Desktop menu](desktop-menu.png) |
 | Icon-only expand button in the collapsed rail | [Collapsed sidebar](desktop-sidebar-collapsed.png) |
 | ArrayList, compact constructor row, nested ELEMENT result | [Desktop ArrayList](desktop-arraylist.png) |
 | 320×740, wrapped ArrayList constructor | [Narrow ArrayList](mobile-arraylist.png) |
@@ -67,9 +69,9 @@ The new Playwright coverage checks pointer/touch and keyboard selection,
 Escape cancellation, focus after closing, accessible names/descriptions,
 collection-specific source links, constructor replacement/history clearing,
 BOOLEAN/ELEMENT results and ELEMENT_READ, nulls and long escaped strings. It
-checks 1440×900, 412×839 and 320×740, with no horizontal overflow. Global header
-placement, visible actions and sticky navigation are also checked at
-1024/768/681/680 px, after page scrolling and with keyboard Tab/Shift+Tab. Existing suites
+checks 1440×900, 412×839 and 320×740, with no horizontal overflow. The shared
+workbench row, visible global header actions and keyboard access after page
+scrolling are also checked at 1024/768/681/680 px with Tab/Shift+Tab. Existing suites
 cover playback, revision/recovery, scenario behavior, sidebar scrolling/collapse,
 zoom preservation, reduced motion and the inspector splitter.
 

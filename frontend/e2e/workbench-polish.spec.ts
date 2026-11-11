@@ -41,21 +41,30 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(nav).toContainText("Collections");
   await expect(nav.locator(":scope > span").nth(1)).toHaveText("Map");
   await expect(collection).toHaveCount(1);
-  await expect(page.locator(".app-header > .breadcrumbs")).toHaveCount(1);
-  await expect(page.locator("main .breadcrumbs")).toHaveCount(0);
+  await expect(page.locator(".app-header .breadcrumbs")).toHaveCount(0);
+  await expect(
+    page.locator("main > .collection-heading > .breadcrumbs"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator("main > .collection-heading > .collection-context"),
+  ).toHaveCount(1);
   await expect(nav.getByRole("combobox")).toHaveCount(1);
   await expect(page.locator(".app-header")).toHaveCSS("position", "sticky");
   const header = (await page.locator(".app-header").boundingBox())!;
-  expect(header.height).toBe(isMobile ? 106 : 76);
+  expect(header.height).toBe(isMobile ? 62 : 76);
   expect(
     (await page.locator(".visualization").boundingBox())!.height,
   ).toBeCloseTo(isMobile ? 540 : 576, 0);
   if (!isMobile) {
-    const brand = (await page.locator(".brand").boundingBox())!;
     const navigation = (await nav.boundingBox())!;
-    const actions = (await page.locator(".header-right").boundingBox())!;
-    expect(navigation.x).toBeGreaterThan(brand.x + brand.width);
-    expect(navigation.x + navigation.width).toBeLessThan(actions.x);
+    const context = (await page.locator(".collection-context").boundingBox())!;
+    expect(navigation.y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(navigation.x + navigation.width).toBeLessThan(context.x);
+    expect(
+      Math.abs(
+        navigation.y + navigation.height / 2 - context.y - context.height / 2,
+      ),
+    ).toBeLessThan(1);
   }
   await expect(page.locator(".sidebar select")).toHaveCount(0);
   for (const caption of [
@@ -92,7 +101,7 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await noHorizontalOverflow(nav);
 });
 
-test("global header navigation stays visible and usable through narrow layouts and scrolling", async ({
+test("compact workbench navigation and model help share a responsive row below the header", async ({
   page,
 }) => {
   await ready(page);
@@ -118,19 +127,28 @@ test("global header navigation stays visible and usable through narrow layouts a
     await expect(nav).toBeInViewport({ ratio: 1 });
     await expect(collection).toBeInViewport({ ratio: 1 });
     await expect(github).toBeInViewport({ ratio: 1 });
+    const navigation = (await nav.boundingBox())!;
+    const model = (await page.locator(".collection-context").boundingBox())!;
+    expect(
+      Math.abs(
+        navigation.y + navigation.height / 2 - model.y - model.height / 2,
+      ),
+    ).toBeLessThan(1);
+    expect(navigation.x + navigation.width).toBeLessThanOrEqual(model.x);
     await noHorizontalOverflow(page.locator("html"));
     await noHorizontalOverflow(page.locator(".app-header"));
   }
   await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
-  await expect(collection).toBeInViewport({ ratio: 1 });
   await expect(github).toBeInViewport({ ratio: 1 });
+  await collection.focus();
+  await expect(collection).toBeInViewport({ ratio: 1 });
   await collection.selectOption("ARRAY_LIST");
   await expect(page.locator(".primary-button")).toBeEnabled();
   await expect(nav.locator(":scope > span").nth(1)).toHaveText("List");
   await expect(page.getByTestId("committed-size")).toHaveText("0");
   await collection.focus();
   await page.keyboard.press("Tab");
-  await expect(github).toBeFocused();
+  await expect(page.locator(".collection-help summary")).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(collection).toBeFocused();
   await expect(collection).toHaveCSS("outline-style", "solid");

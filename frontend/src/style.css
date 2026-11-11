@@ -116,9 +116,7 @@ code {
   z-index: 6;
   height: var(--header-height);
   border-bottom: 1px solid var(--line);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 24px;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
@@ -131,7 +129,6 @@ code {
   font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.5px;
-  white-space: nowrap;
 }
 .brand-mark {
   background: var(--lime);
@@ -352,6 +349,14 @@ main {
 .workspace > main {
   align-self: start;
 }
+.collection-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
 .breadcrumbs {
   display: flex;
   align-items: center;
@@ -359,8 +364,6 @@ main {
   font-size: 12px;
   color: #a4b3a8;
   min-width: 0;
-  justify-self: center;
-  white-space: nowrap;
 }
 .breadcrumbs > svg {
   flex-shrink: 0;
@@ -375,8 +378,6 @@ main {
   gap: 8px;
   color: var(--muted);
   font-size: 10px;
-  justify-content: flex-end;
-  margin-bottom: 4px;
 }
 .collection-help {
   position: relative;
@@ -1565,6 +1566,21 @@ main {
   }
 }
 @media (max-width: 1000px) {
+  .collection-heading {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .breadcrumbs {
+    flex: 1;
+    flex-wrap: wrap;
+  }
+  .collection-context {
+    flex: 0 0 132px;
+  }
+  .collection-context > span {
+    min-width: 0;
+    line-height: 1.5;
+  }
   .inspector {
     height: var(--visualization-height);
   }
@@ -1626,31 +1642,16 @@ main {
   .header-right .connection {
     display: none;
   }
-  .brand-suffix {
-    display: none;
-  }
 }
 @media (max-width: 680px) {
   .workspace > main {
     align-self: stretch;
   }
   :root {
-    --header-height: 106px;
+    --header-height: 62px;
   }
   .app-header {
-    padding: 10px 17px;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 36px 44px;
-    gap: 6px 12px;
-  }
-  .app-header .breadcrumbs {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: start;
-  }
-  .header-right {
-    grid-column: 2;
-    grid-row: 1;
+    padding: 0 17px;
   }
   .brand {
     font-size: 15px;
@@ -1734,6 +1735,9 @@ main {
   main {
     padding: 12px 14px 15px;
   }
+  .collection-heading {
+    gap: 4px;
+  }
   .breadcrumbs {
     gap: 5px;
     font-size: 11px;
@@ -1742,7 +1746,6 @@ main {
     right: 0;
   }
   .collection-context {
-    flex-basis: 100%;
     position: relative;
   }
   .collection-help {

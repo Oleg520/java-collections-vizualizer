@@ -189,7 +189,8 @@ commands above. These regressions run in the existing GitHub Actions verify job.
 ## Компактный workbench и селекторы (#52)
 
 `workbench-polish.spec.ts` проверяет единственный selector в breadcrumbs Map/List
-глобального header между брендом и статусом/GitHub, отсутствие nav в main,
+слева под глобальным header и подпись модели справа в том же контейнере,
+отсутствие selector в глобальном header,
 sidebar со сценариями, ссылки OpenJDK активной коллекции только в Algorithm,
 сброс содержимого/истории через отдельный конструктор, вложенные BOOLEAN/ELEMENT
 результаты и ELEMENT_READ с длинными строками/null без горизонтального overflow.
@@ -197,7 +198,7 @@ sidebar со сценариями, ссылки OpenJDK активной кол�
 клавиатурный фокус и отсутствие оставшейся mouse-подсветки, accessible names и
 descriptions. Подсказка проверяется при уходе мыши, внешнем клике, Escape,
 переходе Tab и touch, а конструктор — как постоянно видимая строка.
-Viewports: 1440×900, 412×839 и 320×740; header дополнительно проверяется
+Viewports: 1440×900, 412×839 и 320×740; компактная строка дополнительно проверяется
 на ширинах 1024/768/681/680 px, после прокрутки и при смене коллекции. `DetailValue.test.tsx`
 проверяет false/zero/null, типизированные результаты, массивы и HTML escaping.
 Существующие workspace/playback/session suites сохраняют проверки прокрутки,
