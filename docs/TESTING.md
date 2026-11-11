@@ -188,7 +188,8 @@ commands above. These regressions run in the existing GitHub Actions verify job.
 
 ## Компактный workbench и селекторы (#52)
 
-`workbench-polish.spec.ts` проверяет единственный selector в breadcrumbs Map/List,
+`workbench-polish.spec.ts` проверяет единственный selector в breadcrumbs Map/List
+глобального header между брендом и статусом/GitHub, отсутствие nav в main,
 sidebar со сценариями, ссылки OpenJDK активной коллекции только в Algorithm,
 сброс содержимого/истории через отдельный конструктор, вложенные BOOLEAN/ELEMENT
 результаты и ELEMENT_READ с длинными строками/null без горизонтального overflow.
@@ -196,10 +197,13 @@ sidebar со сценариями, ссылки OpenJDK активной кол�
 клавиатурный фокус и отсутствие оставшейся mouse-подсветки, accessible names и
 descriptions. Подсказка проверяется при уходе мыши, внешнем клике, Escape,
 переходе Tab и touch, а конструктор — как постоянно видимая строка.
-Viewports: 1440×900, 412×839 и 320×740. `DetailValue.test.tsx`
+Viewports: 1440×900, 412×839 и 320×740; header дополнительно проверяется
+на ширинах 1024/768/681/680 px, после прокрутки и при смене коллекции. `DetailValue.test.tsx`
 проверяет false/zero/null, типизированные результаты, массивы и HTML escaping.
 Существующие workspace/playback/session suites сохраняют проверки прокрутки,
-сворачивания и session/revision semantics.
+сворачивания и session/revision semantics. `workspace.spec.ts` проверяет единую
+строку заголовка сценариев с кнопкой без видимого текста, её доступное имя,
+раскрытие панели клавиатурой, сохранение прокрутки списка и нижнего footer.
 
 ```bash
 E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- workbench-polish.spec.ts

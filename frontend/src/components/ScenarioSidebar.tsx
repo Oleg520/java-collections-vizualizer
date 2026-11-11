@@ -1,9 +1,4 @@
-import {
-  BookOpen,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Scenario, Session, Trace } from "../api/types/index";
 export function ScenarioSidebar({
   collapsed,
@@ -24,27 +19,29 @@ export function ScenarioSidebar({
 }) {
   return (
     <aside className="sidebar" aria-label="Готовые сценарии коллекции">
-      <button
-        className="sidebar-toggle icon-button"
-        aria-label={
-          collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
-        }
-        aria-expanded={!collapsed}
-        aria-controls="sidebar-content"
-        title={
-          collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
-        }
-        onClick={onToggle}
-      >
-        {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
-        <span>Свернуть</span>
-      </button>
+      <div className="sidebar-title">
+        <h2>Готовые сценарии</h2>
+        <button
+          className="sidebar-toggle icon-button"
+          aria-label={
+            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+          }
+          aria-expanded={!collapsed}
+          aria-controls="sidebar-content"
+          title={
+            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+          }
+          onClick={onToggle}
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={19} />
+          ) : (
+            <PanelLeftClose size={19} />
+          )}
+        </button>
+      </div>
       <div className="sidebar-content" id="sidebar-content">
         <div className="sidebar-section scenarios">
-          <div className="sidebar-title">
-            <span className="eyebrow">ГОТОВЫЕ СЦЕНАРИИ</span>
-            <BookOpen size={14} />
-          </div>
           <span id="scenario-reset-hint" className="sr-only">
             Запуск сценария заменяет содержимое коллекции своим начальным
             состоянием.

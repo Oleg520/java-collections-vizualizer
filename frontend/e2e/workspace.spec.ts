@@ -141,6 +141,22 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
     name: "Свернуть боковую панель",
     exact: true,
   });
+  const heading = page.getByRole("heading", {
+    name: "Готовые сценарии",
+    exact: true,
+  });
+  await expect(page.locator(".sidebar-title").getByRole("button")).toHaveCount(
+    1,
+  );
+  await expect(collapse).toHaveText("");
+  const titleBox = (await heading.boundingBox())!;
+  const toggleBox = (await collapse.boundingBox())!;
+  expect(
+    Math.abs(
+      titleBox.y + titleBox.height / 2 - toggleBox.y - toggleBox.height / 2,
+    ),
+  ).toBeLessThan(1);
+  expect(toggleBox.x).toBeGreaterThan(titleBox.x + titleBox.width);
   await collapse.focus();
   await page.keyboard.press("Enter");
   const expand = page.getByRole("button", {
@@ -149,6 +165,7 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   });
   await expect(expand).toBeFocused();
   await expect(expand).toHaveAttribute("aria-expanded", "false");
+  await expect(heading).toBeHidden();
   await expect(page.getByLabel("Коллекция", { exact: true })).toBeVisible();
   expect(
     (await page.locator(".canvas-column").boundingBox())!.width,
@@ -166,12 +183,13 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   await expect(page.getByLabel("История операций")).toHaveValue(history);
   await expect(page.locator(".zoom-controls > span")).toHaveText("100%");
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("Коллекция", { exact: true })).toBeFocused();
+  await expect(page.locator(".collection-help summary")).toBeFocused();
   await page.getByLabel("Скорость воспроизведения").selectOption("0.5");
   await page
     .getByRole("button", { name: "Воспроизвести", exact: true })
     .click();
   await expand.click();
+  await expect(heading).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Пауза", exact: true }),
   ).toBeVisible();

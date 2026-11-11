@@ -116,7 +116,9 @@ code {
   z-index: 6;
   height: var(--header-height);
   border-bottom: 1px solid var(--line);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
@@ -129,6 +131,7 @@ code {
   font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.5px;
+  white-space: nowrap;
 }
 .brand-mark {
   background: var(--lime);
@@ -209,12 +212,9 @@ code {
   flex: 1;
 }
 .sidebar-toggle {
+  min-width: 32px;
   min-height: 36px;
-  gap: 8px;
-  align-self: flex-end;
   flex-shrink: 0;
-  font-size: 10px;
-  margin-bottom: 8px;
 }
 .scenarios {
   display: flex;
@@ -240,11 +240,11 @@ code {
     padding: 12px 8px;
   }
   .sidebar-collapsed .sidebar-content,
-  .sidebar-collapsed .sidebar-toggle span {
+  .sidebar-collapsed .sidebar-title h2 {
     display: none;
   }
-  .sidebar-collapsed .sidebar-toggle {
-    align-self: center;
+  .sidebar-collapsed .sidebar-title {
+    justify-content: center;
   }
 }
 .eyebrow {
@@ -262,6 +262,16 @@ code {
   justify-content: space-between;
   align-items: center;
   color: #7c8f7e;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sidebar-title h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #a4b3a8;
 }
 .scenario-button {
   display: flex;
@@ -342,14 +352,6 @@ main {
 .workspace > main {
   align-self: start;
 }
-.collection-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px 16px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
 .breadcrumbs {
   display: flex;
   align-items: center;
@@ -357,6 +359,8 @@ main {
   font-size: 12px;
   color: #a4b3a8;
   min-width: 0;
+  justify-self: center;
+  white-space: nowrap;
 }
 .breadcrumbs > svg {
   flex-shrink: 0;
@@ -371,6 +375,8 @@ main {
   gap: 8px;
   color: var(--muted);
   font-size: 10px;
+  justify-content: flex-end;
+  margin-bottom: 4px;
 }
 .collection-help {
   position: relative;
@@ -1620,16 +1626,31 @@ main {
   .header-right .connection {
     display: none;
   }
+  .brand-suffix {
+    display: none;
+  }
 }
 @media (max-width: 680px) {
   .workspace > main {
     align-self: stretch;
   }
   :root {
-    --header-height: 62px;
+    --header-height: 106px;
   }
   .app-header {
-    padding: 0 17px;
+    padding: 10px 17px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 36px 44px;
+    gap: 6px 12px;
+  }
+  .app-header .breadcrumbs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+  .header-right {
+    grid-column: 2;
+    grid-row: 1;
   }
   .brand {
     font-size: 15px;
@@ -1680,12 +1701,6 @@ main {
   .sidebar-title {
     margin-bottom: 8px;
   }
-  .sidebar-title .eyebrow {
-    font-size: 8px;
-  }
-  .sidebar-title svg {
-    display: none;
-  }
   .scenarios {
     display: block;
   }
@@ -1719,16 +1734,12 @@ main {
   main {
     padding: 12px 14px 15px;
   }
-  .collection-heading {
-    gap: 4px;
-  }
   .breadcrumbs {
     gap: 5px;
     font-size: 11px;
   }
   .collection-help p {
-    left: 0;
-    right: auto;
+    right: 0;
   }
   .collection-context {
     flex-basis: 100%;
@@ -2240,9 +2251,6 @@ main {
   }
   .sidebar-section {
     margin-bottom: 8px;
-  }
-  .sidebar-toggle {
-    margin-bottom: 0;
   }
   .sidebar-bottom {
     padding-top: 4px;

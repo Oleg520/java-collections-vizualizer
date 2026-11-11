@@ -41,7 +41,22 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(nav).toContainText("Collections");
   await expect(nav.locator(":scope > span").nth(1)).toHaveText("Map");
   await expect(collection).toHaveCount(1);
+  await expect(page.locator(".app-header > .breadcrumbs")).toHaveCount(1);
+  await expect(page.locator("main .breadcrumbs")).toHaveCount(0);
   await expect(nav.getByRole("combobox")).toHaveCount(1);
+  await expect(page.locator(".app-header")).toHaveCSS("position", "sticky");
+  const header = (await page.locator(".app-header").boundingBox())!;
+  expect(header.height).toBe(isMobile ? 106 : 76);
+  expect(
+    (await page.locator(".visualization").boundingBox())!.height,
+  ).toBeCloseTo(isMobile ? 540 : 576, 0);
+  if (!isMobile) {
+    const brand = (await page.locator(".brand").boundingBox())!;
+    const navigation = (await nav.boundingBox())!;
+    const actions = (await page.locator(".header-right").boundingBox())!;
+    expect(navigation.x).toBeGreaterThan(brand.x + brand.width);
+    expect(navigation.x + navigation.width).toBeLessThan(actions.x);
+  }
   await expect(page.locator(".sidebar select")).toHaveCount(0);
   for (const caption of [
     "Один запуск — весь путь алгоритма.",
@@ -75,6 +90,50 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(page.locator(".collection-help p")).toBeVisible();
   await noHorizontalOverflow(page.locator("html"));
   await noHorizontalOverflow(nav);
+});
+
+test("global header navigation stays visible and usable through narrow layouts and scrolling", async ({
+  page,
+}) => {
+  await ready(page);
+  const nav = page.getByRole("navigation", {
+    name: "Java Collections Framework",
+  });
+  const collection = nav.getByRole("combobox", {
+    name: "Коллекция",
+    exact: true,
+  });
+  const github = page.getByRole("link", {
+    name: "Исходный код проекта на GitHub",
+  });
+  for (const width of [1440, 1024, 768, 681, 680, 412, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
+    await page.evaluate(() => scrollTo(0, 0));
+    await expect(nav).toBeInViewport({ ratio: 1 });
+    await expect(collection).toBeInViewport({ ratio: 1 });
+    await expect(github).toBeInViewport({ ratio: 1 });
+    await noHorizontalOverflow(page.locator("html"));
+    await noHorizontalOverflow(page.locator(".app-header"));
+  }
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await expect(collection).toBeInViewport({ ratio: 1 });
+  await expect(github).toBeInViewport({ ratio: 1 });
+  await collection.selectOption("ARRAY_LIST");
+  await expect(page.locator(".primary-button")).toBeEnabled();
+  await expect(nav.locator(":scope > span").nth(1)).toHaveText("List");
+  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await collection.focus();
+  await page.keyboard.press("Tab");
+  await expect(github).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(collection).toBeFocused();
+  await expect(collection).toHaveCSS("outline-style", "solid");
 });
 
 test("themed native menus support pointer/touch, keyboard selection, cancellation and focus", async ({
