@@ -144,7 +144,7 @@ is performed by this change.
 - NODE_ENV=development build also passed the lab-exclusion assertion; normal build
   was restored afterwards. OpenAPI parsed and all local references resolved.
 - Python script suite: 14 passed; profiling clients migrated to the required query
-  version. Compose configuration validated. Docker image build was not run locally.
+  version.
 
 Chromium needed the already available local shared-library directory. This local
 network drops connections to closed localhost ports rather than refusing them;

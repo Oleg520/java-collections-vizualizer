@@ -75,7 +75,7 @@
 
 [Локальная диагностика](OBSERVABILITY.md) предоставляет занятые слоты,
 допуски/отказы, HTTP latency, размер записанного trace и стандартные JVM metrics.
-Actuator слушает отдельный loopback-порт; Compose не публикует его.
+Actuator слушает отдельный loopback-порт Java-процесса.
 
 Метрики имеют ограниченные метки. UUID, ключи/значения пользователя, raw trace,
 IP, секреты и URL с ID не должны попадать в custom tags или диагностические логи.
@@ -131,3 +131,14 @@ decode work; production quotas were not raised. HashMap V1 requests are rejected
 before mutation. Backend must be upgraded before the controlled frontend; old tabs
 reload rather than retry writes or downgrade the protocol. Animation smoothing
 remains Issue #47.
+
+## Зависимости CI
+
+PR проверяет JAR и отдельно собранный frontend на Ubuntu 24.04 без установки
+системных пакетов. Headless Chromium использует библиотеки runner; совместимость
+проверяется настоящими desktop/mobile E2E, включая recovery и строгий lifecycle.
+Обновление Playwright или образа runner может потребовать пересмотра библиотек.
+Сетевыми зависимостями остаются GitHub Actions/cache, Maven/npm repositories,
+Playwright CDN и JetBrains при отсутствии кэша форматтера. Установка браузера
+ограничена тремя минутами, Java-проверки — 15, job — 25; сбой сети остаётся ошибкой,
+а не поводом пропустить тесты. Подробности: [проверки CI](TESTING.md#ci-для-pull-request).

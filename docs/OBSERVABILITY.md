@@ -11,8 +11,7 @@ Diagnostics listen on **127.0.0.1:18083**, separately from the API port.
 `MANAGEMENT_PORT` may select another unused port; keep it separate from `PORT`
 and retain the loopback address. Only `/actuator/health` and `/actuator/metrics`
 are exposed. Health details, JMX, env, heap dumps and loggers are not exposed.
-No management port is published in Compose. Keep diagnostics outside
-public reverse-proxy routes and published container ports.
+Keep diagnostics outside public reverse-proxy routes.
 
 On the machine running Java:
 
@@ -22,10 +21,8 @@ curl --fail http://127.0.0.1:18083/actuator/metrics
 curl --fail http://127.0.0.1:18083/actuator/metrics/visualizer.sessions.active
 ```
 
-In Compose the listener is inside the container's network namespace. Use a
-local container debugging tool in that namespace; there is no host management
-port. Local processes with access to the namespace can read these diagnostics;
-there is no application-level authentication on the loopback listener.
+Local processes on the Java host can read these diagnostics; there is no
+application-level authentication on the loopback listener.
 
 ## Metrics and interpretation
 

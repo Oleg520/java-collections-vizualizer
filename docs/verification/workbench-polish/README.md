@@ -107,4 +107,4 @@ Browser interaction and screenshots were verified in Playwright Chromium,
 including emulated touch. Physical devices, Firefox/Safari and manual screen-reader
 sessions were not tested. Accessible roles/descriptions, keyboard focus and
 navigation were checked in Chromium; these checks do not replace assistive
-technology testing. Docker packaging is checked by the existing CI docker job.
+technology testing. JAR packaging and browser regressions are checked by CI.
