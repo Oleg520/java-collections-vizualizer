@@ -230,6 +230,7 @@ export default function App({
               {snapshot ? (
                 <view.Diagram
                   playing={playing}
+                  trace={trace}
                   snapshot={snapshot}
                   step={step}
                   selectedId={selectedNodeId}

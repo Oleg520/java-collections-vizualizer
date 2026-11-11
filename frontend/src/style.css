@@ -2816,3 +2816,157 @@ summary:focus-visible {
     display: none;
   }
 }
+
+/* HashMap transfer context stays compact; exact physical details are opt-in. */
+.hashmap-diagram .band.old {
+  stroke-dasharray: 5 4;
+  fill: #29291be0;
+}
+.hashmap-diagram .band.transfer {
+  stroke-dasharray: 2 4;
+  fill: #252333e0;
+  stroke: #827397;
+}
+.hashmap-diagram .svg-bucket {
+  font-size: 10px;
+}
+.hashmap-diagram .node-color {
+  font: 9px var(--mono);
+  fill: #c7d7be;
+}
+.hashmap-diagram .physical-edge > path {
+  fill: none;
+  stroke: #789584;
+  stroke-width: 1.5;
+}
+.hashmap-diagram .physical-edge.secondary > path {
+  stroke: #a294bb;
+  stroke-dasharray: 4 3;
+  opacity: 0.55;
+}
+.hashmap-diagram .physical-edge.selected > path {
+  stroke: var(--lime);
+  stroke-width: 2.5;
+  opacity: 1;
+}
+.hashmap-diagram .physical-edge > .edge-hit {
+  stroke: transparent;
+  stroke-width: 12;
+  stroke-dasharray: none;
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+.hashmap-diagram .edge-hit:focus-visible {
+  stroke: #c5ef8655;
+  outline: none;
+}
+.hashmap-diagram .diagram-navigation {
+  min-height: 42px;
+  gap: 8px 14px;
+}
+.hashmap-diagram .diagram-navigation .navigation-hint {
+  margin-left: auto;
+}
+.hashmap-diagram .diagram-navigation .icon-button {
+  font-size: 11px;
+}
+.hashmap-diagram.is-resizing .bucket-overview {
+  height: auto;
+  min-height: 106px;
+  padding: 0 16px 8px;
+}
+.resize-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.resize-counts strong {
+  color: var(--lime);
+}
+.resize-counts span {
+  color: #b8c6ae;
+}
+.resize-focus {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0;
+}
+.resize-focus label,
+.physical-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.resize-focus select,
+.physical-tools select {
+  padding: 5px 8px;
+  min-height: 30px;
+  font-size: 11px;
+  max-width: 100%;
+}
+.resize-progress {
+  font-size: 10px;
+  color: #a7b79d;
+}
+.hashmap-diagram.is-resizing .bucket-array {
+  height: 80px;
+  flex: none;
+  margin-top: 6px;
+}
+.hashmap-diagram .split-explanation {
+  padding: 3px 0;
+  font-size: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.physical-tools {
+  padding: 0 14px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 10px;
+  color: #b1bfa7;
+  max-height: 116px;
+  overflow: auto;
+}
+.relationship-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  width: 100%;
+}
+.relationship-info code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .hashmap-diagram.is-resizing .bucket-overview {
+    min-height: 128px;
+    padding-inline: 12px;
+  }
+  .resize-counts {
+    gap: 2px 12px;
+  }
+  .resize-counts strong {
+    flex-basis: 100%;
+  }
+  .resize-focus {
+    gap: 4px 8px;
+  }
+  .resize-focus select {
+    max-width: 220px;
+  }
+  .physical-tools label {
+    flex-wrap: wrap;
+  }
+  .physical-tools {
+    max-height: 140px;
+  }
+}

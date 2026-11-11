@@ -31,6 +31,7 @@ type DiagramProps = {
   step?: Step;
   selectedId?: NodeSelection;
   playing?: boolean;
+  trace?: Trace;
   onSelect: (id: NodeSelection | undefined) => void;
 };
 interface CollectionView {
@@ -76,10 +77,11 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
         : "операция выполнена Java-движком",
     idleCaption: "начните с put или сценария",
     Commands: CommandPanel,
-    Diagram: ({ snapshot, step, selectedId, onSelect }) =>
+    Diagram: ({ snapshot, step, trace, selectedId, onSelect }) =>
       isArray(snapshot) ? null : (
         <Diagram
           state={snapshot}
+          trace={trace}
           step={step}
           selectedId={selectedId}
           onSelect={(node) =>
