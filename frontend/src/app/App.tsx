@@ -208,6 +208,7 @@ export default function App({
             <div className="canvas-column">
               {snapshot ? (
                 <view.Diagram
+                  playing={playing}
                   snapshot={snapshot}
                   step={step}
                   selectedId={selectedNodeId}
