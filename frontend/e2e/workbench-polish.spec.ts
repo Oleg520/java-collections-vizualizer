@@ -1,4 +1,10 @@
-import { test, expect, type Locator, type Page } from "@playwright/test";
+import {
+  test,
+  expectServerSize,
+  expect,
+  type Locator,
+  type Page,
+} from "./support";
 
 async function ready(page: Page) {
   await page.goto("/");
@@ -41,10 +47,8 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(nav).toContainText("Collections");
   await expect(nav.locator(":scope > span").nth(1)).toHaveText("Map");
   await expect(collection).toHaveCount(1);
-  await expect(page.locator(".app-header .breadcrumbs")).toHaveCount(0);
-  await expect(
-    page.locator("main > .collection-heading > .breadcrumbs"),
-  ).toHaveCount(1);
+  await expect(page.locator(".app-header .breadcrumbs")).toHaveCount(1);
+  await expect(page.locator("main .breadcrumbs")).toHaveCount(0);
   await expect(page.locator(".app-header .collection-help")).toHaveCount(1);
   await expect(page.locator("main .collection-help")).toHaveCount(0);
   await expect(page.locator(".model-help-title")).toHaveText(
@@ -53,14 +57,17 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
   await expect(nav.getByRole("combobox")).toHaveCount(1);
   await expect(page.locator(".app-header")).toHaveCSS("position", "sticky");
   const header = (await page.locator(".app-header").boundingBox())!;
-  expect(header.height).toBe(isMobile ? 62 : 76);
-  expect(
-    (await page.locator(".visualization").boundingBox())!.height,
-  ).toBeCloseTo(isMobile ? 540 : 576, 0);
-  if (!isMobile) {
-    const navigation = (await nav.boundingBox())!;
-    expect(navigation.y).toBeGreaterThanOrEqual(header.y + header.height);
-  }
+  expect(header.height).toBe(isMobile ? 62 : 64);
+  const navigation = (await nav.boundingBox())!;
+  expect(navigation.y).toBeGreaterThanOrEqual(header.y);
+  expect(navigation.y + navigation.height).toBeLessThanOrEqual(
+    header.y + header.height,
+  );
+  if (!isMobile)
+    expect(
+      (await page.locator(".playback").boundingBox())!.y +
+        (await page.locator(".playback").boundingBox())!.height,
+    ).toBeLessThanOrEqual(900);
   await expect(page.locator(".sidebar select")).toHaveCount(0);
   for (const caption of [
     "Один запуск — весь путь алгоритма.",
@@ -122,13 +129,21 @@ test("collection dropdown stays beside the breadcrumbs in one compact left-align
     await expect(nav).toBeInViewport({ ratio: 1 });
     await expect(collection).toBeInViewport({ ratio: 1 });
     await expect(github).toBeInViewport({ ratio: 1 });
-    const family = (await nav.locator(":scope > span").nth(1).boundingBox())!;
     const selector = (await collection.boundingBox())!;
-    expect(
-      Math.abs(family.y + family.height / 2 - selector.y - selector.height / 2),
-    ).toBeLessThan(1);
-    expect(selector.x).toBeGreaterThan(family.x + family.width);
-    expect(selector.x - family.x - family.width).toBeLessThanOrEqual(40);
+    if (width > 680) {
+      const family = (await nav.locator(":scope > span").nth(1).boundingBox())!;
+      expect(
+        Math.abs(
+          family.y + family.height / 2 - selector.y - selector.height / 2,
+        ),
+      ).toBeLessThan(1);
+      expect(selector.x).toBeGreaterThan(family.x + family.width);
+      expect(selector.x - family.x - family.width).toBeLessThanOrEqual(40);
+    } else {
+      await expect(nav.locator(".breadcrumb-ancestor").first()).toBeHidden();
+      const brand = (await page.locator(".brand").boundingBox())!;
+      expect(selector.x - brand.x - brand.width).toBeLessThanOrEqual(12);
+    }
     await noHorizontalOverflow(page.locator("html"));
     await noHorizontalOverflow(page.locator(".app-header"));
   }
@@ -139,12 +154,10 @@ test("collection dropdown stays beside the breadcrumbs in one compact left-align
   await collection.selectOption("ARRAY_LIST");
   await expect(page.locator(".primary-button")).toBeEnabled();
   await expect(nav.locator(":scope > span").nth(1)).toHaveText("List");
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   await collection.focus();
   await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("combobox", { name: "Конструктор ArrayList" }),
-  ).toBeFocused();
+  await expect(github).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(collection).toBeFocused();
   await expect(collection).toHaveCSS("outline-style", "solid");
@@ -209,7 +222,7 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.locator(".primary-button").click();
   await finish(page);
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   const constructor = page.getByRole("combobox", {
     name: "Конструктор ArrayList",
   });
@@ -224,7 +237,14 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
   });
   const createBox = (await create.boundingBox())!;
   const hint = page.locator("#constructor-replacement-hint");
-  expect(constructorBox.width).toBeLessThanOrEqual(240);
+  if (!isMobile) expect(constructorBox.width).toBeLessThanOrEqual(240);
+  const constructorGroup = (await page
+    .locator(".array-constructor")
+    .boundingBox())!;
+  expect(constructorBox.x).toBeGreaterThanOrEqual(constructorGroup.x);
+  expect(constructorBox.x + constructorBox.width).toBeLessThanOrEqual(
+    constructorGroup.x + constructorGroup.width,
+  );
   expect(labelBox.y + labelBox.height).toBeLessThan(constructorBox.y);
   expect((await hint.boundingBox())!.y).toBeGreaterThanOrEqual(
     Math.max(
@@ -239,14 +259,14 @@ test("ArrayList constructor is a separate keyboard-accessible replacement workfl
     );
   }
   await expect(constructor).toHaveAccessibleDescription(
-    "Создание новой коллекции заменит текущую и очистит историю операций",
+    "Создание заменит список и очистит историю.",
   );
   await expect(
     page.locator(".array-command-form").getByRole("button"),
   ).toHaveCount(1);
   await constructor.selectOption("5");
   await page.getByRole("button", { name: "Создать", exact: true }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   await expect(page.getByTestId("metric-capacity")).toHaveText("5");
   await expect(page.getByTestId("step-number")).toHaveText("0");
   await expect(
@@ -270,7 +290,7 @@ test("collection help dismisses on mouse leave, outside click and Escape while p
     await expect(text).toBeVisible();
     await text.tap();
     await expect(text).toBeVisible();
-    await page.locator(".breadcrumbs > span").first().tap();
+    await page.locator(".app-header").tap({ position: { x: 2, y: 2 } });
   } else {
     await trigger.click();
     await text.hover();
@@ -278,7 +298,7 @@ test("collection help dismisses on mouse leave, outside click and Escape while p
     await page.mouse.move(0, 0);
     await expect(text).toBeHidden();
     await trigger.click();
-    await page.locator(".breadcrumbs > span").first().click();
+    await page.locator(".app-header").click({ position: { x: 2, y: 2 } });
   }
   await expect(text).toBeHidden();
   await trigger.focus();

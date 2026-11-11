@@ -64,6 +64,10 @@ export default function App({
     localSplits,
   );
   const { trace, step, cursor, historyIndex, playing, navigate } = playback;
+  const historical =
+    !!trace &&
+    (historyIndex < playback.history.length - 1 ||
+      cursor < trace.steps.length - 1);
   const snapshot =
     step?.snapshot ??
     session?.state ??
@@ -83,15 +87,53 @@ export default function App({
         К управлению воспроизведением
       </a>
       <header className="app-header">
-        <a className="brand" href="/" aria-label="Java Collections Visualizer">
-          <span className="brand-mark">
-            <Network size={23} />
-          </span>
-          <span>
-            Collections<span className="brand-suffix"> / visualizer</span>
-          </span>
+        <div className="header-left">
+          <a
+            className="brand"
+            href="/"
+            aria-label="Java Collections Visualizer"
+          >
+            <span className="brand-mark">
+              <Network size={23} />
+            </span>
+            <span className="brand-name">Visualizer</span>
+          </a>
           <span className="version">{__APP_VERSION__}</span>
-        </a>
+          <nav className="breadcrumbs" aria-label="Java Collections Framework">
+            <span
+              className="breadcrumb-ancestor"
+              title="Java Collections Framework"
+            >
+              Collections
+            </span>
+            <ChevronRight
+              className="breadcrumb-ancestor"
+              size={12}
+              aria-hidden="true"
+            />
+            <span className="breadcrumb-ancestor">{view.family}</span>
+            <ChevronRight
+              className="breadcrumb-ancestor"
+              size={12}
+              aria-hidden="true"
+            />
+            <select
+              className="collection-select"
+              aria-label="Коллекция"
+              aria-describedby="collection-switch-hint"
+              value={collection}
+              onChange={(event) =>
+                switchCollection(event.target.value as CollectionType)
+              }
+            >
+              {collectionOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </nav>
+        </div>
         <div className="header-right">
           <span className={`connection ${session ? "online" : ""}`}>
             <i />
@@ -131,79 +173,58 @@ export default function App({
           onDemo={demo}
         />
         <main>
-          <header className="collection-heading">
-            <h1 className="sr-only">Лаборатория {view.name}</h1>
-            <nav
-              className="breadcrumbs"
-              aria-label="Java Collections Framework"
-            >
-              <span title="Java Collections Framework">Collections</span>
-              <ChevronRight size={12} aria-hidden="true" />
-              <span>{view.family}</span>
-              <ChevronRight size={12} aria-hidden="true" />
-              <select
-                className="collection-select"
-                aria-label="Коллекция"
-                aria-describedby="collection-switch-hint"
-                value={collection}
-                onChange={(event) =>
-                  switchCollection(event.target.value as CollectionType)
-                }
-              >
-                {collectionOptions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </nav>
-          </header>
-          {error && (
-            <div className="error-banner" role="alert">
-              <Info size={18} />
-              <span>
-                {error}
-                {retrySeconds > 0 &&
-                  ` Повторный запрос через ${retrySeconds} сек.`}
-              </span>
-              <button
-                onClick={() => void recoverSession()}
-                disabled={busy || retrySeconds > 0}
-              >
-                {recoveryLabel}
-              </button>
-              <button
-                className="icon-button"
-                aria-label="Закрыть ошибку"
-                disabled={blocked || !session}
-                onClick={() => setError(null)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-          {slow && (
-            <div className="loading-banner" role="status">
-              <LoaderCircle size={16} className="spin" /> Ожидаем Java-сервис.
-              После ошибки можно безопасно обновить состояние.
-            </div>
-          )}
-          <view.Commands
-            busy={busy}
-            blocked={blocked}
-            session={session}
-            onCommand={command}
-            onError={setError}
-            onCreate={(capacity) =>
-              void startSession(collection, capacity ?? null)
-            }
-          />
-          <StateMetrics
-            snapshot={snapshot}
-            session={session}
-            stale={uncertain || !session}
-            {...statePresentation(snapshot, trace)}
-          />
+          <h1 className="sr-only">Лаборатория {view.name}</h1>
+          <div className="control-area">
+            {error && (
+              <div className="error-banner" role="alert">
+                <Info size={18} />
+                <span>
+                  {error}
+                  {retrySeconds > 0 &&
+                    ` Повторный запрос через ${retrySeconds} сек.`}
+                </span>
+                <button
+                  onClick={() => void recoverSession()}
+                  disabled={busy || retrySeconds > 0}
+                >
+                  {recoveryLabel}
+                </button>
+                <button
+                  className="icon-button"
+                  aria-label="Закрыть ошибку"
+                  disabled={blocked || !session}
+                  onClick={() => setError(null)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+            {slow && (
+              <div className="loading-banner" role="status">
+                <LoaderCircle size={16} className="spin" /> Ожидаем Java-сервис.
+                После ошибки можно безопасно обновить состояние.
+              </div>
+            )}
+            <view.Commands
+              metrics={
+                <StateMetrics
+                  {...statePresentation(
+                    snapshot,
+                    trace,
+                    busy ? undefined : cursor,
+                  )}
+                />
+              }
+              busy={busy}
+              blocked={blocked}
+              session={session}
+              onCommand={command}
+              onError={setError}
+              onCreate={(capacity) =>
+                void startSession(collection, capacity ?? null)
+              }
+            />
+          </div>
           <div className="lab-grid">
             <div className="canvas-column">
               {snapshot ? (
@@ -225,7 +246,12 @@ export default function App({
                   <p>Состояние коллекции появится после создания сессии.</p>
                 </div>
               )}
-              <PlaybackPanel playback={playback} step={step} />
+              <PlaybackPanel
+                playback={playback}
+                step={step}
+                historical={historical}
+                stale={uncertain || !session}
+              />
               {localSplits &&
                 trace?.operation.type === "SCENARIO" &&
                 localSplits.scenarios.some(

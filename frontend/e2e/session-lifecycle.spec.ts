@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expectServerSize, expect } from "./support";
 
 test("switching and constructor changes keep one slot under strict quotas, including delayed and lost replies", async ({
   page,
@@ -35,11 +35,9 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
     await page
       .getByLabel("Конструктор ArrayList")
       .selectOption(i % 2 ? "default" : "0");
-    await page
-      .getByRole("button", { name: "Создать", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Создать", exact: true }).click();
     await ready();
-    await expect(page.getByTestId("committed-size")).toHaveText("0");
+    await expectServerSize(page, 0);
   }
   expect(creates).toBe(1);
   await expect(page.getByRole("alert")).toHaveCount(0);
@@ -76,20 +74,18 @@ test("switching and constructor changes keep one slot under strict quotas, inclu
     },
     { times: 1 },
   );
-  await page
-    .getByRole("button", { name: "Создать", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Создать", exact: true }).click();
   await ready();
   await expect(page.getByRole("alert")).toContainText("Нет ответа");
   expect(resets).toBe(beforeLost + 1);
   expect(creates).toBe(1);
   await page.locator(".primary-button").click();
   await ready();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   const second = await context.newPage();
   await second.goto("/");
   await expect(second.locator(".primary-button")).toBeEnabled();
-  await expect(second.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(second, 0);
   const current = await (
     await context.request.get(
       `/api/v1/sessions/${initial.id}?snapshotVersion=2`,

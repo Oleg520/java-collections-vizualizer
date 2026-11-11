@@ -181,7 +181,7 @@ export function ArrayDiagram({
     <motion.section
       layoutScroll
       ref={panel}
-      className={`panel array-diagram${unallocated ? " is-unallocated" : ""}`}
+      className="panel array-diagram"
       data-testid="array-diagram"
       aria-label="Внутренний массив ArrayList"
       tabIndex={0}

@@ -1,4 +1,10 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import {
+  test,
+  expectServerSize,
+  expect,
+  type Page,
+  type Locator,
+} from "./support";
 import type { CompactSessionTrace } from "../src/api/trace/decodeTrace";
 
 async function geometry(page: Page) {
@@ -32,7 +38,7 @@ async function tree(page: Page) {
   );
   await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
   const data: CompactSessionTrace = await (await response).json();
-  await expect(page.getByTestId("committed-size")).toHaveText("9");
+  await expectServerSize(page, 9);
   return data.trace.steps;
 }
 
@@ -183,7 +189,9 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
   await expect(page.getByLabel("История операций")).toHaveValue(history);
   await expect(page.locator(".zoom-controls > span")).toHaveText("100%");
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("Коллекция", { exact: true })).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "put()", exact: true }),
+  ).toBeFocused();
   await page.getByLabel("Скорость воспроизведения").selectOption("0.5");
   await page
     .getByRole("button", { name: "Воспроизвести", exact: true })
@@ -307,7 +315,7 @@ test("ArrayList buffers and selection scroll inside one stable viewport", async 
   await expect(page.locator(".primary-button")).toBeEnabled();
   const empty = await geometry(page);
   await page.locator(".scenario-button").nth(2).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("11");
+  await expectServerSize(page, 11);
   expect(await geometry(page)).toEqual(empty);
   for (const expanded of [true, false]) {
     if (!expanded)

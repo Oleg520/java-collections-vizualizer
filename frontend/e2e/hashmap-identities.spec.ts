@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expectServerSize, expect } from "./support";
 import type { CompactSessionTrace } from "../src/api/trace/hashmap";
 
 test("local splits use the standard sidebar, diagram, playback and node inspector", async ({
@@ -119,7 +119,7 @@ test("local splits use the standard sidebar, diagram, playback and node inspecto
   expect(posts).toBe(writes);
   // Dev preparation must preserve the session's original default RESET constructor.
   await page.getByRole("button", { name: "Начать заново" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   await page.getByRole("button", { name: "В конец", exact: true }).click();
   await expect(page.getByTestId("metric-capacity")).toHaveText("0");
   await page.getByRole("button", { name: /01 Обычная вставка/ }).click();
@@ -165,7 +165,7 @@ test("a lost local preparation response stops writes and uses normal recovery", 
   await expect(
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
-  await expect(page.getByTestId("committed-size")).toHaveText("14");
+  await expectServerSize(page, 14);
   expect(keys).toEqual([
     ...Array.from({ length: 6 }, (_, i) => `L${i}`),
     ...Array.from({ length: 7 }, (_, i) => `H${i}`),
@@ -221,7 +221,7 @@ test("switching collection cancels the remaining local preparation commands", as
   await expect(
     page.getByRole("button", { name: "Выполнить add(E)", exact: true }),
   ).toBeEnabled();
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   expect(keys.at(-1)).toBe("F0");
   expect(keys).toHaveLength(14);
   await expect(

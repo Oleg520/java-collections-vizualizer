@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import type {
   ArrayCommand,
   Element,
@@ -19,6 +19,7 @@ const commands: [ArrayCommand, string][] = [
   ["RESET", "reset · новая структура"],
 ];
 export function ArrayCommandPanel({
+  metrics,
   busy,
   blocked = false,
   session,
@@ -26,6 +27,7 @@ export function ArrayCommandPanel({
   onError,
   onCreate,
 }: {
+  metrics: ReactNode;
   busy: boolean;
   blocked?: boolean;
   session: Session | null;
@@ -66,46 +68,49 @@ export function ArrayCommandPanel({
   };
   return (
     <section
-      className="command-panel panel"
+      className="workbench-controls command-panel panel"
       aria-label="Панель операций ArrayList"
     >
-      <div
-        className="array-constructor"
-        role="group"
-        aria-label="Создание новой коллекции"
-      >
-        <label className="field" htmlFor="array-constructor">
-          <span>Конструктор</span>
-          <select
-            id="array-constructor"
-            aria-label="Конструктор ArrayList"
-            aria-describedby="constructor-replacement-hint"
-            value={constructor}
-            onChange={(e) => setConstructor(e.target.value)}
-          >
-            <option value="default">new ArrayList&lt;&gt;()</option>
-            {[0, 1, 5, 10, 16, 128, 256].map((n) => (
-              <option key={n} value={n}>
-                new ArrayList&lt;&gt;({n})
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="secondary-button"
-          aria-describedby="constructor-replacement-hint"
-          disabled={busy || blocked}
-          onClick={() =>
-            onCreate(
-              constructor === "default" ? undefined : Number(constructor),
-            )
-          }
+      <div className="controls-top has-constructor">
+        <div
+          className="array-constructor"
+          role="group"
+          aria-label="Создание новой коллекции"
         >
-          Создать
-        </button>
-        <p id="constructor-replacement-hint">
-          Создание новой коллекции заменит текущую и очистит историю операций
-        </p>
+          <label className="field" htmlFor="array-constructor">
+            <span>Конструктор</span>
+            <select
+              id="array-constructor"
+              aria-label="Конструктор ArrayList"
+              aria-describedby="constructor-replacement-hint"
+              value={constructor}
+              onChange={(e) => setConstructor(e.target.value)}
+            >
+              <option value="default">new ArrayList&lt;&gt;()</option>
+              {[0, 1, 5, 10, 16, 128, 256].map((n) => (
+                <option key={n} value={n}>
+                  new ArrayList&lt;&gt;({n})
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="secondary-button"
+            aria-describedby="constructor-replacement-hint"
+            disabled={busy || blocked}
+            onClick={() =>
+              onCreate(
+                constructor === "default" ? undefined : Number(constructor),
+              )
+            }
+          >
+            Создать
+          </button>
+          <p id="constructor-replacement-hint">
+            Создание заменит список и очистит историю.
+          </p>
+        </div>
+        {metrics}
       </div>
       <form className="command-form array-command-form" onSubmit={submit}>
         <label className="field">
@@ -174,9 +179,10 @@ export function ArrayCommandPanel({
         <button
           type="submit"
           className="primary-button"
+          aria-label={`Выполнить ${commands.find(([id]) => id === mode)?.[1]}`}
           disabled={busy || blocked || !session}
         >
-          Выполнить {commands.find(([id]) => id === mode)?.[1]}
+          Выполнить
         </button>
       </form>
       <div className="input-caption">

@@ -18,6 +18,7 @@ import { ArrayDiagram } from "../features/arraylist/ArrayDiagram";
 import * as arraylist from "../features/arraylist/presentation";
 
 type CommandsProps = {
+  metrics: ReactNode;
   busy: boolean;
   blocked?: boolean;
   session: Session | null;
@@ -126,21 +127,32 @@ export const collectionOptions = (
 export function statePresentation(
   snapshot?: CollectionSnapshot,
   trace?: Trace,
+  cursor?: number,
 ) {
   const state = Object.values(collectionViews)
     .map((view) => ({ view, metrics: view.metrics(snapshot) }))
     .find(({ metrics }) => metrics !== undefined);
   if (!state || !state.metrics) throw new Error("Неизвестный тип снимка");
 
-  let result = "Готов к работе";
+  let result = "—";
   let resultCaption = state.view.idleCaption;
   if (trace) {
     const view = Object.entries(collectionViews).find(
       ([id]) => id === trace.collection,
     )?.[1];
     if (!view) throw new Error("Неизвестная коллекция trace");
-    result = view.resultText(trace);
-    resultCaption = view.resultCaption(trace);
+    // A scenario may contain earlier OPERATION_COMPLETED/COMMITTED frames.
+    // Only the last frame of this trace makes its final Java result visible.
+    if (
+      cursor !== undefined &&
+      cursor >= 0 &&
+      cursor === trace.steps.length - 1
+    ) {
+      result = view.resultText(trace);
+      resultCaption = view.resultCaption(trace);
+    } else {
+      resultCaption = "Результат появится после завершения трассировки.";
+    }
   }
   return { metrics: state.metrics, result, resultCaption };
 }

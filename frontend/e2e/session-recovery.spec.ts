@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expectServerSize, expect } from "./support";
 
 test("a lost committed response recovers state without retrying rapid commands", async ({
   page,
@@ -39,7 +39,7 @@ test("a lost committed response recovers state without retrying rapid commands",
   await expect(page.getByRole("alert")).toContainText(
     "Нет ответа от Java-сервиса",
   );
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   await expect(
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
@@ -47,7 +47,7 @@ test("a lost committed response recovers state without retrying rapid commands",
   await expect(page.getByLabel("История операций")).toHaveValue("-1");
   await expect(page.getByTestId("step-number")).toHaveText("0");
   const response = await request.get(
-    `http://127.0.0.1:8080/api/v1/sessions/${session.id}?snapshotVersion=2`,
+    `/api/v1/sessions/${session.id}?snapshotVersion=2`,
   );
   const committed = await response.json();
   expect(committed.revision).toBe(1);
@@ -57,6 +57,8 @@ test("a lost committed response recovers state without retrying rapid commands",
   // Recovery has released the lock and refreshed revision for an explicit next command.
   await page.getByRole("button", { name: "get()", exact: true }).click();
   await page.getByRole("button", { name: "Выполнить get" }).click();
+  await expect(page.locator(".primary-button")).toBeEnabled();
+  await page.getByRole("button", { name: "В конец", exact: true }).click();
   await expect(page.getByTestId("operation-result")).toHaveText('"Hello"');
   expect(writes).toBe(2);
   await expect(
@@ -88,7 +90,7 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
       ).toBeEnabled();
     }
     await page.locator(".primary-button").click();
-    await expect(page.getByTestId("committed-size")).toHaveText("1");
+    await expectServerSize(page, 1);
     await expect(page.locator(".primary-button")).toBeEnabled();
     await page.route(
       /\/sessions\/[^/?]+(?:\?.*)?$/,
@@ -157,15 +159,13 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
       ).toBeEnabled();
     }
     await page.locator(".primary-button").click();
-    await expect(page.getByTestId("committed-size")).toHaveText("1");
+    await expectServerSize(page, 1);
     await expect(page.locator(".primary-button")).toBeEnabled();
     const current = await (
-      await request.get(
-        `http://127.0.0.1:8080/api/v1/sessions/${session.id}?snapshotVersion=2`,
-      )
+      await request.get(`/api/v1/sessions/${session.id}?snapshotVersion=2`)
     ).json();
     const external = await request.post(
-      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
+      `/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
       {
         data: {
           expectedRevision: current.revision,
@@ -177,13 +177,13 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
     await page.locator(".primary-button").click();
     await expect(page.getByRole("alert")).toContainText("Состояние изменилось");
     await expect(page.getByTestId("metric-size")).toHaveText("0");
-    await expect(page.getByTestId("committed-size")).toHaveText("0");
+    await expectServerSize(page, 0);
     await page
       .getByRole("button", { name: "Обновить состояние", exact: true })
       .click();
     await expect(page.getByTestId("metric-size")).toHaveText("0");
     await page.locator(".primary-button").click();
-    await expect(page.getByTestId("committed-size")).toHaveText("1");
+    await expectServerSize(page, 1);
   });
 
   for (const status of [429, 503]) {
@@ -230,7 +230,7 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
         page.getByRole("button", { name: "Обновить состояние", exact: true }),
       ).toBeEnabled();
       expect(writes).toBe(1);
-      await expect(page.getByTestId("committed-size")).toHaveText("0");
+      await expectServerSize(page, 0);
       await page
         .getByRole("button", { name: "Обновить состояние", exact: true })
         .click();
@@ -238,7 +238,7 @@ for (const collection of ["HASH_MAP", "ARRAY_LIST"] as const) {
       expect(creates).toBe(1);
       expect(writes).toBe(1);
       await page.locator(".primary-button").click();
-      await expect(page.getByTestId("committed-size")).toHaveText("1");
+      await expectServerSize(page, 1);
       expect(writes).toBe(2);
     });
   }
@@ -255,7 +255,7 @@ test("expired session or backend restart keeps the last snapshot and creates onl
   await page.goto("/");
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.locator(".primary-button").click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   await expect(page.locator(".primary-button")).toBeEnabled();
   await page.route(
     /\/commands\?encoding=compact(?:&.*)?$/,
@@ -414,5 +414,5 @@ test("zero or elapsed Retry-After does not leave recovery permanently disabled",
     await expect(page.getByRole("alert")).toHaveCount(0);
   }
   await page.locator(".primary-button").click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
 });
