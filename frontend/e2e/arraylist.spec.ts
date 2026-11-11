@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expectServerSize, expect, type Page } from "./support";
 import type { CompactArrayTrace } from "../src/api/trace/decodeTrace";
 import type { Operation } from "../src/api/types/index";
 async function ready(page: Page) {
@@ -78,7 +78,7 @@ test("ArrayList commands, typed null, rewind and constructor configuration", asy
   await page.getByLabel("История операций").selectOption("0");
   await finish(page);
   expect(writes).toBe(priorWrites);
-  await expect(page.getByTestId("committed-size")).toHaveText("2");
+  await expectServerSize(page, 2);
   // Capacity operations execute against committed state even when viewing old history.
   await command(page, "ENSURE_CAPACITY");
   await expect(page.getByTestId("metric-capacity")).toHaveText("20");
@@ -91,15 +91,11 @@ test("ArrayList commands, typed null, rewind and constructor configuration", asy
   await command(page, "ADD");
   await expect(page.getByTestId("metric-capacity")).toHaveText("1");
   await page.getByLabel("Конструктор ArrayList").selectOption("0");
-  await page
-    .getByRole("button", { name: "Создать", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Создать", exact: true }).click();
   await command(page, "ADD");
   await expect(page.getByTestId("metric-capacity")).toHaveText("1");
   await page.getByLabel("Конструктор ArrayList").selectOption("default");
-  await page
-    .getByRole("button", { name: "Создать", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Создать", exact: true }).click();
   await command(page, "ADD");
   await expect(page.getByTestId("metric-capacity")).toHaveText("10");
   expect(errors).toEqual([]);
@@ -160,8 +156,11 @@ test("all nine Java scenarios, growth buffers, 320px and reduced motion; HashMap
       else expect(step.operation.element).toBeNull();
       await page.locator(".event-row").nth(step.index).click();
       await expect(page.locator(".step-op")).toHaveText(label);
-      await expect(page.locator(".step-explanation code")).toHaveText(
+      await expect(page.locator(".step-explanation code")).toContainText(
         `OPERATION_STARTED · ${label}`,
+      );
+      await expect(page.locator(".step-explanation code")).toContainText(
+        "Промежуточный снимок",
       );
     }
     if (id === "growth") {
@@ -227,7 +226,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   );
   await page.locator(".primary-button").click();
   await expect(page.getByRole("alert")).toContainText("Нет ответа");
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   expect(writes).toBe(1);
   await expect(page.locator(".primary-button")).toBeEnabled();
   let sessionId = "";
@@ -252,7 +251,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   );
   await page.locator(".primary-button").click();
   await expect(page.getByRole("alert")).toContainText("Состояние изменилось");
-  await expect(page.getByTestId("committed-size")).toHaveText("2");
+  await expectServerSize(page, 2);
   expect(writes).toBe(2);
   await expect(page.locator(".primary-button")).toBeEnabled();
   let release!: () => void;
@@ -281,7 +280,7 @@ test("lost ArrayList response and revision conflict recover without retry; old r
   await expect(
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   await page.getByRole("button", { name: "Выполнить put" }).click();
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("16");

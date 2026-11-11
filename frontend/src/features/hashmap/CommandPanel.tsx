@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { LoaderCircle, Play, RotateCcw, Terminal, Trash2 } from "lucide-react";
 import type {
   CommandType,
@@ -8,12 +8,14 @@ import type {
   Session,
 } from "../../api/types/index";
 export function CommandPanel({
+  metrics,
   busy,
   blocked = false,
   session,
   onCommand,
   onError: setError,
 }: {
+  metrics: ReactNode;
   busy: boolean;
   blocked?: boolean;
   session: Session | null;
@@ -59,41 +61,24 @@ export function CommandPanel({
   };
 
   return (
-    <section className="command-panel panel" aria-label="Панель операций">
-      <div className="command-topline">
-        <div className="operation-tabs">
-          {(["PUT", "GET", "REMOVE"] as const).map((t) => (
-            <button
-              key={t}
-              className={mode === t ? "active" : ""}
-              onClick={() => setMode(t)}
-              aria-pressed={mode === t}
-            >
-              {t.toLowerCase()}
-              <span>()</span>
-            </button>
-          ))}
-        </div>
-        <div className="reset-actions">
-          <button
-            className="subtle-button"
-            onClick={() => command("CLEAR")}
-            disabled={busy || blocked || !session}
-            title="clear сохраняет массив бакетов"
-          >
-            <Trash2 size={13} />
-            <span>clear</span>
-          </button>
-          <button
-            className="subtle-button"
-            onClick={() => command("RESET")}
-            disabled={busy || blocked || !session}
-          >
-            <RotateCcw size={13} /> Начать заново
-          </button>
-        </div>
-      </div>
+    <section
+      className="workbench-controls command-panel panel"
+      aria-label="Панель операций"
+    >
+      <div className="controls-top">{metrics}</div>
       <form onSubmit={submit} className="command-form">
+        <label className="field">
+          <span>Операция</span>
+          <select
+            aria-label="Операция"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as typeof mode)}
+          >
+            <option value="PUT">put(K, V)</option>
+            <option value="GET">get(K)</option>
+            <option value="REMOVE">remove(K)</option>
+          </select>
+        </label>
         <label className="field key-type">
           <span>Тип ключа</span>
           <select
@@ -154,6 +139,7 @@ export function CommandPanel({
         )}
         <button
           className="primary-button"
+          aria-label={`Выполнить ${mode.toLowerCase()}`}
           type="submit"
           disabled={busy || blocked || !session}
         >
@@ -162,7 +148,7 @@ export function CommandPanel({
           ) : (
             <Play size={15} fill="currentColor" />
           )}{" "}
-          Выполнить {mode.toLowerCase()}
+          Выполнить
         </button>
       </form>
       <div className="input-caption">
@@ -184,6 +170,24 @@ export function CommandPanel({
             value = null
           </label>
         )}
+        <div className="reset-actions">
+          <button
+            className="subtle-button"
+            onClick={() => command("CLEAR")}
+            disabled={busy || blocked || !session}
+            title="clear сохраняет массив бакетов"
+          >
+            <Trash2 size={13} />
+            <span>clear</span>
+          </button>
+          <button
+            className="subtle-button"
+            onClick={() => command("RESET")}
+            disabled={busy || blocked || !session}
+          >
+            <RotateCcw size={13} /> Начать заново
+          </button>
+        </div>
       </div>
     </section>
   );

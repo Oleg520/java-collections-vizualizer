@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expectServerSize, expect } from "./support";
 
 for (const reducedMotion of ["no-preference", "reduce"] as const) {
   test(`large tree navigation with ${reducedMotion} motion`, async ({
@@ -10,7 +10,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.setViewportSize({ width: 320, height: 740 });
     await page.goto("/");
     await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
-    await expect(page.getByTestId("committed-size")).toHaveText("9");
+    await expectServerSize(page, 9);
     await page.getByRole("button", { name: "В конец", exact: true }).click();
     const diagram = page.getByTestId("diagram");
     const zoom = page.locator(".zoom-controls > span");

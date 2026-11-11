@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expectServerSize, expect } from "./support";
 
 test("old backend route 404 preserves the slot and shows an actionable error without retries", async ({
   page,
@@ -41,7 +41,7 @@ test("old backend route 404 preserves the slot and shows an actionable error wit
     page.getByRole("button", { name: "Выполнить put" }),
   ).toBeEnabled();
   await page.getByRole("button", { name: "Выполнить put" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   expect(creates).toBe(1);
   expect(resets).toBe(3);
 });

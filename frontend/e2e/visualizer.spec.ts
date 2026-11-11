@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expectServerSize, expect, type Page } from "./support";
 
 async function ready(page: Page) {
   await page.goto("/");
@@ -9,6 +9,7 @@ async function ready(page: Page) {
   ).toBeEnabled();
 }
 async function finish(page: Page) {
+  await expect(page.locator(".primary-button")).toBeEnabled();
   await page.getByRole("button", { name: "В конец", exact: true }).click();
 }
 
@@ -58,7 +59,7 @@ test("real Java session, put/get/remove, null and immutable playback", async ({
   await ready(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("0");
   await page.getByRole("button", { name: "Выполнить put" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   await finish(page);
   await expect(page.getByTestId("metric-size")).toHaveText("1");
   await expect(page.getByTestId("metric-capacity")).toHaveText("16");
@@ -72,25 +73,26 @@ test("real Java session, put/get/remove, null and immutable playback", async ({
   await expect(page.getByTestId("step-number")).toHaveText(number!);
   await page.getByRole("button", { name: "В начало", exact: true }).click();
   await expect(page.getByTestId("metric-capacity")).toHaveText("0");
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   await page
     .getByRole("button", { name: "Воспроизвести", exact: true })
     .click();
   await page.getByRole("button", { name: "Пауза", exact: true }).click();
   expect(writes).toBe(1);
-  await page.getByRole("button", { name: "get()", exact: true }).click();
+  await page.getByLabel("Операция", { exact: true }).selectOption("GET");
   await page.getByRole("button", { name: "Выполнить get" }).click();
+  await finish(page);
   await expect(page.getByTestId("operation-result")).toHaveText('"Hello"');
-  await page.getByRole("button", { name: "remove()", exact: true }).click();
+  await page.getByLabel("Операция", { exact: true }).selectOption("REMOVE");
   await page.getByRole("button", { name: "Выполнить remove" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(page, 0);
   await finish(page);
   await expect(page.getByTestId("diagram").getByRole("button")).toHaveCount(0);
-  await page.getByRole("button", { name: "put()", exact: true }).click();
+  await page.getByLabel("Операция", { exact: true }).selectOption("PUT");
   await page.getByLabel("Тип ключа").selectOption("NULL");
   await page.getByLabel("value = null").check();
   await page.getByRole("button", { name: "Выполнить put" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   await finish(page);
   await expect(
     page.getByRole("button", { name: "Узел null, список" }),
@@ -105,13 +107,16 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
   page.on("pageerror", (error) => errors.push(error.message));
   await ready(page);
   await page.getByRole("button", { name: /02 Коллизия/ }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("3");
+  await expectServerSize(page, 3);
   await finish(page);
   await expect(page.getByTestId("diagram").getByRole("button")).toHaveCount(3);
   await expect(page.locator(".svg-edge-label")).toHaveCount(2);
   await page.getByRole("button", { name: /04 Resize и split/ }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("13");
+  await expectServerSize(page, 13);
   await finish(page);
+  await expect(page.getByTestId("operation-result")).toHaveText(
+    "13 записей · готово",
+  );
   await expect(page.getByTestId("metric-capacity")).toHaveText("32");
   const split = page
     .locator(".event-row")
@@ -121,7 +126,7 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
   await expect(page.locator(".split-explanation")).toBeVisible();
   await expect(page.locator(".split-explanation")).toContainText("bucket [1]");
   await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("9");
+  await expectServerSize(page, 9);
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("64");
   await expect(page.getByText("RB TREE", { exact: true })).toBeVisible();
@@ -145,22 +150,23 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
     await page.getByRole("button", { name: "В начало", exact: true }).click();
     await finish(page);
   }
-  await expect(page.getByTestId("committed-size")).toHaveText("9");
+  await expectServerSize(page, 9);
   await page.getByRole("button", { name: /06 Почему нет дерева/ }).click();
-  await expect(page.getByTestId("operation-result")).toHaveText(
-    "9 записей · готово",
-  );
+  await expect(page.getByTestId("operation-result")).toHaveText("—");
   // Wait for this request, since the size is deliberately unchanged.
   await expect(
     page.getByRole("button", { name: /06 Почему нет дерева/ }),
   ).toBeEnabled();
   await finish(page);
+  await expect(page.getByTestId("operation-result")).toHaveText(
+    "9 записей · готово",
+  );
   await expect(page.getByTestId("metric-capacity")).toHaveText("32");
   await expect(page.locator(".red-node,.black-node")).toHaveCount(0);
   await page.getByLabel("История операций").selectOption("0");
   await finish(page);
   await expect(page.getByTestId("metric-size")).toHaveText("3");
-  await expect(page.getByTestId("committed-size")).toHaveText("9");
+  await expectServerSize(page, 9);
   expect(errors).toEqual([]);
   expect(
     await page.evaluate(
@@ -175,14 +181,14 @@ test("different tabs own different sessions and invalid input is actionable", as
 }) => {
   await ready(page);
   await page.getByRole("button", { name: "Выполнить put" }).click();
-  await expect(page.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(page, 1);
   const second = await context.newPage();
   await ready(second);
-  await expect(second.getByTestId("committed-size")).toHaveText("0");
+  await expectServerSize(second, 0);
   await second.getByLabel("Тип ключа").selectOption("COLLISION");
   await second.getByRole("textbox", { name: "Ключ", exact: true }).fill("A");
   await second.getByRole("button", { name: "Выполнить put" }).click();
-  await expect(second.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(second, 1);
   await second
     .getByRole("textbox", { name: "hashCode", exact: true })
     .fill("43");
@@ -190,7 +196,7 @@ test("different tabs own different sessions and invalid input is actionable", as
   await expect(second.getByRole("alert")).toContainText(
     "hashCode этого ID уже закреплён: 42",
   );
-  await expect(second.getByTestId("committed-size")).toHaveText("1");
+  await expectServerSize(second, 1);
   await second.close();
 });
 
@@ -238,7 +244,7 @@ for (const initialCapacity of [0, 16, 32, 64]) {
       );
     }
     await page.getByRole("button", { name: "Начать заново" }).click();
-    await expect(page.getByTestId("committed-size")).toHaveText("0");
+    await expectServerSize(page, 0);
     await finish(page);
     await expect(page.getByTestId("metric-threshold")).toHaveText(
       String(initialCapacity),
@@ -261,7 +267,7 @@ test("large tree split, conflict recovery and offline history", async ({
   let revision = 0;
   for (let i = 0; i < 96; i++) {
     const response = await request.post(
-      `http://127.0.0.1:8080/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
+      `/api/v1/sessions/${session.id}/commands?encoding=compact&snapshotVersion=2`,
       {
         data: {
           expectedRevision: revision,
@@ -288,7 +294,7 @@ test("large tree split, conflict recovery and offline history", async ({
   });
   await page.getByRole("button", { name: "Выполнить put" }).click();
   await expect(page.getByRole("alert")).toContainText("Состояние изменилось");
-  await expect(page.getByTestId("committed-size")).toHaveText("96");
+  await expectServerSize(page, 96);
   expect(writes).toBe(1);
   await page.getByLabel("Тип ключа").selectOption("COLLISION");
   await page.getByRole("textbox", { name: "Ключ", exact: true }).fill("K096");
@@ -301,7 +307,7 @@ test("large tree split, conflict recovery and offline history", async ({
   const encoded = await response.json();
   expect(encoded.nodePool.length).toBeLessThan(5000);
   expect(encoded.trace.steps.length).toBeGreaterThan(100);
-  await expect(page.getByTestId("committed-size")).toHaveText("97");
+  await expectServerSize(page, 97);
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("256");
   await expect(page.getByText("RB TREE", { exact: true })).toHaveCount(2);

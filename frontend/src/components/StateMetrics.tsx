@@ -1,69 +1,31 @@
-import type { Session, CollectionSnapshot } from "../api/types";
 export function StateMetrics({
-  snapshot,
-  session,
-  stale = false,
   metrics,
   result,
   resultCaption,
 }: {
-  snapshot?: CollectionSnapshot;
-  session: Session | null;
-  stale?: boolean;
   metrics: { label: string; value: string | number; caption: string }[];
   result: string;
   resultCaption: string;
 }) {
   return (
-    <>
-      <div className="state-label">
-        <span>
-          <i
-            className={
-              snapshot?.phase === "WORKING" ? "working-dot" : "committed-dot"
-            }
-          />
-          {stale
-            ? "Последнее известное состояние"
-            : snapshot?.phase === "WORKING"
-              ? "Рабочий снимок шага"
-              : "Зафиксированное состояние"}
-        </span>
-        {session && (
-          <span>
-            {stale ? "Последнее чтение: size" : "На сервере: size"}{" "}
-            <b data-testid="committed-size">{session.state.size}</b> · revision{" "}
-            {session.revision}
-          </span>
-        )}
-      </div>
-      <section className="metrics" aria-label="Показатели состояния">
-        {metrics.map((metric) => (
-          <Metric key={metric.label} {...metric} />
-        ))}
-        <div className="metric result-metric">
-          <span>РЕЗУЛЬТАТ ОПЕРАЦИИ</span>
-          <strong data-testid="operation-result">{result}</strong>
-          <small>{resultCaption} </small>
+    <section className="metrics" aria-label="Показатели состояния">
+      {metrics.map((metric) => (
+        <div className="metric" key={metric.label} title={metric.caption}>
+          <span>{metric.label}</span>
+          <strong data-testid={`metric-${metric.label}`}>{metric.value}</strong>
+          <small className="sr-only">{metric.caption}</small>
         </div>
-      </section>
-    </>
-  );
-}
-function Metric({
-  label,
-  value,
-  caption,
-}: {
-  label: string;
-  value: string | number;
-  caption: string;
-}) {
-  return (
-    <div className="metric">
-      <span>{label}</span>
-      <strong data-testid={`metric-${label}`}>{value}</strong>
-      <small>{caption}</small>
-    </div>
+      ))}
+      <div
+        className="metric result-metric"
+        title={`${result} · ${resultCaption}`}
+      >
+        <span>Результат операции</span>
+        <div className="result-value">
+          <strong data-testid="operation-result">{result}</strong>
+        </div>
+        <small className="sr-only">{resultCaption}</small>
+      </div>
+    </section>
   );
 }

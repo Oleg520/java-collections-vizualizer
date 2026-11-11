@@ -18,13 +18,24 @@ import type { useTracePlayback } from "./useTracePlayback";
 export function PlaybackPanel({
   playback,
   step,
+  historical = false,
+  stale = false,
 }: {
   playback: ReturnType<typeof useTracePlayback>;
   step?: Step;
+  historical?: boolean;
+  stale?: boolean;
 }) {
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
   const [collapsed, setCollapsed] = useState(false);
+  const snapshotStatus = stale
+    ? "Синхронизация не подтверждена"
+    : step?.snapshot.phase === "WORKING"
+      ? "Промежуточный снимок"
+      : historical
+        ? "Исторический снимок"
+        : undefined;
   return (
     <section
       id="playback"
@@ -84,6 +95,39 @@ export function PlaybackPanel({
           <b data-testid="step-number">{trace ? cursor + 1 : 0}</b>
           <span>/ {trace?.steps.length ?? 0}</span>
         </div>
+        <div
+          className="step-explanation"
+          role="region"
+          aria-label="Пояснение текущего шага"
+          tabIndex={0}
+          hidden={collapsed}
+          title={step?.message}
+        >
+          <span className="step-symbol">
+            {step?.event === "OPERATION_COMPLETED" ? (
+              <Check size={16} />
+            ) : (
+              <ArrowRight size={16} />
+            )}
+          </span>
+          <div>
+            <strong>
+              {step?.message ?? "Операции превращаются в понятные шаги"}
+            </strong>
+            <code>
+              {snapshotStatus && (
+                <>
+                  <span role="status">{snapshotStatus}</span> ·{" "}
+                </>
+              )}
+              {step?.details.formula
+                ? String(step.details.formula)
+                : step
+                  ? `${step.event} · ${operationLabel(step.operation)}`
+                  : "Воспроизведение управляет временем, а не состоянием Java-коллекции."}
+            </code>
+          </div>
+        </div>
         <button
           className="icon-button collapse-playback"
           aria-label={collapsed ? "Развернуть плеер" : "Свернуть плеер"}
@@ -121,32 +165,6 @@ export function PlaybackPanel({
               ))}
             </select>
           </label>
-        </div>
-        <div
-          className="step-explanation"
-          role="region"
-          aria-label="Пояснение текущего шага"
-          tabIndex={0}
-        >
-          <span className="step-symbol">
-            {step?.event === "OPERATION_COMPLETED" ? (
-              <Check size={16} />
-            ) : (
-              <ArrowRight size={16} />
-            )}
-          </span>
-          <div>
-            <strong>
-              {step?.message ?? "Операции превращаются в понятные шаги"}
-            </strong>
-            <code>
-              {step?.details.formula
-                ? String(step.details.formula)
-                : step
-                  ? `${step.event} · ${operationLabel(step.operation)}`
-                  : "Воспроизведение управляет временем, а не состоянием Java-коллекции."}
-            </code>
-          </div>
         </div>
       </div>
     </section>

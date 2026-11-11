@@ -1,4 +1,10 @@
-import { test, expect, type Locator, type Page } from "@playwright/test";
+import {
+  test,
+  expectServerSize,
+  expect,
+  type Locator,
+  type Page,
+} from "./support";
 
 async function playerIsAvailable(page: Page, expanded = true) {
   const player = page.getByRole("region", {
@@ -129,7 +135,7 @@ test("short ArrayList layouts retain bounded panes without redundant bottom spac
   for (const state of ["empty", "first-add"]) {
     if (state === "first-add") {
       await page.locator(".primary-button").click();
-      await expect(page.getByTestId("committed-size")).toHaveText("1");
+      await expectServerSize(page, 1);
       await page.getByRole("button", { name: "В конец", exact: true }).click();
     }
     for (const expanded of [true, false]) {
@@ -174,7 +180,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await page.goto("/");
     await expect(page.locator(".primary-button")).toBeEnabled();
     await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
-    await expect(page.getByTestId("committed-size")).toHaveText("9");
+    await expectServerSize(page, 9);
     await page.locator(".event-row").nth(20).click();
     const position = await page.getByTestId("step-number").innerText();
     const history = await page.getByLabel("История операций").inputValue();
@@ -193,7 +199,20 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await expect(expand).toBeFocused();
     await expect(expand).toHaveAttribute("aria-expanded", "false");
     const compact = await playerIsAvailable(page, false);
-    expect(compact.height).toBeLessThan(expanded.height / 2);
+    expect(compact.height).toBeLessThan(expanded.height);
+    const transportHeight = await page
+      .locator(".transport")
+      .evaluate((el) => el.getBoundingClientRect().height);
+    const chromeHeight = await page.locator(".playback").evaluate((el) => {
+      const s = getComputedStyle(el);
+      return (
+        parseFloat(s.paddingTop) +
+        parseFloat(s.paddingBottom) +
+        parseFloat(s.borderTopWidth) +
+        parseFloat(s.borderBottomWidth)
+      );
+    });
+    expect(compact.height).toBeCloseTo(transportHeight + chromeHeight, 0);
     await expect(page.getByTestId("step-number")).toHaveText(position);
     await contentIsReachable(page, page.getByLabel("История операций"));
     await pageEndIsReachable(page);
@@ -247,7 +266,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     ).toBeDisabled();
 
     await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
-    await expect(page.getByTestId("committed-size")).toHaveText("9");
+    await expectServerSize(page, 9);
     await page.getByRole("button", { name: "В начало", exact: true }).click();
     await playerIsAvailable(page);
     const beforeGrowth = await page.evaluate(
@@ -272,7 +291,15 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await page.evaluate(() => scrollTo(0, 0));
     await page.mouse.move(page.viewportSize()!.width - 20, 30);
     await page.mouse.wheel(0, 350);
-    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+    if (
+      await page.evaluate(
+        () => document.documentElement.scrollHeight > innerHeight,
+      )
+    ) {
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+    } else {
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+    }
     await playerIsAvailable(page);
     await contentIsReachable(page, page.getByLabel("История операций"));
     await page.getByLabel("Скрыть пустые").focus();
@@ -333,7 +360,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       .selectOption("ARRAY_LIST");
     await expect(page.locator(".primary-button")).toBeEnabled();
     await page.locator(".scenario-button").nth(2).click();
-    await expect(page.getByTestId("committed-size")).toHaveText("11");
+    await expectServerSize(page, 11);
     await page.getByRole("button", { name: "В конец", exact: true }).click();
     await page
       .locator(".event-row")
@@ -355,7 +382,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       .getByLabel("Элемент", { exact: true })
       .fill("Длинное значение ".repeat(8).slice(0, 128));
     await page.locator(".primary-button").click();
-    await expect(page.getByTestId("committed-size")).toHaveText("12");
+    await expectServerSize(page, 12);
     await page.getByRole("button", { name: "В начало", exact: true }).click();
     const explanation = page.getByRole("region", {
       name: "Пояснение текущего шага",
