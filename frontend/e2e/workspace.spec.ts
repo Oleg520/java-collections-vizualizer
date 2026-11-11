@@ -129,20 +129,37 @@ test("sidebar reclaims width and scrolls independently without resetting playbac
     name: "Готовые сценарии",
     exact: true,
   });
-  await page.evaluate(() => scrollTo(0, 100));
-  const outerY = await page.evaluate(() => scrollY);
-  const rect = (await list.boundingBox())!;
-  await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
-  await page.mouse.wheel(0, 10000);
-  await expect
-    .poll(() => list.evaluate((el) => el.scrollTop))
-    .toBeGreaterThan(0);
-  expect(await page.evaluate(() => scrollY)).toBe(outerY);
-  await list.focus();
-  await page.keyboard.press("End");
-  await accessible(page, page.locator(".scenario-button").last());
-  await expect(page.locator(".sidebar-title")).toBeInViewport({ ratio: 1 });
-  await expect(page.locator(".sidebar-bottom")).toBeInViewport({ ratio: 1 });
+  for (const height of [900, 480]) {
+    await page.setViewportSize({ width: 1440, height });
+    const { scrollHeight, clientHeight } = await list.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
+    // Font metrics can let every scenario fit at 900px; the short window must overflow.
+    if (height === 480) expect(scrollHeight).toBeGreaterThan(clientHeight);
+    if (scrollHeight > clientHeight) {
+      await page.evaluate(() => scrollTo(0, 100));
+      const outerY = await page.evaluate(() => scrollY);
+      await list.evaluate((el) => (el.scrollTop = 0));
+      const rect = (await list.boundingBox())!;
+      await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      await page.mouse.wheel(0, 10000);
+      await expect
+        .poll(() => list.evaluate((el) => el.scrollTop))
+        .toBeGreaterThan(0);
+      expect(await page.evaluate(() => scrollY)).toBe(outerY);
+      await list.focus();
+      await page.keyboard.press("End");
+      await accessible(page, page.locator(".scenario-button").last());
+    } else {
+      for (const scenario of await list.getByRole("button").all()) {
+        await expect(scenario).toBeInViewport({ ratio: 1 });
+      }
+    }
+    await expect(page.locator(".sidebar-title")).toBeInViewport({ ratio: 1 });
+    await expect(page.locator(".sidebar-bottom")).toBeInViewport({ ratio: 1 });
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
   const collapse = page.getByRole("button", {
     name: "Свернуть боковую панель",
     exact: true,
