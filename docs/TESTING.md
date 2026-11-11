@@ -228,8 +228,9 @@ E2E_PREVIEW=1 npm --prefix frontend run test:e2e -- workbench-polish.spec.ts
 Удалены неиспользуемая контейнерная сборка и её health smoke job. Реальный JAR,
 health и точная Git-версия по-прежнему проверяются Java integration tests и
 `visualizer.spec.ts`. Отдельный Maven `validate` объединён с `verify`; `clean`
-не нужен на свежем checkout CI. Ключ кэша форматтера вычисляется из скрипта
-без отдельного metadata step. Убраны негейтящие audit/funding-запросы `npm ci`;
+не нужен на свежем checkout CI. Ключ кэша IntelliJ зависит только от OS,
+архитектуры и VERSION/BUILD: правки скрипта не вызывают повторную загрузку IDE.
+Убраны негейтящие audit/funding-запросы `npm ci`;
 Vitest/build и release-contract fixtures сохранены. Setup Java/Node и кэши
 Maven/npm/IntelliJ оставлены: они выбирают нужные версии и ускоряют зависимости.
 
