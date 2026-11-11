@@ -129,8 +129,8 @@ The probe is bounded and short; it does not prove leak freedom or a universal wo
 case. The decoder validates addressing before playback, increasing whole-history
 decode work; production quotas were not raised. HashMap V1 requests are rejected
 before mutation. Backend must be upgraded before the controlled frontend; old tabs
-reload rather than retry writes or downgrade the protocol. Animation smoothing
-remains Issue #47.
+reload rather than retry writes or downgrade the protocol. HashMap presentation and transitions are covered by #47/#61; see the
+[local verification](verification/hashmap-visualization/README.md).
 
 ## Зависимости CI
 

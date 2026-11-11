@@ -1,0 +1,10 @@
+{
+  "maximum": {
+    "size": "128",
+    "physicalNodes": 128,
+    "edges": 508,
+    "overflow": false,
+    "canvasHeight": 246
+  },
+  "nodesAfterScenario": 1
+}

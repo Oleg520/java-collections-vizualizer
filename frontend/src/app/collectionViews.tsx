@@ -17,6 +17,8 @@ import { ArrayCommandPanel } from "../features/arraylist/ArrayCommandPanel";
 import { ArrayDiagram } from "../features/arraylist/ArrayDiagram";
 import * as arraylist from "../features/arraylist/presentation";
 
+import type { PlaybackNavigation } from "../playback/useTracePlayback";
+
 type CommandsProps = {
   metrics: ReactNode;
   busy: boolean;
@@ -31,6 +33,10 @@ type DiagramProps = {
   step?: Step;
   selectedId?: NodeSelection;
   playing?: boolean;
+  trace?: Trace;
+  cursor?: number;
+  speed?: number;
+  navigation?: PlaybackNavigation;
   onSelect: (id: NodeSelection | undefined) => void;
 };
 interface CollectionView {
@@ -76,10 +82,25 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
         : "операция выполнена Java-движком",
     idleCaption: "начните с put или сценария",
     Commands: CommandPanel,
-    Diagram: ({ snapshot, step, selectedId, onSelect }) =>
+    Diagram: ({
+      snapshot,
+      step,
+      trace,
+      selectedId,
+      onSelect,
+      cursor,
+      speed,
+      navigation,
+      playing,
+    }) =>
       isArray(snapshot) ? null : (
         <Diagram
           state={snapshot}
+          trace={trace}
+          cursor={cursor}
+          speed={speed}
+          navigation={navigation}
+          playing={playing}
           step={step}
           selectedId={selectedId}
           onSelect={(node) =>
