@@ -1,3 +1,5 @@
+import { eventExplanation } from "../i18n/events";
+import { useI18n } from "../i18n/LocaleProvider";
 import { useState } from "react";
 import { operationLabel } from "../presentation/operationLabel";
 import {
@@ -26,6 +28,7 @@ export function PlaybackPanel({
   historical?: boolean;
   stale?: boolean;
 }) {
+  const { locale, t } = useI18n();
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
   const [collapsed, setCollapsed] = useState(false);
@@ -63,7 +66,7 @@ export function PlaybackPanel({
           </button>
           <button
             className="play-button"
-            aria-label={playing ? "Пауза" : "Воспроизвести"}
+            aria-label={playing ? t("pause") : t("play")}
             disabled={!trace}
             onClick={togglePlay}
           >
@@ -101,7 +104,7 @@ export function PlaybackPanel({
           aria-label="Пояснение текущего шага"
           tabIndex={0}
           hidden={collapsed}
-          title={step?.message}
+          title={step ? eventExplanation(locale, step) : undefined}
         >
           <span className="step-symbol">
             {step?.event === "OPERATION_COMPLETED" ? (
@@ -112,7 +115,8 @@ export function PlaybackPanel({
           </span>
           <div>
             <strong>
-              {step?.message ?? "Операции превращаются в понятные шаги"}
+              {(step ? eventExplanation(locale, step) : undefined) ??
+                "Операции превращаются в понятные шаги"}
             </strong>
             <code>
               {snapshotStatus && (

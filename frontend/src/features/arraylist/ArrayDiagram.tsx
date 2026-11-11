@@ -1,3 +1,5 @@
+import { eventExplanation } from "../../i18n/events";
+import { useI18n } from "../../i18n/LocaleProvider";
 import { elementLabel } from "./presentation";
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
@@ -32,6 +34,7 @@ export function ArrayDiagram({
   step?: Step;
   playing?: boolean;
 }) {
+  const { locale } = useI18n();
   const reduced = useSyncExternalStore(
     subscribeReducedMotion,
     prefersReducedMotion,
@@ -258,7 +261,7 @@ export function ArrayDiagram({
       <div className="array-buffers">{buffers.map(buffer)}</div>
       {step && (
         <p className="array-step" aria-live="polite">
-          {step.message}
+          {eventExplanation(locale, step)}
         </p>
       )}
       {selected && selectedBuffer && (

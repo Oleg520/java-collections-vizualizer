@@ -1,3 +1,5 @@
+import { eventExplanation } from "../i18n/events";
+import { useI18n } from "../i18n/LocaleProvider";
 import type { CSSProperties, ReactNode } from "react";
 import { operationLabel } from "../presentation/operationLabel";
 import { useEffect, useRef, useState } from "react";
@@ -27,6 +29,7 @@ export function TraceInspector({
   selectedDetails?: { title: string; content: ReactNode };
   navigate: (index: number) => void;
 }) {
+  const { locale, t } = useI18n();
   const [tab, setTab] = useState<"events" | "algorithm">("events");
   const eventRef = useRef<HTMLButtonElement>(null);
   const [eventsShare, setEventsShare] = useState(0.55);
@@ -55,21 +58,24 @@ export function TraceInspector({
           className={tab === "events" ? "active" : ""}
           onClick={() => setTab("events")}
         >
-          <Terminal size={14} /> Events <span>{trace?.steps.length ?? 0}</span>
+          <Terminal size={14} /> {t("events")}{" "}
+          <span>{trace?.steps.length ?? 0}</span>
         </button>
         <button
           className={tab === "algorithm" ? "active" : ""}
           onClick={() => setTab("algorithm")}
         >
-          <Code2 size={14} /> Algorithm
+          <Code2 size={14} /> {t("algorithm")}
         </button>
       </div>
       <div className="inspector-history">{history}</div>
       <div className="inspector-title">
         <span className="eyebrow">
-          {tab === "events" ? "EXECUTION TRACE" : "СЕМАНТИЧЕСКИЕ ЭТАПЫ"}
+          {tab === "events" ? t("executionTrace") : "СЕМАНТИЧЕСКИЕ ЭТАПЫ"}
         </span>
-        <span className="live-label">{playing ? "PLAYING" : "PAUSED"}</span>
+        <span className="live-label">
+          {playing ? t("playing") : t("paused")}
+        </span>
       </div>
       <div
         className="inspector-panes"
@@ -102,7 +108,7 @@ export function TraceInspector({
                   </span>
                   <span>
                     <code>{s.event}</code>
-                    <small>{s.message}</small>
+                    <small>{eventExplanation(locale, s)}</small>
                   </span>
                   {i === cursor && <ChevronRight size={13} />}
                 </button>
