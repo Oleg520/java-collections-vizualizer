@@ -50,18 +50,22 @@ export const scenarioMessages = {
       "Tree removal",
       "Balancing and tree → list conversion based on tree shape",
     ],
-    "local-split-6-7": [
-      "Локально: split 6/7",
-      "Только dev: физические копии L3, проблемный кадр 11",
-      "Local: split 6/7",
-      "Dev only: physical copies L3, problem frame 11",
-    ],
-    "local-split-2-7": [
-      "Локально: split 2/7",
-      "Только dev: физические копии L1, проблемный кадр 11",
-      "Local: split 2/7",
-      "Dev only: physical copies L1, problem frame 11",
-    ],
+    ...(import.meta.env.DEV
+      ? {
+          "local-split-6-7": [
+            "Локально: split 6/7",
+            "Только dev: физические копии L3, проблемный кадр 11",
+            "Local: split 6/7",
+            "Dev only: physical copies L3, problem frame 11",
+          ],
+          "local-split-2-7": [
+            "Локально: split 2/7",
+            "Только dev: физические копии L1, проблемный кадр 11",
+            "Local: split 2/7",
+            "Dev only: physical copies L1, problem frame 11",
+          ],
+        }
+      : {}),
   },
   ARRAY_LIST: {
     "first-add": [

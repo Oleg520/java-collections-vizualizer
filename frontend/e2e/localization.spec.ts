@@ -165,7 +165,7 @@ test("active playback keeps its existing timer and inspector state on locale cha
   await page
     .getByRole("button", { name: "Collapse player", exact: true })
     .click();
-  await page.getByRole("button", { name: "Алгоритм", exact: true }).click();
+  await page.getByRole("button", { name: "Algorithm", exact: true }).click();
   await language(page, "ru");
   await expect(
     page.getByRole("button", { name: "Развернуть плеер", exact: true }),
