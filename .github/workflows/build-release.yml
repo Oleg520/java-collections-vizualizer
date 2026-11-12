@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       api_origin:
-        description: Public HTTPS API origin compiled into this release (no trailing slash)
+        description: Public HTTPS origin compiled into this release (same as the site for /api; no trailing slash)
         required: true
         type: string
 
@@ -89,7 +89,6 @@ jobs:
         run: |
           npm --prefix frontend run build
           test -f frontend/dist/index.html
-          cmp frontend/public/_headers frontend/dist/_headers
           test ! -e frontend/dist/404.html
           test ! -e frontend/dist/_redirects
       - name: Package verified release

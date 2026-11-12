@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-# Fetch annotated and lightweight tags even from a shallow Pages checkout.
+# Fetch annotated and lightweight tags even from a shallow checkout.
 # Do not mask network/authentication errors or force-replace conflicting tags.
 remote=$(git remote get-url origin)
 # A hosted checkout may use an SSH deploy key unavailable to build commands.
