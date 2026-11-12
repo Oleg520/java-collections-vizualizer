@@ -246,7 +246,8 @@ final class InstrumentedHashMap<K, V> {
         select(hash);
         if ((p = tab[i = (n - 1) & hash]) == null) {
             tab[i] = newNode(hash, key, value, null);
-            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "nodeId", tab[i].id, "nodeObjectId", tab[i].objectId,
+            emit("NODE_INSERTED", "В пустой бакет добавлен узел", "context", "EMPTY_BUCKET", "nodeId", tab[i].id,
+                    "nodeObjectId", tab[i].objectId,
                     "bucketIndex", i);
         } else {
             Node<K, V> e;
@@ -852,7 +853,7 @@ final class InstrumentedHashMap<K, V> {
                 if (lc <= UNTREEIFY_THRESHOLD) {
                     tab[index] = loHead.untreeify(map);
                     map.emit("UNTREEIFIED", "После split в нижней половине ≤ 6 узлов: список", "bucketIndex", index,
-                            "count", lc, "reason", "SPLIT_COUNT");
+                            "count", lc, "reason", "SPLIT_COUNT", "partition", "LOW");
                 } else {
                     tab[index] = loHead;
                     if (hiHead != null) // (else is already treeified)
@@ -863,7 +864,7 @@ final class InstrumentedHashMap<K, V> {
                 if (hc <= UNTREEIFY_THRESHOLD) {
                     tab[index + bit] = hiHead.untreeify(map);
                     map.emit("UNTREEIFIED", "После split в верхней половине ≤ 6 узлов: список", "bucketIndex",
-                            index + bit, "count", hc, "reason", "SPLIT_COUNT");
+                            index + bit, "count", hc, "reason", "SPLIT_COUNT", "partition", "HIGH");
                 } else {
                     tab[index + bit] = hiHead;
                     if (loHead != null)

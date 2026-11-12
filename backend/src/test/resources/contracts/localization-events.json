@@ -1,0 +1,1647 @@
+[ {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "MAP_RESET",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CONFIGURED",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "initialCapacity" : 0
+  }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "HASH_CALCULATED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "TABLE_INITIALIZED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "BUCKET_SELECTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "NODE_INSERTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "EMPTY_BUCKET"
+  }
+}, {
+  "event" : "SIZE_CHANGED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "KEY_COMPARED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "COLLISION",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "NODE_INSERTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "CHAIN_APPEND"
+  }
+}, {
+  "event" : "KEY_COMPARED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : true
+  }
+}, {
+  "event" : "VALUE_UPDATED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "THRESHOLD_EXCEEDED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "RESIZE_STARTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "TABLE_EXPANDED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "BUCKET_SPLIT",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "RESIZE_COMPLETED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CONFIGURED",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "initialCapacity" : 64
+  }
+}, {
+  "event" : "TREEIFY_STARTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "TREEIFY",
+    "direction" : "RIGHT"
+  }
+}, {
+  "event" : "TREE_RECOLORED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "NEW_NODE"
+  }
+}, {
+  "event" : "TREE_ROTATED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "direction" : "LEFT"
+  }
+}, {
+  "event" : "TREE_RECOLORED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "RED_UNCLE"
+  }
+}, {
+  "event" : "TREE_RECOLORED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "ROOT_BLACK"
+  }
+}, {
+  "event" : "TREEIFY_COMPLETED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "TREEIFY_DEFERRED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 64
+  }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "HASH_CALCULATED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "BUCKET_SELECTED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "KEY_COMPARED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "TREE_VISITED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "SEARCH",
+    "direction" : "RIGHT"
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "SEARCH",
+    "direction" : "LEFT"
+  }
+}, {
+  "event" : "TREE_VISITED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : true
+  }
+}, {
+  "event" : "LOOKUP_RESULT",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "found" : true
+  }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "HASH_CALCULATED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "BUCKET_SELECTED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "KEY_COMPARED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "TREE_VISITED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "SEARCH",
+    "direction" : "LEFT"
+  }
+}, {
+  "event" : "TREE_VISITED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : true
+  }
+}, {
+  "event" : "TREE_BALANCED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "NODE_REMOVED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "REMOVE_RESULT",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "found" : true
+  }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "UNTREEIFIED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "REMOVAL_SHAPE"
+  }
+}, {
+  "event" : "KEY_COMPARED",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : true
+  }
+}, {
+  "event" : "LIST_RESET",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "constructor" : "default"
+  }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 1
+  }
+}, {
+  "event" : "ARRAY_ALLOCATED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 1
+  }
+}, {
+  "event" : "ARRAY_COPY_STARTED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ARRAY_COPY_COMPLETED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_GROWN",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 1
+  }
+}, {
+  "event" : "ELEMENT_WRITTEN",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "LIST_RESET",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "constructor" : 0
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 2
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 3
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 4
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 5
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 6
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 7
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 8
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 9
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 10
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 11
+  }
+}, {
+  "event" : "ARRAY_ALLOCATED",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 11
+  }
+}, {
+  "event" : "CAPACITY_GROWN",
+  "operation" : {
+    "type" : "ADD",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 11
+  }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "INDEX_CHECKED",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 4
+  }
+}, {
+  "event" : "ELEMENTS_SHIFTED_RIGHT",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_WRITTEN",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "ADD_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "INDEX_CHECKED",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_READ",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENTS_SHIFTED_LEFT",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "TAIL_CLEARED",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "REMOVE_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "GET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "INDEX_CHECKED",
+  "operation" : {
+    "type" : "GET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_READ",
+  "operation" : {
+    "type" : "GET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "GET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "SET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "INDEX_CHECKED",
+  "operation" : {
+    "type" : "SET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_READ",
+  "operation" : {
+    "type" : "SET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_REPLACED",
+  "operation" : {
+    "type" : "SET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "SET_AT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 10
+  }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 24
+  }
+}, {
+  "event" : "ARRAY_ALLOCATED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 24
+  }
+}, {
+  "event" : "ARRAY_COPY_STARTED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ARRAY_COPY_COMPLETED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_RESERVED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 24
+  }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ARRAY_ALLOCATED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 1
+  }
+}, {
+  "event" : "ARRAY_COPY_STARTED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ARRAY_COPY_COMPLETED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_TRIMMED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 1
+  }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "CLEAR",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "LIST_CLEARED",
+  "operation" : {
+    "type" : "CLEAR",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "CLEAR",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ARRAY_ALLOCATED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 0
+  }
+}, {
+  "event" : "CAPACITY_TRIMMED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : 0
+  }
+}, {
+  "event" : "OPERATION_STARTED",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_COMPARED",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : true
+  }
+}, {
+  "event" : "ELEMENT_FOUND",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "OPERATION_COMPLETED",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "ELEMENT_COMPARED",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "ELEMENT_NOT_FOUND",
+  "operation" : {
+    "type" : "INDEX_OF",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CONFIGURED",
+  "operation" : {
+    "type" : "RESET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "initialCapacity" : 16
+  }
+}, {
+  "event" : "TABLE_ABSENT",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "LOOKUP_RESULT",
+  "operation" : {
+    "type" : "GET",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "found" : false
+  }
+}, {
+  "event" : "TABLE_ABSENT",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "REMOVE_RESULT",
+  "operation" : {
+    "type" : "REMOVE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "found" : false
+  }
+}, {
+  "event" : "TREE_VISITED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "equal" : false
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "INSERT",
+    "direction" : "LEFT"
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "INSERT",
+    "direction" : "RIGHT"
+  }
+}, {
+  "event" : "NODE_INSERTED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "TREE_INSERT"
+  }
+}, {
+  "event" : "TREE_BALANCED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "UNTREEIFIED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "SPLIT_COUNT",
+    "partition" : "LOW"
+  }
+}, {
+  "event" : "TREE_DIRECTION",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "context" : "TREEIFY",
+    "direction" : "LEFT"
+  }
+}, {
+  "event" : "TREE_ROTATED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "direction" : "RIGHT"
+  }
+}, {
+  "event" : "UNTREEIFIED",
+  "operation" : {
+    "type" : "PUT",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "reason" : "SPLIT_COUNT",
+    "partition" : "HIGH"
+  }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "TRIM_TO_SIZE",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : { }
+}, {
+  "event" : "CAPACITY_CHECKED",
+  "operation" : {
+    "type" : "ENSURE_CAPACITY",
+    "key" : null,
+    "value" : null,
+    "index" : null,
+    "element" : null,
+    "minCapacity" : null
+  },
+  "details" : {
+    "minimumCapacity" : -1
+  }
+} ]
