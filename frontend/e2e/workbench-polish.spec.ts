@@ -157,7 +157,23 @@ test("collection dropdown stays beside the breadcrumbs in one compact left-align
   await expectServerSize(page, 0);
   await collection.focus();
   await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Русский", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "English", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(github).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    page.getByRole("button", { name: "English", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    page.getByRole("button", { name: "Русский", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(collection).toBeFocused();
   await expect(collection).toHaveCSS("outline-style", "solid");

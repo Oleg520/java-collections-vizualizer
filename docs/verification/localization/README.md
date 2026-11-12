@@ -1,6 +1,7 @@
 # RU/EN local visual review — Issue #9
 
-Status: implementation ready for owner visual review; **owner approval pending**.
+Status: **owner visual approval received on 2026-11-12**. Final local validation
+is recorded in [final-validation.md](final-validation.md).
 Source: `feat/ru-en-localization`, frontend implementation `4cdd796`, targeted E2E
 `156ce7c`; Java event metadata/fixture `eeeb68d`. Captured 2026-11-12 against Vite
 development UI and the real Java backend. No production build/deployment is implied.
@@ -52,11 +53,10 @@ The local test backend was restarted using the existing broad E2E configuration
 WORK_RATE_LIMIT 5000); the rerun passed. No production configuration was changed.
 The manual-review backend is restarted with ordinary defaults afterward.
 
-Full final validation, production frontend build, complete E2E and strict lifecycle
-suite are intentionally deferred until explicit owner visual approval. Existing
-RU test selectors were updated for localized tabs/field labels; the full suite has
-not yet been rerun. Chromium was used; other browser engines remain unverified.
-No push, PR, merge or deployment has been performed.
+The checks above document visual iteration before owner approval. See the final
+validation report for the subsequent complete suite and publication handoff.
+Chromium was used; other browser engines remain unverified. Merge and deployment
+remain unauthorized. GitHub CI monitoring is left to the owner as requested.
 
 ## Manual review
 
@@ -75,6 +75,5 @@ http://localhost:8080/api/v1/health.
    focus, header spacing and internal scrolling. Reload after selecting English
    to check language persistence (session/history still follow normal reload rules).
 
-After visual feedback, iterate locally. Only after approval run the required final
-checks, push and open one PR with `Closes #9`; merging/deployment require separate
-owner authorization.
+Visual review is complete. The owner authorized final validation, push and one PR
+with `Closes #9`; merging/deployment still require separate authorization.
