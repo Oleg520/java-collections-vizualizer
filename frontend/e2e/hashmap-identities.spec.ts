@@ -39,7 +39,7 @@ test("local splits use the standard sidebar, diagram, playback and node inspecto
   let firstLogicalId = 0;
   const displayedObject = page
     .locator(".technical-details dl > div")
-    .filter({ has: page.locator("dt", { hasText: /^objectId$/ }) })
+    .filter({ has: page.locator("dt", { hasText: / · objectId$/ }) })
     .locator("dd");
   for (const low of [6, 2]) {
     const final = page.waitForResponse(

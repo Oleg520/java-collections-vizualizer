@@ -1,3 +1,5 @@
+import { eventExplanation } from "../i18n/events";
+import { useI18n } from "../i18n/LocaleProvider";
 import { useState } from "react";
 import { operationLabel } from "../presentation/operationLabel";
 import {
@@ -26,28 +28,29 @@ export function PlaybackPanel({
   historical?: boolean;
   stale?: boolean;
 }) {
+  const { locale, t } = useI18n();
   const { cursor, playing, speed, setSpeed, trace, navigate, togglePlay } =
     playback;
   const [collapsed, setCollapsed] = useState(false);
   const snapshotStatus = stale
-    ? "Синхронизация не подтверждена"
+    ? t("PlaybackPanel.synchronization_unconfirmed")
     : step?.snapshot.phase === "WORKING"
-      ? "Промежуточный снимок"
+      ? t("PlaybackPanel.working_snapshot")
       : historical
-        ? "Исторический снимок"
+        ? t("PlaybackPanel.historical_snapshot")
         : undefined;
   return (
     <section
       id="playback"
       tabIndex={-1}
       className={`playback panel${collapsed ? " is-collapsed" : ""}`}
-      aria-label="Управление воспроизведением"
+      aria-label={t("PlaybackPanel.playback_controls")}
     >
       <div className="playback-top">
         <div className="transport">
           <button
             className="icon-button"
-            aria-label="В начало"
+            aria-label={t("PlaybackPanel.go_to_beginning")}
             disabled={!trace}
             onClick={() => navigate(0)}
           >
@@ -55,7 +58,7 @@ export function PlaybackPanel({
           </button>
           <button
             className="icon-button"
-            aria-label="Шаг назад"
+            aria-label={t("PlaybackPanel.step_back")}
             disabled={!trace || cursor === 0}
             onClick={() => navigate(cursor - 1, "step")}
           >
@@ -63,7 +66,7 @@ export function PlaybackPanel({
           </button>
           <button
             className="play-button"
-            aria-label={playing ? "Пауза" : "Воспроизвести"}
+            aria-label={playing ? t("pause") : t("play")}
             disabled={!trace}
             onClick={togglePlay}
           >
@@ -75,7 +78,7 @@ export function PlaybackPanel({
           </button>
           <button
             className="icon-button"
-            aria-label="Шаг вперёд"
+            aria-label={t("PlaybackPanel.step_forward")}
             disabled={!trace || cursor === trace.steps.length - 1}
             onClick={() => navigate(cursor + 1, "step")}
           >
@@ -83,7 +86,7 @@ export function PlaybackPanel({
           </button>
           <button
             className="icon-button"
-            aria-label="В конец"
+            aria-label={t("PlaybackPanel.go_to_end")}
             disabled={!trace}
             onClick={() => navigate((trace?.steps.length ?? 1) - 1)}
           >
@@ -91,17 +94,17 @@ export function PlaybackPanel({
           </button>
         </div>
         <div className="step-counter">
-          <span className="step-counter-label">ШАГ</span>
+          <span className="step-counter-label">{t("PlaybackPanel.step")}</span>
           <b data-testid="step-number">{trace ? cursor + 1 : 0}</b>
           <span>/ {trace?.steps.length ?? 0}</span>
         </div>
         <div
           className="step-explanation"
           role="region"
-          aria-label="Пояснение текущего шага"
+          aria-label={t("PlaybackPanel.current_step_explanation")}
           tabIndex={0}
           hidden={collapsed}
-          title={step?.message}
+          title={step ? eventExplanation(locale, step) : undefined}
         >
           <span className="step-symbol">
             {step?.event === "OPERATION_COMPLETED" ? (
@@ -112,7 +115,8 @@ export function PlaybackPanel({
           </span>
           <div>
             <strong>
-              {step?.message ?? "Операции превращаются в понятные шаги"}
+              {(step ? eventExplanation(locale, step) : undefined) ??
+                t("PlaybackPanel.operations_become_understandable_steps")}
             </strong>
             <code>
               {snapshotStatus && (
@@ -123,15 +127,25 @@ export function PlaybackPanel({
               {step?.details.formula
                 ? String(step.details.formula)
                 : step
-                  ? `${step.event} · ${operationLabel(step.operation)}`
-                  : "Воспроизведение управляет временем, а не состоянием Java-коллекции."}
+                  ? `${step.event} · ${operationLabel(step.operation, locale, trace?.collection)}`
+                  : t(
+                      "PlaybackPanel.playback_controls_time_not_java_collection",
+                    )}
             </code>
           </div>
         </div>
         <button
           className="icon-button collapse-playback"
-          aria-label={collapsed ? "Развернуть плеер" : "Свернуть плеер"}
-          title={collapsed ? "Развернуть плеер" : "Свернуть плеер"}
+          aria-label={
+            collapsed
+              ? t("PlaybackPanel.expand_player")
+              : t("PlaybackPanel.collapse_player")
+          }
+          title={
+            collapsed
+              ? t("PlaybackPanel.expand_player")
+              : t("PlaybackPanel.collapse_player")
+          }
           aria-expanded={!collapsed}
           aria-controls="playback-details"
           onClick={() => setCollapsed((value) => !value)}
@@ -142,7 +156,7 @@ export function PlaybackPanel({
       <div id="playback-details" hidden={collapsed}>
         <div className="playback-timeline">
           <input
-            aria-label="Позиция воспроизведения"
+            aria-label={t("PlaybackPanel.playback_position")}
             className="timeline"
             type="range"
             min="0"
@@ -152,9 +166,9 @@ export function PlaybackPanel({
             disabled={!trace}
           />
           <label className="speed-control">
-            <span>Скорость</span>
+            <span>{t("PlaybackPanel.speed")}</span>
             <select
-              aria-label="Скорость воспроизведения"
+              aria-label={t("PlaybackPanel.playback_speed")}
               value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
             >
@@ -178,10 +192,11 @@ export function OperationHistory({
   playback: ReturnType<typeof useTracePlayback>;
   onSelectHistory: (index: number) => void;
 }) {
+  const { t, locale } = useI18n();
   return (
     <div className="history-bar">
       <Layers size={14} />
-      <label htmlFor="history">История операций</label>
+      <label htmlFor="history">{t("PlaybackPanel.operation_history")}</label>
       <select
         id="history"
         value={historyIndex}
@@ -189,14 +204,14 @@ export function OperationHistory({
           onSelectHistory(Number(e.target.value));
         }}
       >
-        <option value="-1">Текущее состояние сервера</option>
+        <option value="-1">{t("PlaybackPanel.current_server_state")}</option>
         {history.map((t, i) => (
           <option key={i} value={i}>
-            {i + 1}. {operationLabel(t.operation)}
+            {i + 1}. {operationLabel(t.operation, locale, t.collection)}
           </option>
         ))}
       </select>
-      <span>последние 12</span>
+      <span>{t("PlaybackPanel.last_12")}</span>
     </div>
   );
 }

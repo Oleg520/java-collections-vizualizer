@@ -107,3 +107,41 @@ it("checks backend capability before any create or mutation and never falls back
   expect(fetch.mock.calls[0][0]).toContain("/health");
   expect(fetch.mock.calls[0][1].method).toBe("GET");
 });
+
+it("retains additive validation metadata without requiring it from older servers", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            schemaVersion: 1,
+            code: "INVALID_INPUT",
+            message: "legacy",
+            reason: "INDEX_RANGE",
+            params: { index: 7, size: 2 },
+          }),
+          { status: 400 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            schemaVersion: 1,
+            code: "INVALID_INPUT",
+            message: "legacy",
+          }),
+          { status: 400 },
+        ),
+      ),
+  );
+  await expect(api.get("tab")).rejects.toMatchObject({
+    code: "INVALID_INPUT",
+    reason: "INDEX_RANGE",
+    params: { index: 7, size: 2 },
+  });
+  const legacy = await api.get("tab").catch((e) => e);
+  expect(legacy.reason).toBeUndefined();
+  expect(legacy.params).toBeUndefined();
+});

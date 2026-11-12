@@ -18,6 +18,8 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     public retryAt = 0,
+    public reason?: string,
+    public params?: Record<string, unknown>,
   ) {
     super(message);
   }
@@ -101,6 +103,12 @@ async function request<T>(path: string, data?: unknown): Promise<T> {
         response.status,
         code,
         retryAt,
+        typeof payload?.reason === "string" ? payload.reason : undefined,
+        payload?.params &&
+        typeof payload.params === "object" &&
+        !Array.isArray(payload.params)
+          ? payload.params
+          : undefined,
       );
     }
     if (payload === null)

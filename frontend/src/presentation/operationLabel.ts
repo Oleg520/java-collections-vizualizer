@@ -1,14 +1,22 @@
+import { scenarioText } from "../i18n/scenarios";
+import type { Locale } from "../i18n/locale";
 import type { Operation } from "../api/types";
 import { keyLabel, valueLabel } from "../features/hashmap/presentation";
 import { elementLabel } from "../features/arraylist/presentation";
 
-export function operationLabel(op: Operation): string {
+export function operationLabel(
+  op: Operation,
+  locale?: Locale,
+  collection = "HASH_MAP",
+): string {
   const key = op.key ? keyLabel(op.key) : "";
   const element = op.element ? elementLabel(op.element) : "";
   const index = op.index ?? "";
   switch (op.type) {
     case "SCENARIO":
-      return `demo / ${op.value}`;
+      return locale
+        ? scenarioText(locale, collection, op.value ?? "").title
+        : `demo / ${op.value}`;
     case "PUT":
       return `put(${key}, ${valueLabel(op.value)})`;
     case "GET":

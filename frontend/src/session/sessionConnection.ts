@@ -1,3 +1,4 @@
+import { ClientError } from "../i18n/errors";
 import { api, ApiError } from "../api/api";
 import type { CollectionType, Session, SessionTrace } from "../api/types/index";
 
@@ -41,9 +42,7 @@ export class SessionConnection {
       if (!active()) return null; // Coalesce switches that have not started yet.
       this.checkCooldown();
       if (!this.session && creationFailure !== this.creationFailure)
-        throw new Error(
-          "Предыдущее создание сессии завершилось ошибкой. Подключитесь повторно явным действием.",
-        );
+        throw new ClientError("errors.createFailed");
       if (this.needsRefresh) await this.read();
       if (!active()) return null;
       if (this.session) {
@@ -83,12 +82,8 @@ export class SessionConnection {
   execute(request: (session: Session) => Promise<SessionTrace>) {
     return this.serialize(async () => {
       this.checkCooldown();
-      if (this.needsRefresh)
-        throw new Error(
-          "Сначала обновите состояние сессии. Результат предыдущей операции неизвестен.",
-        );
-      if (!this.session)
-        throw new Error("Создайте сессию перед выполнением команды.");
+      if (this.needsRefresh) throw new ClientError("errors.refreshRequired");
+      if (!this.session) throw new ClientError("errors.createRequired");
       try {
         const response = await request(this.session);
         this.session = {

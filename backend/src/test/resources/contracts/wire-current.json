@@ -298,6 +298,7 @@
         "stage" : "mutation",
         "message" : "В пустой бакет добавлен узел",
         "details" : {
+          "context" : "EMPTY_BUCKET",
           "nodeId" : 1,
           "bucketIndex" : 10,
           "nodeObjectId" : 1
@@ -1032,6 +1033,7 @@
         "stage" : "mutation",
         "message" : "В пустой бакет добавлен узел",
         "details" : {
+          "context" : "EMPTY_BUCKET",
           "nodeId" : 1,
           "bucketIndex" : 10,
           "nodeObjectId" : 1

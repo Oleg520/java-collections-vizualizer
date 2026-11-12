@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n/LocaleProvider";
 import { resolveSelection, type NodeSelection } from "./identity";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Boxes, Maximize, Minus, Plus, ScanLine } from "lucide-react";
@@ -34,6 +35,7 @@ export function Diagram({
   onSelect: (node: MapNode) => void;
   selectedId?: NodeSelection;
 }) {
+  const { t } = useI18n();
   const groupingCapacity =
     resizeGroupingCapacity(trace, cursor) || state.pendingCapacity;
   const graph = useMemo(
@@ -195,19 +197,20 @@ export function Diagram({
   return (
     <section
       className={`visualization panel hashmap-diagram ${physical ? "has-physical" : ""} ${graph.expanding ? "is-resizing" : ""}`}
-      aria-label="Визуализация HashMap"
+      aria-label={t("hashmap.Diagram.hashmap_visualization")}
     >
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">MEMORY VIEW</span>
+          <span className="eyebrow">{t("memoryView")}</span>
           <h2>
-            Внутри HashMap <span className="small-tag">Java 21</span>
+            {t("hashmap.Diagram.inside_hashmap")}{" "}
+            <span className="small-tag">Java 21</span>
           </h2>
         </div>
         <div className="zoom-controls">
           <button
             className="icon-button"
-            aria-label="Уменьшить масштаб"
+            aria-label={t("hashmap.Diagram.zoom_out")}
             onClick={() => setZoom(Math.max(0.1, scale - 0.15))}
           >
             <Minus size={15} />
@@ -215,22 +218,22 @@ export function Diagram({
           <span>{Math.round(scale * 100)}%</span>
           <button
             className="icon-button"
-            aria-label="Масштаб 100%"
+            aria-label={t("hashmap.Diagram.zoom_100")}
             onClick={() => setZoom(1)}
           >
             <code>1:1</code>
           </button>
           <button
             className="icon-button"
-            aria-label="Увеличить масштаб"
+            aria-label={t("hashmap.Diagram.zoom_in")}
             onClick={() => setZoom(Math.min(1.6, scale + 0.15))}
           >
             <Plus size={15} />
           </button>
           <button
             className="icon-button"
-            aria-label="Вместить по ширине"
-            title="Вместить по ширине"
+            aria-label={t("hashmap.Diagram.fit_to_width")}
+            title={t("hashmap.Diagram.fit_to_width")}
             onClick={() => {
               setFitReference({ trace, width: cameraWidth });
               setZoom("fit");
@@ -245,7 +248,7 @@ export function Diagram({
           </button>
           <button
             className="icon-button"
-            aria-label="Сбросить масштаб"
+            aria-label={t("hashmap.Diagram.reset_zoom")}
             onClick={resetZoom}
           >
             <ScanLine size={15} />
@@ -255,28 +258,31 @@ export function Diagram({
       <div className="bucket-overview">
         {graph.expanding ? (
           <div className="resize-overview">
-            <div className="resize-counts" aria-label="Состояние переноса">
-              <strong>Map: {state.size} записей</strong>
+            <div
+              className="resize-counts"
+              aria-label={t("hashmap.Diagram.transfer_state")}
+            >
+              <strong>Map: {t("entryCount", { count: state.size })}</strong>
               <span>
-                Новая таблица:{" "}
+                {t("hashmap.Diagram.new_table")}{" "}
                 <b>
                   {state.buckets.length}/{state.capacity}
                 </b>{" "}
-                занято
+                {t("hashmap.Diagram.occupied")}
               </span>
               <span>
-                Старая таблица:{" "}
+                {t("hashmap.Diagram.old_table")}{" "}
                 <b>
                   {graph.oldOccupied}/{graph.oldCapacity}
                 </b>{" "}
-                ожидают переноса
+                {t("hashmap.Diagram.awaiting_transfer")}
               </span>
             </div>
             <div className="resize-focus">
               <label>
-                Показать{" "}
+                {t("hashmap.Diagram.show")}{" "}
                 <select
-                  aria-label="Фокус переноса"
+                  aria-label={t("hashmap.Diagram.transfer_focus")}
                   value={focusChoice}
                   onChange={(e) =>
                     focusOn(
@@ -286,11 +292,16 @@ export function Diagram({
                     )
                   }
                 >
-                  <option value="auto">По текущему шагу</option>
-                  <option value="all">Все бакеты</option>
+                  <option value="auto">
+                    {t("hashmap.Diagram.follow_current_step")}
+                  </option>
+                  <option value="all">
+                    {t("hashmap.Diagram.all_buckets")}
+                  </option>
                   {groups.map((i) => (
                     <option value={i} key={i}>
-                      Перенос [{i}] → [{i}], [{i + graph.oldCapacity}]
+                      {t("hashmap.Diagram.transfer")}
+                      {i}] → [{i}], [{i + graph.oldCapacity}]
                     </option>
                   ))}
                 </select>
@@ -300,21 +311,33 @@ export function Diagram({
                 aria-expanded={tablesOpen}
                 onClick={() => setTablesOpen((v) => !v)}
               >
-                {tablesOpen ? "Скрыть массив" : "Массив новой таблицы"}
+                {tablesOpen
+                  ? t("hashmap.Diagram.hide_array")
+                  : t("hashmap.Diagram.new_table_array")}
               </button>
             </div>
             <div className="resize-progress">
               {graph.transferObjects > 0
-                ? `Временные объекты: ${graph.transferObjects} · вне табличных цепочек`
-                : "Старые бакеты сохраняют записи до переноса"}
-              {group !== null && <span> · фокус [{group}]</span>}
+                ? t("hashmap.Diagram.temporary_objects_outside_table_chains", {
+                    "0": graph.transferObjects,
+                  })
+                : t(
+                    "hashmap.Diagram.old_buckets_retain_entries_until_transfer",
+                  )}
+              {group !== null && (
+                <span>
+                  {" "}
+                  {t("hashmap.Diagram.focus")}
+                  {group}]
+                </span>
+              )}
             </div>
           </div>
         ) : (
           <div className="array-heading">
             <code>
               {graph.starting
-                ? "Старая table · resize начинается"
+                ? t("hashmap.Diagram.old_table_resize_begins")
                 : "Node<K, V>[] table"}
             </code>
             <label className="check-label">
@@ -323,7 +346,7 @@ export function Diagram({
                 checked={hideEmpty}
                 onChange={(e) => setHideEmpty(e.target.checked)}
               />{" "}
-              Скрыть пустые
+              {t("hashmap.Diagram.hide_empty")}
             </label>
           </div>
         )}
@@ -334,12 +357,15 @@ export function Diagram({
                 className="bucket-array"
                 role="region"
                 tabIndex={0}
-                aria-label="Массив бакетов"
+                aria-label={t("hashmap.Diagram.bucket_array")}
               >
                 {indexList.map((i) => (
                   <button
                     key={i}
-                    title={`Бакет ${i}: ${occupied.get(i)?.kind ?? "пустой"}`}
+                    title={t("hashmap.Diagram.bucket", {
+                      "0": i,
+                      "1": occupied.get(i)?.kind ?? t("emptyBucket"),
+                    })}
                     className={`bucket-cell ${occupied.has(i) ? "occupied" : ""} ${activeBucket === i || focusedBucket === i ? "active" : ""}`}
                     onClick={() => {
                       setFocusedBucket(i === focusedBucket ? null : i);
@@ -368,15 +394,19 @@ export function Diagram({
               </div>
               {!graph.expanding && (
                 <div className="array-caption">
-                  {state.capacity} бакетов · {state.buckets.length} занято{" "}
+                  {state.capacity} {t("hashmap.Diagram.buckets")}{" "}
+                  {state.buckets.length}
+                  {t("hashmap.Diagram.occupied")}{" "}
                   {hideEmpty &&
-                    `· ${state.capacity - state.buckets.length} пустых скрыто`}
+                    t("hashmap.Diagram.empty_hidden", {
+                      "0": state.capacity - state.buckets.length,
+                    })}
                   {focusedBucket !== null && focusedBucket < state.capacity && (
                     <span>
                       {" "}
                       · [{focusedBucket}]{" "}
                       {occupied.get(focusedBucket)?.kind ??
-                        "null — пустой бакет"}
+                        t("hashmap.Diagram.null_empty_bucket")}
                     </span>
                   )}
                 </div>
@@ -385,14 +415,15 @@ export function Diagram({
           ) : (
             <div className="unallocated">
               <code>table = null</code>
-              <span>Массив будет выделен при первом put.</span>
+              <span>{t("hashmap.Diagram.the_array_is_allocated_on_the")}</span>
             </div>
           ))}
         {step?.event === "BUCKET_SPLIT" && (
           <div className="split-explanation">
-            <span>SPLIT</span> <code>{String(step.details.formula)}</code>
+            <span>{t("splitLabel")}</span>{" "}
+            <code>{String(step.details.formula)}</code>
             <span>
-              bucket [{String(step.details.fromBucket)}] → [
+              {t("bucketLabel")} [{String(step.details.fromBucket)}] → [
               {String(step.details.toBucket)}]
             </span>
           </div>
@@ -408,11 +439,11 @@ export function Diagram({
               setRelationship(undefined);
             }}
           />{" "}
-          Физические связи
+          {t("hashmap.Diagram.physical_links")}
         </label>
         {group !== null && (
           <button className="subtle-button" onClick={() => focusOn("all")}>
-            Все бакеты
+            {t("hashmap.Diagram.all_buckets")}
           </button>
         )}
         {selected && (
@@ -420,24 +451,26 @@ export function Diagram({
             className="icon-button"
             onClick={() => reveal(selected.objectId)}
           >
-            К выбранному узлу
+            {t("hashmap.Diagram.go_to_selected_node")}
           </button>
         )}
         {!selected && !graph.expanding && (
-          <span className="navigation-hint">Нажмите на бакет или узел</span>
+          <span className="navigation-hint">
+            {t("hashmap.Diagram.click_a_bucket_or_node")}
+          </span>
         )}
       </div>
       {physical && (
         <div className="physical-tools">
           <span>
-            {graph.nodes.size} физических объектов · {graph.unlinked} вне
-            цепочек
+            {graph.nodes.size} {t("hashmap.Diagram.physical_objects")}{" "}
+            {graph.unlinked} {t("hashmap.Diagram.outside_chains")}
           </span>
           {selected && outgoing.length > 0 && (
             <label>
-              Ссылка{" "}
+              {t("hashmap.Diagram.link")}{" "}
               <select
-                aria-label="Физическая связь"
+                aria-label={t("hashmap.Diagram.physical_link")}
                 value={
                   selectedEdge?.from === selected.objectId
                     ? selectedEdge.id
@@ -448,7 +481,10 @@ export function Diagram({
                   if (edge) chooseEdge(edge);
                 }}
               >
-                <option value="">Выберите поле obj {selected.objectId}</option>
+                <option value="">
+                  {t("hashmap.Diagram.select_a_field_of_obj")}{" "}
+                  {selected.objectId}
+                </option>
                 {outgoing.map((e) => (
                   <option key={e.id} value={e.id}>
                     {e.field} → obj {e.to}
@@ -470,14 +506,14 @@ export function Diagram({
                   className="subtle-button"
                   onClick={() => reveal(selectedEdge.from!)}
                 >
-                  К источнику
+                  {t("hashmap.Diagram.go_to_source")}
                 </button>
               )}
               <button
                 className="subtle-button"
                 onClick={() => reveal(selectedEdge.to)}
               >
-                К цели
+                {t("hashmap.Diagram.go_to_target")}
               </button>
             </div>
           )}
@@ -489,7 +525,7 @@ export function Diagram({
         ref={scrollRef}
         tabIndex={0}
         role="region"
-        aria-label="Прокручиваемая схема HashMap"
+        aria-label={t("hashmap.Diagram.scrollable_hashmap_diagram")}
       >
         {layout.nodes.length === 0 && (
           <div className="empty-diagram">
@@ -498,13 +534,14 @@ export function Diagram({
             </div>
             <h3>
               {state.capacity
-                ? "Все бакеты пусты"
-                : "Всё начинается с первого ключа"}
+                ? t("hashmap.Diagram.all_buckets_are_empty")
+                : t("hashmap.Diagram.it_starts_with_the_first_key")}
             </h3>
             <p>
-              Выполните <code>put</code> или выберите готовый сценарий.
+              {t("hashmap.Diagram.execute")} <code>put</code>{" "}
+              {t("hashmap.Diagram.or_choose_a_ready_made_scenario")}
               <br />
-              Каждый переход здесь выполняет Java-движок.
+              {t("hashmap.Diagram.the_java_engine_performs_every_transition")}
             </p>
           </div>
         )}
@@ -530,16 +567,16 @@ export function Diagram({
       </div>
       <div className="diagram-legend">
         <span>
-          <i className="legend-list" /> Узел списка
+          <i className="legend-list" /> {t("hashmap.Diagram.list_node")}
         </span>
         <span>
-          <i className="legend-red" /> R · Красный
+          <i className="legend-red" /> {t("hashmap.Diagram.r_red")}
         </span>
         <span>
-          <i className="legend-black" /> B · Чёрный
+          <i className="legend-black" /> {t("hashmap.Diagram.b_black")}
         </span>
         <span className="legend-hint">
-          Нажмите на узел, чтобы изучить ссылки
+          {t("hashmap.Diagram.click_a_node_to_explore_its")}
         </span>
       </div>
     </section>

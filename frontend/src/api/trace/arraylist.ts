@@ -1,3 +1,4 @@
+import { ClientError } from "../../i18n/errors";
 import type {
   ArrayBuffer,
   ArraySnapshot,
@@ -20,12 +21,12 @@ export interface CompactArrayTrace extends Omit<SessionTrace, "trace"> {
 export function decodeArrayTrace(response: CompactArrayTrace): SessionTrace {
   const ref = <T>(pool: T[], index: number): T => {
     if (!Number.isInteger(index) || index < 0 || index >= pool.length)
-      throw new Error("Повреждённая ссылка в trace");
+      throw new ClientError("errors.corruptReference");
     return pool[index];
   };
   const buffers: ArrayBuffer[] = response.bufferPool.map((b) => {
     if (b.capacity !== b.cellRefs.length)
-      throw new Error("Повреждённый буфер trace");
+      throw new ClientError("errors.corruptBuffer");
     return {
       id: b.id,
       capacity: b.capacity,

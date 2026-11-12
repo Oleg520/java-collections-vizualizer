@@ -1,3 +1,4 @@
+import { useI18n } from "../../i18n/LocaleProvider";
 import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { MapNode, Step, Trace } from "../../api/types";
@@ -45,6 +46,7 @@ export function HashMapGraph({
   playing: boolean;
   view: string;
 }) {
+  const { t } = useI18n();
   const transition = useDiagramTransition(
     layout,
     trace,
@@ -110,7 +112,7 @@ export function HashMapGraph({
       height={layout.height * scale}
       viewBox={`0 0 ${cameraWidth} ${layout.height}`}
       role="img"
-      aria-label="Узлы, цепочки и красно-чёрные деревья HashMap"
+      aria-label={t("hashmap.HashMapGraph.hashmap_nodes_chains_and_red_black")}
     >
       <defs>
         <marker
@@ -143,29 +145,30 @@ export function HashMapGraph({
           />
           <text x="30" y={b.y + 27} className="svg-bucket">
             {b.area.source === "transfer"
-              ? "ВРЕМЕННЫЕ"
+              ? t("hashmap.HashMapGraph.temporary")
               : b.area.source === "old" || graph.starting
-                ? "СТАРАЯ"
+                ? t("hashmap.HashMapGraph.old")
                 : graph.expanding
-                  ? "НОВАЯ"
-                  : "БАКЕТ"}{" "}
+                  ? t("hashmap.HashMapGraph.new")
+                  : t("hashmap.HashMapGraph.bucket")}{" "}
             [{b.index}]
           </text>
           <text x="30" y={b.y + 45} className="svg-kind">
             {b.kind === "TREE"
-              ? "RB TREE"
+              ? t("rbTree")
               : b.kind === "TRANSFER"
-                ? "PHYSICAL OBJECTS"
-                : "LINKED LIST"}
+                ? t("physicalObjects")
+                : t("linkedList")}
           </text>
           <title>
-            {areaLabel(b.area, graph)}; размещение объектов snapshot
+            {areaLabel(b.area, graph, t)}
+            {t("hashmap.HashMapGraph.snapshot_object_placement")}
           </title>
         </g>
       ))}
       {layout.edges.map((edge) => {
         const geometry = edgeGeometry(edge, transition.to, bands, cameraWidth)!;
-        const title = `${edge.from === null ? `${edge.areaId} snapshot` : `obj ${edge.from}`} · ${edge.field} → obj ${edge.to}${geometry.external ? ", вне фокуса" : ""}`;
+        const title = `${edge.from === null ? `${edge.areaId} snapshot` : `obj ${edge.from}`} · ${edge.field} → obj ${edge.to}${geometry.external ? t("outsideFocusSuffix") : ""}`;
         return (
           <g
             key={edge.id}
@@ -204,7 +207,10 @@ export function HashMapGraph({
               className="svg-edge-label"
             >
               {geometry.external
-                ? `${edge.label} → obj ${edge.to} · вне фокуса`
+                ? t("hashmap.HashMapGraph.obj_outside_focus", {
+                    "0": edge.label,
+                    "1": edge.to,
+                  })
                 : edge.label}
             </text>
             <title>{title}</title>
@@ -244,6 +250,7 @@ function Node({
   onSelect: (node: MapNode) => void;
   register: (element: SVGGElement | null) => void;
 }) {
+  const { t } = useI18n();
   return (
     <g
       ref={register}
@@ -254,7 +261,19 @@ function Node({
       data-linked={node.linked}
       role="button"
       tabIndex={0}
-      aria-label={`Узел ${keyLabel(node.key)}, запись ${node.id}, объект ${node.objectId}, ${areaId}, ${node.red === null ? "список" : node.red ? "красный" : "чёрный"}${node.linked ? "" : ", вне цепочки"}`}
+      aria-label={t("hashmap.HashMapGraph.node_entry_object", {
+        "0": keyLabel(node.key),
+        "1": node.id,
+        "2": node.objectId,
+        "3": areaId,
+        "4":
+          node.red === null
+            ? t("listNode")
+            : node.red
+              ? t("redNode")
+              : t("blackNode"),
+        "5": node.linked ? "" : t("outsideChainSuffix"),
+      })}
       onClick={() => onSelect(node)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -289,7 +308,7 @@ function Node({
       </text>
       {!node.linked && (
         <text x="57" y="95" textAnchor="middle" className="svg-node-id">
-          вне цепочки
+          {t("hashmap.HashMapGraph.outside_chain")}
         </text>
       )}
     </g>

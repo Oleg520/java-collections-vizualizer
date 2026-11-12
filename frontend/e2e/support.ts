@@ -44,7 +44,7 @@ export const test = base.extend<{ observeSessions: void }>({
 /** The server row was removed; assert real committed Java state and an observed revision. */
 export async function expectServerSize(page: Page, size: number) {
   // Do not compete with a pending mutation for the per-client admission slot.
-  await expect(page.locator(".connection")).not.toContainText("Java выполняет");
+  await expect(page.locator("main")).toHaveAttribute("aria-busy", "false");
   await expect
     .poll(
       async () => {

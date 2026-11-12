@@ -90,10 +90,10 @@ for (const compact of [false, true]) {
         ).toHaveCount(Object.keys(steps[index].details).length);
         expect(await geometry(page)).toEqual(baseline);
       }
-      await page.getByRole("button", { name: /Algorithm/ }).click();
+      await page.getByRole("button", { name: /Алгоритм/ }).click();
       expect(await geometry(page)).toEqual(baseline);
       await accessible(page, page.locator(".algorithm-list > a"));
-      await page.getByRole("button", { name: /Events/ }).click();
+      await page.getByRole("button", { name: /События/ }).click();
       await page.locator(".event-row").nth(seven).click();
       await accessible(
         page,
@@ -312,7 +312,7 @@ test("inspector splitter supports pointer, keyboard and touch without changing d
   await page.locator(".event-row").last().focus();
   await accessible(page, page.locator(".event-row").last());
   expect(await geometry(page)).toEqual(baseline);
-  await page.getByRole("button", { name: /Algorithm/ }).click();
+  await page.getByRole("button", { name: /Алгоритм/ }).click();
   await expect(splitter).toHaveAttribute("aria-valuenow", "15");
   await accessible(page, page.locator(".algorithm-list > a"));
 });

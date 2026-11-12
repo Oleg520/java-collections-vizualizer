@@ -1,5 +1,14 @@
 /** Show the fields supplied by Java without inferring a result from truthiness or null. */
-export function DetailValue({ value }: { value: unknown }) {
+type Model = "result" | "element" | "key";
+export function DetailValue({
+  value,
+  model,
+  label = (key) => key,
+}: {
+  value: unknown;
+  model?: Model;
+  label?: (key: string) => string;
+}) {
   if (value === null) return <code>null</code>;
   if (Array.isArray(value)) {
     return value.length ? (
@@ -27,9 +36,17 @@ export function DetailValue({ value }: { value: unknown }) {
                 : undefined
             }
           >
-            <dt>{key}</dt>
+            <dt>{model ? label(key) : key}</dt>
             <dd>
-              <DetailValue value={item} />
+              <DetailValue
+                value={item}
+                label={label}
+                model={
+                  model === "result" && key === "element"
+                    ? "element"
+                    : undefined
+                }
+              />
             </dd>
           </div>
         ))}

@@ -1,3 +1,5 @@
+import type { Message } from "../../i18n/errors";
+import { useI18n } from "../../i18n/LocaleProvider";
 import { useState, type FormEvent, type ReactNode } from "react";
 import type {
   ArrayCommand,
@@ -6,18 +8,6 @@ import type {
   Session,
 } from "../../api/types/index";
 
-const commands: [ArrayCommand, string][] = [
-  ["ADD", "add(E)"],
-  ["ADD_AT", "add(index, E)"],
-  ["GET_AT", "get(index)"],
-  ["SET_AT", "set(index, E)"],
-  ["REMOVE_AT", "remove(index)"],
-  ["INDEX_OF", "indexOf(E)"],
-  ["ENSURE_CAPACITY", "ensureCapacity(n)"],
-  ["TRIM_TO_SIZE", "trimToSize()"],
-  ["CLEAR", "clear()"],
-  ["RESET", "reset · новая структура"],
-];
 export function ArrayCommandPanel({
   metrics,
   busy,
@@ -32,9 +22,23 @@ export function ArrayCommandPanel({
   blocked?: boolean;
   session: Session | null;
   onCommand: (op: Operation) => void;
-  onError: (error: string) => void;
+  onError: (error: Message) => void;
   onCreate: (capacity?: number) => void;
 }) {
+  const { t } = useI18n();
+  const commands: [ArrayCommand, string][] = [
+    ["ADD", "add(E)"],
+    ["ADD_AT", "add(index, E)"],
+    ["GET_AT", "get(index)"],
+    ["SET_AT", "set(index, E)"],
+    ["REMOVE_AT", "remove(index)"],
+    ["INDEX_OF", "indexOf(E)"],
+    ["ENSURE_CAPACITY", "ensureCapacity(n)"],
+    ["TRIM_TO_SIZE", "trimToSize()"],
+    ["CLEAR", "clear()"],
+    ["RESET", t("arraylist.ArrayCommandPanel.reset_new_structure")],
+  ];
+
   const [mode, setMode] = useState<ArrayCommand>("ADD");
   const [type, setType] = useState<Element["type"]>("STRING");
   const [value, setValue] = useState("A");
@@ -52,7 +56,9 @@ export function ArrayCommandPanel({
       (valued && type === "INTEGER" && !int(value)) ||
       (mode === "ENSURE_CAPACITY" && !int(minimum))
     ) {
-      onError("Введите целое число в диапазоне Java int.");
+      onError({
+        key: "arraylist.ArrayCommandPanel.enter_a_whole_number_within_the",
+      });
       return;
     }
     onCommand({
@@ -69,19 +75,21 @@ export function ArrayCommandPanel({
   return (
     <section
       className="workbench-controls command-panel panel"
-      aria-label="Панель операций ArrayList"
+      aria-label={t("arraylist.ArrayCommandPanel.arraylist_operations")}
     >
       <div className="controls-top has-constructor">
         <div
           className="array-constructor"
           role="group"
-          aria-label="Создание новой коллекции"
+          aria-label={t("arraylist.ArrayCommandPanel.create_a_new_collection")}
         >
           <label className="field" htmlFor="array-constructor">
-            <span>Конструктор</span>
+            <span>{t("arraylist.ArrayCommandPanel.constructor")}</span>
             <select
               id="array-constructor"
-              aria-label="Конструктор ArrayList"
+              aria-label={t(
+                "arraylist.ArrayCommandPanel.arraylist_constructor",
+              )}
               aria-describedby="constructor-replacement-hint"
               value={constructor}
               onChange={(e) => setConstructor(e.target.value)}
@@ -104,19 +112,21 @@ export function ArrayCommandPanel({
               )
             }
           >
-            Создать
+            {t("arraylist.ArrayCommandPanel.create")}
           </button>
           <p id="constructor-replacement-hint">
-            Создание заменит список и очистит историю.
+            {t(
+              "arraylist.ArrayCommandPanel.creating_replaces_the_list_and_clears",
+            )}
           </p>
         </div>
         {metrics}
       </div>
       <form className="command-form array-command-form" onSubmit={submit}>
         <label className="field">
-          <span>Операция</span>
+          <span>{t("arraylist.ArrayCommandPanel.operation")}</span>
           <select
-            aria-label="Операция"
+            aria-label={t("arraylist.ArrayCommandPanel.operation")}
             value={mode}
             onChange={(e) => setMode(e.target.value as ArrayCommand)}
           >
@@ -129,9 +139,9 @@ export function ArrayCommandPanel({
         </label>
         {indexed && (
           <label className="field">
-            <span>Индекс</span>
+            <span>{t("arraylist.ArrayCommandPanel.index")}</span>
             <input
-              aria-label="Индекс"
+              aria-label={t("arraylist.ArrayCommandPanel.index")}
               value={index}
               inputMode="numeric"
               onChange={(e) => setIndex(e.target.value)}
@@ -141,9 +151,9 @@ export function ArrayCommandPanel({
         {valued && (
           <>
             <label className="field">
-              <span>Тип элемента</span>
+              <span>{t("arraylist.ArrayCommandPanel.element_type")}</span>
               <select
-                aria-label="Тип элемента"
+                aria-label={t("arraylist.ArrayCommandPanel.element_type")}
                 value={type}
                 onChange={(e) => setType(e.target.value as Element["type"])}
               >
@@ -154,9 +164,9 @@ export function ArrayCommandPanel({
             </label>
             {type !== "NULL" && (
               <label className="field">
-                <span>Элемент</span>
+                <span>{t("arraylist.ArrayCommandPanel.element")}</span>
                 <input
-                  aria-label="Элемент"
+                  aria-label={t("arraylist.ArrayCommandPanel.element")}
                   value={value}
                   maxLength={128}
                   onChange={(e) => setValue(e.target.value)}
@@ -179,18 +189,26 @@ export function ArrayCommandPanel({
         <button
           type="submit"
           className="primary-button"
-          aria-label={`Выполнить ${commands.find(([id]) => id === mode)?.[1]}`}
+          aria-label={t("arraylist.ArrayCommandPanel.execute", {
+            "0": commands.find(([id]) => id === mode)?.[1],
+          })}
           disabled={busy || blocked || !session}
         >
-          Выполнить
+          {t("arraylist.ArrayCommandPanel.execute_button")}
         </button>
       </form>
       <div className="input-caption">
         {mode === "REMOVE_AT"
-          ? "remove(int index) возвращает элемент; это удаление по индексу."
+          ? t(
+              "arraylist.ArrayCommandPanel.remove_int_index_returns_the_element",
+            )
           : mode === "RESET"
-            ? "Учебный reset восстанавливает конструктор текущей сессии. clear сохраняет capacity."
-            : "String, Integer и null различаются. ID обозначает вхождение, а не адрес Java-объекта."}
+            ? t(
+                "arraylist.ArrayCommandPanel.teaching_reset_restores_the_current_session",
+              )
+            : t(
+                "arraylist.ArrayCommandPanel.string_integer_and_null_are_distinct",
+              )}
       </div>
     </section>
   );

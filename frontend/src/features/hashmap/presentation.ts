@@ -1,3 +1,4 @@
+import { russian, type Translator } from "../../i18n/locale";
 import type { Trace, Snapshot } from "../../api/types";
 import type { KeySpec } from "../../api/types";
 
@@ -10,71 +11,96 @@ export const keyLabel = (key: KeySpec): string =>
 export const valueLabel = (value: string | null): string =>
   value === null ? "null" : JSON.stringify(value);
 
-export const algorithm = [
-  ["operation", "put / get / remove", "Начало операции и фиксация результата"],
-  ["hash", "h ^ (h >>> 16)", "Старшие биты влияют на младшие. null → 0"],
-  ["index", "(capacity - 1) & hash", "Выбор бакета в таблице степени двойки"],
+export const algorithm = (t: Translator = russian) => [
+  [
+    "operation",
+    "put / get / remove",
+    t("hashmap.presentation.operation_start_and_result_commit"),
+  ],
+  [
+    "hash",
+    "h ^ (h >>> 16)",
+    t("hashmap.presentation.high_bits_influence_low_bits_null"),
+  ],
+  [
+    "index",
+    "(capacity - 1) & hash",
+    t("hashmap.presentation.select_a_bucket_in_a_power"),
+  ],
   [
     "search",
     "hash == h && key.equals(k)",
-    "Проверка головы, цепочки или дерева",
+    t("hashmap.presentation.check_the_head_chain_or_tree"),
   ],
-  ["mutation", "link / replace / unlink", "Изменение значения, ссылок и size"],
+  [
+    "mutation",
+    "link / replace / unlink",
+    t("hashmap.presentation.change_the_value_links_and_size"),
+  ],
   [
     "tree",
     "treeifyBin / balance / untreeify",
-    "При put: 9-й узел и capacity ≥ 64",
+    t("hashmap.presentation.on_put_the_9th_node_and"),
   ],
   [
     "resize",
     "(hash & oldCapacity) == 0",
-    "Оставить индекс или прибавить oldCapacity",
+    t("hashmap.presentation.keep_the_index_or_add_oldcapacity"),
   ],
 ];
 
-export function resultText(trace: Trace) {
+export function resultText(trace: Trace, t: Translator = russian) {
   const type = trace.operation.type;
   if (type === "GET")
     return trace.result.found
       ? valueLabel(trace.result.value)
-      : "null · не найден";
+      : t("hashmap.presentation.null_not_found");
   if (type === "PUT")
     return trace.result.found
-      ? `было ${valueLabel(trace.result.previousValue)}`
-      : "null · новый ключ";
+      ? t("hashmap.presentation.previously", {
+          "0": valueLabel(trace.result.previousValue),
+        })
+      : t("hashmap.presentation.null_new_key");
   if (type === "REMOVE")
     return trace.result.found
-      ? `удалено ${valueLabel(trace.result.previousValue)}`
-      : "null · не найден";
-  if (type === "SCENARIO") return `${trace.committed.size} записей · готово`;
-  return type === "CLEAR" ? "Коллекция очищена" : "Новая коллекция";
+      ? t("hashmap.presentation.removed", {
+          "0": valueLabel(trace.result.previousValue),
+        })
+      : t("hashmap.presentation.null_not_found");
+  if (type === "SCENARIO")
+    return t("scenarioDone", { count: trace.committed.size });
+  return type === "CLEAR"
+    ? t("hashmap.presentation.collection_cleared")
+    : t("arraylist.presentation.new_collection");
 }
 
-export function metrics(snapshot?: Snapshot) {
+export function metrics(snapshot?: Snapshot, t: Translator = russian) {
   return [
     {
       label: "size",
       value: snapshot?.size ?? "—",
-      caption: "количество записей",
+      caption: t("arraylist.presentation.number_of_entries"),
     },
     {
       label: "capacity",
       value: snapshot?.capacity ?? "—",
       caption:
-        snapshot?.capacity === 0 ? "массив не выделен" : "выделенных бакетов",
+        snapshot?.capacity === 0
+          ? t("arraylist.presentation.array_not_allocated")
+          : t("hashmap.presentation.allocated_buckets"),
     },
     {
       label: "threshold",
       value: snapshot?.threshold ?? "—",
       caption:
         snapshot?.capacity === 0 && snapshot.threshold > 0
-          ? "целевая начальная ёмкость"
-          : "resize при size > threshold",
+          ? t("hashmap.presentation.target_initial_capacity")
+          : t("hashmap.presentation.resize_when_size_threshold"),
     },
     {
       label: "loadFactor",
       value: snapshot?.loadFactor ?? ".75",
-      caption: "коэффициент загрузки",
+      caption: t("hashmap.presentation.load_factor"),
     },
   ];
 }
