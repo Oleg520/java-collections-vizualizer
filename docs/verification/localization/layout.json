@@ -1,0 +1,278 @@
+[
+  {
+    "device": "desktop",
+    "collection": "HASH_MAP",
+    "locale": "ru",
+    "file": "desktop-hash_map-ru.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        },
+        {
+          "text": "EN",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "collection": "HASH_MAP",
+    "locale": "en",
+    "file": "desktop-hash_map-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "collection": "ARRAY_LIST",
+    "locale": "ru",
+    "file": "desktop-array_list-ru.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        },
+        {
+          "text": "EN",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "desktop",
+    "collection": "ARRAY_LIST",
+    "locale": "en",
+    "file": "desktop-array_list-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "mobile",
+    "collection": "HASH_MAP",
+    "locale": "ru",
+    "file": "mobile-hash_map-ru.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        },
+        {
+          "text": "EN",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "mobile",
+    "collection": "HASH_MAP",
+    "locale": "en",
+    "file": "mobile-hash_map-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "mobile",
+    "collection": "ARRAY_LIST",
+    "locale": "ru",
+    "file": "mobile-array_list-ru.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        },
+        {
+          "text": "EN",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "mobile",
+    "collection": "ARRAY_LIST",
+    "locale": "en",
+    "file": "mobile-array_list-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "narrow",
+    "collection": "HASH_MAP",
+    "locale": "en",
+    "file": "narrow-hash_map-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "narrow",
+    "collection": "ARRAY_LIST",
+    "locale": "en",
+    "file": "narrow-array_list-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "short",
+    "collection": "HASH_MAP",
+    "locale": "en",
+    "file": "short-hash_map-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  },
+  {
+    "device": "short",
+    "collection": "ARRAY_LIST",
+    "locale": "en",
+    "file": "short-array_list-en.png",
+    "layout": {
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "RU",
+          "pressed": "false",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "EN",
+          "pressed": "true",
+          "background": "rgb(53, 67, 47)"
+        }
+      ]
+    },
+    "untranslatedRussian": [],
+    "errors": []
+  }
+]

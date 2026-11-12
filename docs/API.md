@@ -327,3 +327,33 @@ GET health не является транзакционной гарантией
 
 Локальная лаборатория split описана в [ручной проверке #55](verification/hashmap-physical-identity.md).
 Она отсутствует в production bundle и не добавляет сценарии/маршруты backend.
+
+## Метаданные представления для RU/EN (#9)
+
+Locale не передаётся в запросах и не хранится в серверной сессии. Переводы
+интерфейса принадлежат frontend; существующие русские `message`, HTTP status,
+`code`, schema versions и compact encodings сохраняются.
+
+Для неоднозначных ошибок `INVALID_INPUT` ответ может дополнительно содержать
+`reason` (стабильная причина валидации) и `params` (её данные: например, index/size,
+limit или закреплённый hashCode). Пример:
+
+```json
+{"schemaVersion":1,"code":"INVALID_INPUT","message":"Индекс вне диапазона: 7; size = 2","reason":"INDEX_RANGE","params":{"index":7,"size":2}}
+```
+
+Без структурированной причины эти поля отсутствуют; прежний error envelope
+остаётся допустимым. Frontend принимает оба варианта и показывает локализованный
+общий текст при неизвестной причине, не распознавая серверную фразу.
+
+В `Step.details` дополнены только неоднозначные варианты:
+
+- `NODE_INSERTED.context`: `EMPTY_BUCKET`, `CHAIN_APPEND`, `TREE_INSERT`;
+- `TREE_DIRECTION.context`: `SEARCH`, `TREEIFY`, `INSERT`;
+- `TREE_RECOLORED.reason`: `NEW_NODE`, `ROOT_BLACK`, `RED_UNCLE`;
+- `UNTREEIFIED.partition`: `LOW`/`HIGH` при существующем `reason=SPLIT_COUNT`.
+
+Идентификаторы событий/stages, операции, существующие details и семантика Java
+не изменены. Метаданные одинаково передаются в full и compact trace. Клиенты
+должны допускать дополнительные поля details; frontend принимает trace без новых
+полей и использует нейтральное пояснение вместо угадывания варианта алгоритма.

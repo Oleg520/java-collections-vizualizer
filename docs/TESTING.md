@@ -264,3 +264,39 @@ including right and removal rotations, not generated algorithm states.
 
 [Visual review materials and limits of local validation](verification/hashmap-visualization/README.md).
 Full final validation follows owner visual approval.
+
+## RU/EN localization (#9)
+
+Targeted checks during local visual iteration:
+
+```bash
+./mvnw -pl backend -am -Dtest=LocalizationMetadataTest,SerializationContractTest,LocalizationEventContractTest -Dsurefire.failIfNoSpecifiedTests=false test
+cd frontend
+npx tsc -b --pretty false
+npx vitest run src/i18n src/app/collectionViews.test.ts src/components/DetailValue.test.tsx src/session/sessionConnection.test.ts src/api/api.test.ts src/api/trace
+npx playwright test localization.spec.ts
+npx playwright test workbench-polish.spec.ts --grep 'technical details preserve'
+```
+
+`LocalizationEventContractTest` runs all standard Java scenarios and additional
+operations/splits. It checks a shared fixture of 49 event names and 137 semantic
+samples (operation type plus relevant details; snapshots and user data omitted).
+Frontend tests require RU/EN coverage for every sample and each registered variant,
+regardless of the original message. Validation reasons and Java scenario IDs are
+checked against their owning source. A JSX copy allowlist admits only Java notation
+and brand names outside catalogs. Nested details tests preserve escaping, explicit
+null/false/zero, strings and unknown extension objects.
+
+When intentionally changing the event contract, regenerate and inspect the fixture:
+
+```bash
+./mvnw -pl backend -am -Dtest=LocalizationEventContractTest -DupdateLocalizationFixtures=true -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+Playwright covers RU default and EN persistence, paused history in both collections,
+forms/selection/zoom, an active playback timer, in-flight responses, errors/cooldown,
+keyboard use at 320px and document metadata. State tests count all browser API
+requests while switching. Existing RU selectors follow translated labels, with
+technical field IDs still visible in detail labels. Production preview, full Java
+verification, lifecycle and complete E2E remain required **after owner visual approval**.
+[Local screenshots and visual-review status](verification/localization/README.md).
