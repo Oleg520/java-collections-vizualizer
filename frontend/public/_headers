@@ -1,3 +1,0 @@
-# Vite emits content-hashed assets; HTML keeps Pages revalidation defaults.
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable

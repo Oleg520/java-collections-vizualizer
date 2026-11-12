@@ -54,29 +54,30 @@ When publishing a GitHub Release for an existing tag, attach the same verified
 `backend.jar`, `frontend.tar` and `release.json`. Production delivery is outside
 this repository.
 
-## Static hosting and previews
+## Static hosting and same-origin API
 
-The frontend is static output from Vite. `frontend/public/_headers` provides
-caching for content-hashed assets. Serve `index.html` for SPA navigation; do not
-add a top-level `404.html`, catch-all redirect, Pages worker or functions.
+The frontend is static output from Vite; it needs no Node.js process in production.
+For a site at `https://visualizer.devport.ru`, supply that exact value as
+`api_origin` when dispatching **Build release artifacts**. The existing
+`VITE_API_URL` setting is compiled into JavaScript; requests then use
+`https://visualizer.devport.ru/api/v1/...`. Do not include `/api` or a trailing slash.
+The manifest records this origin so delivery can reject a bundle for another target.
+Changing a server environment variable cannot rewrite an already built frontend.
 
-The existing Cloudflare Pages project retains these Git preview build settings.
-Commands and output paths are relative to the repository root:
+The operator serves `dist`, routes `/api` and `/api/*` to Java **without stripping
+the path**, and returns `index.html` for SPA navigation. Keep API, `/release.json`,
+and `/assets/*` outside the SPA fallback: missing assets/API must not return HTML.
+Cache content-hashed assets immutably; revalidate HTML and disable caching for
+`/release.json` and API responses. Hosting owns these headers; no Pages publishing
+tool, `_headers` file, worker or functions are needed.
 
-| Setting | Value |
-| --- | --- |
-| Root directory | `/` (repository root) |
-| Build command | `sh scripts/fetch-version-tags.sh && npm --prefix frontend ci && npm --prefix frontend run build` |
-| Output directory | `frontend/dist` |
-| Node version | Match `frontend/package.json` (22.12+ on 22, or 24+) |
+Keep preceding content-hashed assets available for open tabs and rollback.
+Add the exact public site origin to backend `ALLOWED_ORIGINS`; the HTTPS origin
+can still need explicit allowance when Java receives HTTP from the local proxy.
+Retain previous allowed origins only for an agreed transition period. Wildcard
+CORS is not supported. Never expose the separate management listener.
 
-Keep existing Git integration and preview settings when editing build scripts.
-Preview builds do not implicitly grant API access. For an interactive hosted
-preview set `VITE_API_URL` to a compatible API origin before building and allow
-the exact preview origin in that backend's `ALLOWED_ORIGINS`. Wildcard CORS is
-not supported. Without an API origin, static hosting needs its own `/api` proxy;
-Vite's development proxy is not included in `dist`.
-
-Local builds need no hosting account, credentials or environment file.
-See [local startup](../README.md#быстрый-запуск), [API security](API_SECURITY.md)
-and [diagnostics](OBSERVABILITY.md).
+For local development, empty `VITE_API_URL` uses Vite's existing `/api` proxy.
+That proxy is not included in production `dist`. Local builds need no hosting
+account, credentials or environment file. See [local startup](../README.md#быстрый-запуск),
+[API security](API_SECURITY.md) and [diagnostics](OBSERVABILITY.md).

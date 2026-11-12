@@ -3,7 +3,7 @@
 Интерактивная лаборатория Java HashMap и ArrayList: выполняйте операции и наблюдайте
 цепочки, деревья, внутренние массивы, сдвиги и расширение буферов.
 
-**[Открыть приложение](https://java-collections-vizualizer.pages.dev)** ·
+**[Открыть приложение](https://visualizer.devport.ru)** ·
 [Контракт API](docs/API.md) ·
 [Архитектура](docs/ARCHITECTURE.md)
 

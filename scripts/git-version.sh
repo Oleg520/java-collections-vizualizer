@@ -1,5 +1,5 @@
 #!/bin/sh
-# Shared exact-commit release rule for Maven validation and Vite (including Cloudflare Pages).
+# Shared exact-commit release rule for Maven validation and Vite.
 set -efu
 cd "$(dirname "$0")/.."
 fail() { echo "Build version: $*" >&2; exit 1; }

@@ -31,8 +31,6 @@ class ReleasePackageTests(unittest.TestCase):
             public = root / 'frontend/public'
             dist.mkdir(parents=True)
             public.mkdir()
-            (public / '_headers').write_bytes(b'inert headers')
-            (dist / '_headers').write_bytes(b'inert headers')
             (dist / 'index.html').write_bytes(b'inert html')
             with patch.object(package, 'ROOT', root), patch.dict(os.environ, VITE_API_URL='https://api.example.com'), \
                     patch.object(package.subprocess, 'check_output', side_effect=[

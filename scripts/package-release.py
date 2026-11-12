@@ -46,8 +46,7 @@ def main():
     output.mkdir(exist_ok=False)
     shutil.copyfile(jar, output / 'backend.jar')
     dist = ROOT / 'frontend/dist'
-    if ((dist / '_headers').read_bytes() != (ROOT / 'frontend/public/_headers').read_bytes()
-            or not (dist / 'index.html').is_file()
+    if (not (dist / 'index.html').is_file()
             or any((dist / name).exists() for name in ('404.html', '_redirects', '_worker.js', 'functions'))):
         raise ValueError('Unexpected static SPA output')
     (dist / 'release.json').write_text(json.dumps({'sha': sha, 'version': version}) + '\n')
