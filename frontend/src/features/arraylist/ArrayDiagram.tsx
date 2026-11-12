@@ -34,7 +34,7 @@ export function ArrayDiagram({
   step?: Step;
   playing?: boolean;
 }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const reduced = useSyncExternalStore(
     subscribeReducedMotion,
     prefersReducedMotion,
@@ -96,9 +96,9 @@ export function ArrayDiagram({
   const buffer = (b: ArrayBuffer) => {
     const pending = b.id === state.pendingBuffer?.id;
     const title = pending
-      ? "Новый буфер"
+      ? t("arraylist.ArrayDiagram.new_buffer")
       : copying
-        ? "Старый elementData"
+        ? t("arraylist.ArrayDiagram.old_elementdata")
         : "elementData";
     return (
       <motion.section
@@ -117,11 +117,17 @@ export function ArrayDiagram({
         </div>
         {b.capacity === 0 ? (
           <div className="array-empty">
-            <strong>Массив ещё не выделен</strong>
+            <strong>
+              {t("arraylist.ArrayDiagram.array_not_allocated_yet")}
+            </strong>
             <p>
               {state.emptyMode === "DEFAULT_EMPTY"
-                ? "Default-empty: первая add выделит 10 ячеек. Сейчас capacity = 0."
-                : "Explicit-empty: первая add выделит 1 ячейку."}
+                ? t(
+                    "arraylist.ArrayDiagram.default_empty_the_first_add_allocates",
+                  )
+                : t(
+                    "arraylist.ArrayDiagram.explicit_empty_the_first_add_allocates",
+                  )}
             </p>
           </div>
         ) : (
@@ -133,17 +139,25 @@ export function ArrayDiagram({
               const target = shifting
                 ? inRange(i, d.toIndex, d.length)
                 : copying && pending && inRange(i, 0, d.length);
-              const label = cell ? elementLabel(cell.element) : "empty";
+              const label = cell ? elementLabel(cell.element) : t("emptySlot");
               const metadata = cell
                 ? `${cell.element.type} · #${cell.id}`
-                : "свободно";
+                : t("arraylist.ArrayDiagram.free");
               return (
                 <button
                   key={`${b.id}:${i}`}
                   data-slot-index={i}
                   className={`array-cell ${cell ? "occupied" : "free"} ${d.index === i || source || target ? "highlighted" : ""} ${source ? "range-source" : ""} ${target ? "range-target" : ""} ${i === state.size ? "size-boundary" : ""}`}
-                  aria-label={`Ячейка ${i}: ${label}`}
-                  aria-description={`${metadata}; буфер #${b.id}${source ? "; источник диапазона" : ""}${target ? "; приёмник диапазона" : ""}`}
+                  aria-label={t("arraylist.ArrayDiagram.slot", {
+                    "0": i,
+                    "1": label,
+                  })}
+                  aria-description={t("arraylist.ArrayDiagram.buffer", {
+                    "0": metadata,
+                    "1": b.id,
+                    "2": source ? t("rangeSourceSuffix") : "",
+                    "3": target ? t("rangeTargetSuffix") : "",
+                  })}
                   aria-pressed={
                     selected?.buffer === b.id && selected.index === i
                   }
@@ -186,27 +200,26 @@ export function ArrayDiagram({
       ref={panel}
       className="panel array-diagram"
       data-testid="array-diagram"
-      aria-label="Внутренний массив ArrayList"
+      aria-label={t("arraylist.ArrayDiagram.arraylist_backing_array")}
       tabIndex={0}
       onScroll={rememberScroll}
     >
       <div className="array-title">
-        <h2>Внутри ArrayList</h2>
+        <h2>{t("arraylist.ArrayDiagram.inside_arraylist")}</h2>
         <span className="eyebrow">{state.emptyMode}</span>
       </div>
       <p className="array-legend">
-        Ячейка — фиксированный индекс массива. Внутри — ссылка, включая null;
-        пунктир — свободное место.
+        {t("arraylist.ArrayDiagram.a_slot_is_a_fixed_array")}
       </p>
       {!unallocated && (
         <div className="array-operation" role="status" aria-live="polite">
           {copying ? (
             <>
               <strong>
-                Копирование ссылок ·{" "}
+                {t("arraylist.ArrayDiagram.reference_copying")}{" "}
                 {step?.event === "ARRAY_COPY_COMPLETED"
-                  ? "завершено"
-                  : "подготовка"}
+                  ? t("arraylist.ArrayDiagram.completed")
+                  : t("arraylist.ArrayDiagram.preparing")}
               </strong>
               <div className="array-transfer">
                 <span className="array-source">
@@ -215,7 +228,7 @@ export function ArrayDiagram({
                     ? copyRange
                     : `Object[${state.buffer.capacity}]`}
                 </span>
-                <span aria-label="в">→</span>
+                <span aria-label={t("arraylist.ArrayDiagram.to")}>→</span>
                 <span className="array-target">
                   #{state.pendingBuffer!.id}{" "}
                   {typeof d.length === "number"
@@ -225,27 +238,37 @@ export function ArrayDiagram({
               </div>
               <small>
                 {step?.event === "ARRAY_ALLOCATED"
-                  ? "Новый массив выделен; ссылки ещё не перенесены."
-                  : "Одна блочная операция. Объекты не клонируются."}
+                  ? t(
+                      "arraylist.ArrayDiagram.new_array_allocated_references_have_not",
+                    )
+                  : t(
+                      "arraylist.ArrayDiagram.one_block_operation_objects_are_not",
+                    )}
               </small>
             </>
           ) : shifting ? (
             <>
               <strong>
-                Сдвиг{" "}
-                {step?.event === "ELEMENTS_SHIFTED_RIGHT" ? "вправо" : "влево"}{" "}
+                {t("arraylist.ArrayDiagram.shift")}{" "}
+                {step?.event === "ELEMENTS_SHIFTED_RIGHT"
+                  ? t("arraylist.ArrayDiagram.right")
+                  : t("arraylist.ArrayDiagram.left")}{" "}
                 · System.arraycopy
               </strong>
               <div className="array-transfer">
                 <span className="array-source">
                   {rangeLabel(Number(d.fromIndex), Number(d.length))}
                 </span>
-                <span aria-label="в">→</span>
+                <span aria-label={t("arraylist.ArrayDiagram.to")}>→</span>
                 <span className="array-target">
                   {rangeLabel(Number(d.toIndex), Number(d.length))}
                 </span>
               </div>
-              <small>Источник → приёмник · одна блочная операция</small>
+              <small>
+                {t(
+                  "arraylist.ArrayDiagram.source_destination_one_block_operation",
+                )}
+              </small>
             </>
           ) : (
             <>
@@ -253,7 +276,11 @@ export function ArrayDiagram({
               <span>
                 size {state.size} · capacity {state.capacity}
               </span>
-              <small>Индексы остаются на месте при изменении ссылок.</small>
+              <small>
+                {t(
+                  "arraylist.ArrayDiagram.indices_stay_in_place_when_references",
+                )}
+              </small>
             </>
           )}
         </div>
@@ -265,19 +292,28 @@ export function ArrayDiagram({
         </p>
       )}
       {selected && selectedBuffer && (
-        <div className="array-selection" aria-label="Сведения о ячейке">
+        <div
+          className="array-selection"
+          aria-label={t("arraylist.ArrayDiagram.slot_details")}
+        >
           <strong>
-            Буфер #{selected.buffer} · индекс {selected.index}
+            {t("arraylist.ArrayDiagram.buffer_number")}
+            {selected.buffer} {t("arraylist.ArrayDiagram.index")}{" "}
+            {selected.index}
           </strong>
           <p>
             {selectedCell
-              ? `${elementLabel(selectedCell.element)} · ${selectedCell.element.type} · вхождение #${selectedCell.id}`
-              : "empty · нет удерживаемой ссылки"}
+              ? t("arraylist.ArrayDiagram.occurrence", {
+                  "0": elementLabel(selectedCell.element),
+                  "1": selectedCell.element.type,
+                  "2": selectedCell.id,
+                })
+              : t("arraylist.ArrayDiagram.empty_no_retained_reference")}
           </p>
           <small>
             {selected.index < state.size
-              ? "Индекс входит в логический размер списка"
-              : "Индекс за границей size"}{" "}
+              ? t("arraylist.ArrayDiagram.index_is_within_the_logical_list")
+              : t("arraylist.ArrayDiagram.index_is_outside_size")}{" "}
             · {state.phase}
           </small>
         </div>

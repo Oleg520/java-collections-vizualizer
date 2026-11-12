@@ -12,12 +12,14 @@ import {
   saveLocale,
   translate,
   type Locale,
+  type Translator,
+  type Params,
 } from "./locale";
 import type { MessageKey } from "./catalog";
 const Context = createContext<{
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: MessageKey) => string;
+  t: Translator;
 } | null>(null);
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, selectLocale] = useState<Locale>(() =>
@@ -30,7 +32,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         selectLocale(next);
         saveLocale(browserStorage(), next);
       },
-      t: (key: MessageKey) => translate(locale, key),
+      t: (key: MessageKey, params?: Params) => translate(locale, key, params),
     }),
     [locale],
   );
@@ -48,21 +50,22 @@ export function useI18n() {
   if (!value) throw new Error("LocaleProvider is required");
   return value;
 }
-export function LanguageSelect() {
+export function LanguageSwitch() {
   const { locale, setLocale, t } = useI18n();
   return (
-    <select
-      className="language-select"
-      aria-label={t("language")}
-      value={locale}
-      onChange={(event) => setLocale(event.target.value === "en" ? "en" : "ru")}
-    >
-      <option value="ru" lang="ru" label="RU">
-        Русский
-      </option>
-      <option value="en" lang="en" label="EN">
-        English
-      </option>
-    </select>
+    <div className="language-switch" role="group" aria-label={t("language")}>
+      {(["ru", "en"] as const).map((language) => (
+        <button
+          key={language}
+          type="button"
+          lang={language}
+          aria-label={language === "ru" ? "Русский" : "English"}
+          aria-pressed={locale === language}
+          onClick={() => setLocale(language)}
+        >
+          {language.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }

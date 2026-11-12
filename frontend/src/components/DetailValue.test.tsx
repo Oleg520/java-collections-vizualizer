@@ -46,3 +46,29 @@ it("renders arrays structurally and escapes user-controlled strings", () => {
     "<dt>value</dt><dd><code>&quot;null&quot;</code></dd>",
   );
 });
+
+it("localizes known nested protocol labels and preserves arbitrary strings and extension objects", async () => {
+  const { fieldLabel } = await import("../i18n/fields");
+  const { translate } = await import("../i18n/locale");
+  const value = {
+    kind: "ELEMENT",
+    element: { type: "STRING", value: "Значение {count} <script>" },
+    extension: { value: "Данные" },
+  };
+  const before = JSON.stringify(value);
+  const markup = renderToStaticMarkup(
+    <DetailValue
+      value={value}
+      model="result"
+      label={(key) =>
+        fieldLabel((key, params) => translate("en", key, params), key)
+      }
+    />,
+  );
+  expect(markup).toContain("Kind · kind");
+  expect(markup).toContain("Element · element");
+  expect(markup).toContain("Type · type");
+  expect(markup).toContain("Значение {count} &lt;script&gt;");
+  expect(markup).toContain("<dt>value</dt>");
+  expect(JSON.stringify(value)).toBe(before);
+});

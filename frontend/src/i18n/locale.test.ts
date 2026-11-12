@@ -40,3 +40,14 @@ describe("locale preferences", () => {
     }
   });
 });
+
+it("interpolates values once, including literal placeholder-shaped user data", () => {
+  expect(translate("en", "validation.KEY_LENGTH", { limit: 64 })).toBe(
+    "The key must contain at most 64 characters",
+  );
+  expect(
+    translate("en", "hashmap.presentation.previously", {
+      0: "Привет {limit} <value>",
+    }),
+  ).toBe("previously Привет {limit} <value>");
+});

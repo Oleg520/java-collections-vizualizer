@@ -1,3 +1,4 @@
+import { operationLabel } from "../presentation/operationLabel";
 import type { Step } from "../api/types";
 import type { Locale } from "./locale";
 type Pair = readonly [string, string];
@@ -55,7 +56,8 @@ export const eventMessages = {
     "Узел удалён, ссылки перестроены",
     "Node removed; links updated",
   ],
-  NODE_INSERTED: [
+  NODE_INSERTED: ["Узел добавлен", "Node inserted"],
+  "NODE_INSERTED.EMPTY_BUCKET": [
     "В пустой бакет добавлен узел",
     "Node added to an empty bucket",
   ],
@@ -128,6 +130,18 @@ export const eventMessages = {
   TREE_BALANCED: [
     "Свойства красно-чёрного дерева восстановлены",
     "Red-black tree properties restored",
+  ],
+  "TREE_BALANCED.REMOVE": [
+    "Удаление и балансировка дерева завершены",
+    "Tree removal and balancing completed",
+  ],
+  "UNTREEIFIED.SPLIT_COUNT_LOW": [
+    "После split в нижней половине ≤ 6 узлов: список",
+    "After splitting, the low partition has ≤ 6 nodes; use a list",
+  ],
+  "UNTREEIFIED.SPLIT_COUNT_HIGH": [
+    "После split в верхней половине ≤ 6 узлов: список",
+    "After splitting, the high partition has ≤ 6 nodes; use a list",
   ],
   TREE_ROTATED: ["Левое вращение вокруг узла", "Left rotation around the node"],
   "TREE_ROTATED.RIGHT": [
@@ -229,29 +243,56 @@ export const eventMessages = {
 export function eventExplanation(locale: Locale, step: Step): string {
   const d = step.details;
   const variant =
-    step.event === "KEY_COMPARED"
-      ? d.equal
-        ? "found"
-        : ""
-      : step.event === "LOOKUP_RESULT" || step.event === "REMOVE_RESULT"
-        ? d.found
-          ? "found"
-          : ""
-        : step.event === "TREE_ROTATED"
-          ? d.direction
-          : step.event === "TREE_RECOLORED" || step.event === "UNTREEIFIED"
-            ? d.reason
-            : step.event === "TREE_DIRECTION" || step.event === "NODE_INSERTED"
-              ? d.context
-              : step.event === "CAPACITY_CHECKED"
-                ? step.operation.type
-                : "";
+    step.event === "TREE_BALANCED"
+      ? step.operation.type
+      : step.event === "UNTREEIFIED" &&
+          d.reason === "SPLIT_COUNT" &&
+          (d.partition === "LOW" || d.partition === "HIGH")
+        ? `SPLIT_COUNT_${d.partition}`
+        : step.event === "KEY_COMPARED"
+          ? d.equal
+            ? "found"
+            : ""
+          : step.event === "LOOKUP_RESULT" || step.event === "REMOVE_RESULT"
+            ? d.found
+              ? "found"
+              : ""
+            : step.event === "TREE_ROTATED"
+              ? d.direction
+              : step.event === "TREE_RECOLORED" || step.event === "UNTREEIFIED"
+                ? d.reason
+                : step.event === "TREE_DIRECTION" ||
+                    step.event === "NODE_INSERTED"
+                  ? d.context
+                  : step.event === "CAPACITY_CHECKED"
+                    ? step.operation.type
+                    : "";
   const messages: Record<string, Pair> = eventMessages;
-  const pair =
-    messages[`${step.event}.${String(variant)}`] ?? messages[step.event];
-  return pair
-    ? pair[locale === "en" ? 1 : 0]
-    : locale === "en"
+  const variantKey = `${step.event}.${String(variant)}`;
+  const pair = Object.hasOwn(messages, variantKey)
+    ? messages[variantKey]
+    : Object.hasOwn(messages, step.event)
+      ? messages[step.event]
+      : undefined;
+  if (!pair)
+    return locale === "en"
       ? `Java event: ${step.event}`
       : `Событие Java: ${step.event}`;
+  const text = pair[locale === "en" ? 1 : 0];
+  if (step.event === "OPERATION_STARTED")
+    return `${text}: ${operationLabel(step.operation)}`;
+  if (step.event === "CONFIGURED") {
+    const constructor =
+      d.initialCapacity === 0
+        ? "new HashMap()"
+        : `new HashMap(${String(d.initialCapacity ?? "?")})`;
+    return `${text}: ${constructor}`;
+  }
+  if (step.event === "LIST_RESET") {
+    const capacity = Object.hasOwn(d, "constructor")
+      ? d["constructor"]
+      : undefined;
+    return `${text}: new ArrayList<>(${capacity === "default" ? "" : String(capacity ?? "?")})`;
+  }
+  return text;
 }

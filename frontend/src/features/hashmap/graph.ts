@@ -1,3 +1,4 @@
+import { russian, type Translator } from "../../i18n/locale";
 import type { Bucket, MapNode, Snapshot, Step } from "../../api/types";
 
 export type AreaSource = "table" | "old" | "transfer";
@@ -120,12 +121,16 @@ export function snapshotGraph(
   };
 }
 export type SnapshotGraph = ReturnType<typeof snapshotGraph>;
-export function areaLabel(area: Area, graph: SnapshotGraph) {
+export function areaLabel(
+  area: Area,
+  graph: SnapshotGraph,
+  t: Translator = russian,
+) {
   return area.source === "transfer"
-    ? `Временные объекты [${area.bucket.index}]`
+    ? t("hashmap.graph.temporary_objects", { "0": area.bucket.index })
     : area.source === "old" || graph.starting
-      ? `Старая таблица [${area.bucket.index}]`
+      ? t("hashmap.graph.old_table", { "0": area.bucket.index })
       : graph.expanding
-        ? `Новая таблица [${area.bucket.index}]`
-        : `Бакет [${area.bucket.index}]`;
+        ? t("hashmap.graph.new_table", { "0": area.bucket.index })
+        : t("hashmap.graph.bucket", { "0": area.bucket.index });
 }

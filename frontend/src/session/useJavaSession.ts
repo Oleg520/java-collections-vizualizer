@@ -1,3 +1,5 @@
+import type { DisplayError, Message } from "../i18n/errors";
+import type { MessageKey } from "../i18n/catalog";
 import type { LocalSplits } from "../dev/splitScenarios";
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/api";
@@ -32,7 +34,7 @@ export function useJavaSession(
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<DisplayError | null>(null);
   const busyRef = useRef(false);
   const epoch = useRef(0);
   const connection = useRef(new SessionConnection());
@@ -47,16 +49,11 @@ export function useJavaSession(
         connection.current.retryAt,
         e.retryAt,
       );
-    const message =
-      session && !connection.current.session
-        ? "Сессия истекла или Java-сервис перезапущен. Создайте новую сессию. Прежнее состояние сервера недоступно."
-        : errorMessage(e);
-    setError(
-      message +
-        (connection.current.needsRefresh
-          ? " Актуальное состояние пока не получено. Обновите состояние перед следующей командой."
-          : ""),
-    );
+    setError({
+      cause: e,
+      expired: !!session && !connection.current.session,
+      refresh: connection.current.needsRefresh,
+    });
   };
 
   const listScenarios = async (type: CollectionType) => {
@@ -255,11 +252,11 @@ export function useJavaSession(
     collection,
     lastKnownSession,
     recoverSession,
-    recoveryLabel: !connection.current.session
-      ? "Новая сессия"
+    recoveryLabel: (!connection.current.session
+      ? "recovery.create"
       : connection.current.session.collection !== collection
-        ? "Повторить подключение"
-        : "Обновить состояние",
+        ? "recovery.reconnect"
+        : "recovery.refresh") as MessageKey,
     retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)),
     uncertain: connection.current.needsRefresh,
     blocked: connection.current.needsRefresh || now < retryAt,
@@ -269,13 +266,9 @@ export function useJavaSession(
     busy,
     slow,
     error,
-    setError,
+    setError: (value: Message | null) => setError(value),
     startSession,
     command,
     demo,
   };
-}
-
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : "Не удалось выполнить запрос";
 }

@@ -1,3 +1,4 @@
+import { ClientError } from "../../i18n/errors";
 import type {
   Bucket,
   MapNode,
@@ -32,10 +33,10 @@ export function decodeHashMapTrace(
       ...bucket,
       nodes: nodeRefs.map((index) => {
         if (!Number.isInteger(index) || !response.nodePool[index])
-          throw new Error("Повреждённая ссылка в trace");
+          throw new ClientError("errors.corruptReference");
         const node = response.nodePool[index];
         if (!Number.isSafeInteger(node.objectId) || node.objectId! <= 0)
-          throw new Error("Повреждённый objectId в trace");
+          throw new ClientError("errors.corruptObject");
         return node;
       }),
     }));
@@ -49,7 +50,7 @@ export function decodeHashMapTrace(
     return result;
   };
   if (response.schemaVersion !== 2 || response.trace.schemaVersion !== 2)
-    throw new Error("Несовместимая версия HashMap trace");
+    throw new ClientError("errors.traceVersion");
   return {
     schemaVersion: response.schemaVersion,
     sessionId: response.sessionId,
@@ -75,10 +76,10 @@ export function validatePhysicalSnapshot(state: Snapshot): void {
     ids.size !== nodes.length ||
     nodes.some((n) => !Number.isSafeInteger(n.objectId) || n.objectId <= 0)
   )
-    throw new Error("Неоднозначный objectId в snapshot");
+    throw new ClientError("errors.ambiguousObject");
   const refs = buckets.flatMap((b) => [b.headId, b.rootId]);
   for (const node of nodes)
     refs.push(node.next, node.prev, node.parent, node.left, node.right);
   if (refs.some((id) => id !== null && !ids.has(id)))
-    throw new Error("Повреждённая физическая ссылка snapshot");
+    throw new ClientError("errors.corruptLink");
 }

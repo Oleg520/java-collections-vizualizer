@@ -1,7 +1,9 @@
+import { useI18n } from "../i18n/LocaleProvider";
 import { useEffect, useRef } from "react";
 import { Info } from "lucide-react";
 
 export function CollectionHelp({ description }: { description: string }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDetailsElement>(null);
   const mouseOpened = useRef(false);
   useEffect(() => {
@@ -39,8 +41,8 @@ export function CollectionHelp({ description }: { description: string }) {
       }}
     >
       <summary
-        aria-label="О коллекции и переключении"
-        title="О коллекции и переключении"
+        aria-label={t("CollectionHelp.about_the_collection_and_switching")}
+        title={t("CollectionHelp.about_the_collection_and_switching")}
         onPointerDown={(event) => {
           mouseOpened.current = event.pointerType === "mouse";
         }}
@@ -52,11 +54,11 @@ export function CollectionHelp({ description }: { description: string }) {
       </summary>
       <p>
         <strong className="model-help-title">
-          Учебная модель · OpenJDK 21
+          {t("CollectionHelp.teaching_model_openjdk_21")}
         </strong>
         {description}{" "}
         <span id="collection-switch-hint">
-          Смена коллекции заменяет её содержимое и очищает историю операций.
+          {t("CollectionHelp.switching_collections_replaces_the_contents_and")}
         </span>
       </p>
     </details>

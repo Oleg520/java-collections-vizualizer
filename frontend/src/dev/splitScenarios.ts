@@ -1,3 +1,4 @@
+import { ClientError } from "../i18n/errors";
 import { api } from "../api/api";
 import type { Scenario, SessionTrace } from "../api/types";
 import type { SessionConnection } from "../session/sessionConnection";
@@ -24,10 +25,10 @@ export const localSplits = {
     active: () => boolean,
   ): Promise<SessionTrace> {
     if (!localSplits.scenarios.some((s) => s.id === name))
-      throw new Error("Неизвестный локальный split");
+      throw new ClientError("errors.localUnknown");
     const low = name === "local-split-6-7" ? 6 : 2;
     const check = () => {
-      if (!active()) throw new Error("Локальный сценарий остановлен");
+      if (!active()) throw new ClientError("errors.localStopped");
     };
     check();
     // The standard treeify demo chooses capacity 64 without changing the session's RESET constructor.

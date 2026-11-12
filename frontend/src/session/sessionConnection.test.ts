@@ -215,7 +215,7 @@ it.each([0, 409, 502, 503])(
     await expect(c.execute(mutation)).rejects.toThrow("uncertain");
     expect(c.needsRefresh).toBe(true);
     expect(c.session?.id).toBe("tab");
-    await expect(c.execute(mutation)).rejects.toThrow("Сначала обновите");
+    await expect(c.execute(mutation)).rejects.toMatchObject({ key: "errors.refreshRequired" });
     expect(mutation).toHaveBeenCalledTimes(1);
     await c.refresh();
     expect(c.needsRefresh).toBe(false);

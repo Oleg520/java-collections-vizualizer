@@ -1,3 +1,4 @@
+import { ClientError } from "../../i18n/errors";
 import type { SessionTrace, Snapshot } from "../types";
 import {
   decodeHashMapTrace,
@@ -16,7 +17,7 @@ export function decodeTrace(
       response.trace.collection === "HASH_MAP" &&
       (response.schemaVersion !== 2 || response.trace.schemaVersion !== 2)
     )
-      throw new Error("Несовместимая версия HashMap trace");
+      throw new ClientError("errors.traceVersion");
     if (response.trace.collection === "HASH_MAP") {
       validatePhysicalSnapshot(response.trace.before as Snapshot);
       response.trace.steps.forEach((s) =>
@@ -30,5 +31,5 @@ export function decodeTrace(
     return decodeArrayTrace(response);
   if (response.encoding === "node-table-v2")
     return decodeHashMapTrace(response);
-  throw new Error("Неизвестный формат trace");
+  throw new ClientError("errors.traceFormat");
 }

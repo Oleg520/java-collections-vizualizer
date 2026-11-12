@@ -1,3 +1,4 @@
+import { russian } from "../i18n/locale";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   ArraySnapshot,
@@ -180,9 +181,9 @@ describe("registered collection presentation", () => {
       result: "registered result",
       resultCaption: "registered caption",
     });
-    expect(formatMetrics).toHaveBeenCalledWith(array);
-    expect(formatResult).toHaveBeenCalledWith(operation);
-    expect(formatCaption).toHaveBeenCalledWith(operation);
+    expect(formatMetrics).toHaveBeenCalledWith(array, russian);
+    expect(formatResult).toHaveBeenCalledWith(operation, russian);
+    expect(formatCaption).toHaveBeenCalledWith(operation, russian);
   });
   it.each(["LINKED_LIST", "constructor", "toString"])(
     "rejects unregistered trace collection %s",

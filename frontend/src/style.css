@@ -3022,4 +3022,43 @@ summary:focus-visible {
   }
 }
 
-.language-select { width: 66px; min-height: 40px; flex-shrink: 0; }
+.language-switch {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border, #35432f);
+  border-radius: 7px;
+  background: #141c15;
+}
+.language-switch button {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  color: #92a286;
+  background: transparent;
+  font-size: 11px;
+}
+.language-switch button[aria-pressed="true"] {
+  background: #35432f;
+  color: #e0edcc;
+}
+.language-switch button:hover {
+  color: #e0edcc;
+}
+@media (max-width: 680px) {
+  .language-switch {
+    padding: 2px;
+    gap: 0;
+  }
+  .language-switch button {
+    min-width: 28px;
+    min-height: 36px;
+    padding-inline: 4px;
+  }
+  .header-right {
+    gap: 2px;
+  }
+}

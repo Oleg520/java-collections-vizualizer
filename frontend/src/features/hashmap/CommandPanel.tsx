@@ -1,3 +1,5 @@
+import type { Message } from "../../i18n/errors";
+import { useI18n } from "../../i18n/LocaleProvider";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { LoaderCircle, Play, RotateCcw, Terminal, Trash2 } from "lucide-react";
 import type {
@@ -20,8 +22,9 @@ export function CommandPanel({
   blocked?: boolean;
   session: Session | null;
   onCommand: (operation: Operation) => void;
-  onError: (message: string) => void;
+  onError: (message: Message) => void;
 }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<"PUT" | "GET" | "REMOVE">("PUT");
   const [keyType, setKeyType] = useState<KeyType>("STRING");
   const [key, setKey] = useState("Java");
@@ -40,17 +43,19 @@ export function CommandPanel({
     let parsedHash: number | null = null;
     if (keyType === "COLLISION") {
       if (!validInt(hash)) {
-        setError("hashCode должен быть целым числом в диапазоне Java int.");
+        setError({
+          key: "hashmap.CommandPanel.hashcode_must_be_a_whole_number",
+        });
         return;
       }
       if (!key.trim()) {
-        setError("Введите ID учебного ключа.");
+        setError({ key: "hashmap.CommandPanel.enter_a_teaching_key_id" });
         return;
       }
       parsedHash = Number(hash);
     }
     if (keyType === "INTEGER" && !validInt(key)) {
-      setError("Введите целое число в диапазоне Java Integer.");
+      setError({ key: "hashmap.CommandPanel.enter_a_whole_number_within_the" });
       return;
     }
     command(mode, {
@@ -63,14 +68,14 @@ export function CommandPanel({
   return (
     <section
       className="workbench-controls command-panel panel"
-      aria-label="Панель операций"
+      aria-label={t("hashmap.CommandPanel.operations")}
     >
       <div className="controls-top">{metrics}</div>
       <form onSubmit={submit} className="command-form">
         <label className="field">
-          <span>Операция</span>
+          <span>{t("arraylist.ArrayCommandPanel.operation")}</span>
           <select
-            aria-label="Операция"
+            aria-label={t("arraylist.ArrayCommandPanel.operation")}
             value={mode}
             onChange={(event) => setMode(event.target.value as typeof mode)}
           >
@@ -80,23 +85,28 @@ export function CommandPanel({
           </select>
         </label>
         <label className="field key-type">
-          <span>Тип ключа</span>
+          <span>{t("hashmap.CommandPanel.key_type")}</span>
           <select
             value={keyType}
             onChange={(e) => setKeyType(e.target.value as KeyType)}
           >
             <option value="STRING">String</option>
             <option value="INTEGER">Integer</option>
-            <option value="COLLISION">Учебный · hashCode</option>
+            <option value="COLLISION">
+              {t("hashmap.CommandPanel.teaching_key_hashcode")}
+            </option>
             <option value="NULL">null</option>
           </select>
         </label>
         <label className="field">
           <span>
-            {keyType === "COLLISION" ? "ID ключа" : "Ключ"} <code>key</code>
+            {keyType === "COLLISION"
+              ? t("hashmap.CommandPanel.key_id")
+              : t("hashmap.CommandPanel.key")}{" "}
+            <code>key</code>
           </span>
           <input
-            aria-label="Ключ"
+            aria-label={t("hashmap.CommandPanel.key")}
             value={keyType === "NULL" ? "null" : key}
             onChange={(e) => setKey(e.target.value)}
             disabled={keyType === "NULL"}
@@ -123,10 +133,10 @@ export function CommandPanel({
         {mode === "PUT" && (
           <label className="field">
             <span>
-              Значение <code>value</code>
+              {t("hashmap.CommandPanel.value")} <code>value</code>
             </span>
             <input
-              aria-label="Значение"
+              aria-label={t("hashmap.CommandPanel.value")}
               value={nullValue ? "null" : value}
               disabled={nullValue}
               onChange={(e) => setValue(e.target.value)}
@@ -139,7 +149,9 @@ export function CommandPanel({
         )}
         <button
           className="primary-button"
-          aria-label={`Выполнить ${mode.toLowerCase()}`}
+          aria-label={t("arraylist.ArrayCommandPanel.execute", {
+            "0": mode.toLowerCase(),
+          })}
           type="submit"
           disabled={busy || blocked || !session}
         >
@@ -148,17 +160,20 @@ export function CommandPanel({
           ) : (
             <Play size={15} fill="currentColor" />
           )}{" "}
-          Выполнить
+          {t("arraylist.ArrayCommandPanel.execute_button")}
         </button>
       </form>
       <div className="input-caption">
         <span>
           <Terminal size={12} />
           {keyType === "COLLISION"
-            ? "TeachingKey: разные ID могут иметь один hashCode. Порядок в дереве — по ID."
+            ? t("hashmap.CommandPanel.teachingkey_distinct_ids_can_have_the")
             : keyType === "NULL"
-              ? "Единственный null-ключ имеет hash = 0."
-              : `${keyType}: настоящий Java ${keyType}. Хеш вычисляется на сервере.`}
+              ? t("hashmap.CommandPanel.the_single_null_key_has_hash")
+              : t("hashmap.CommandPanel.a_real_java_hash_is_computed", {
+                  "0": keyType,
+                  "1": keyType,
+                })}
         </span>
         {mode === "PUT" && (
           <label className="check-label">
@@ -175,7 +190,7 @@ export function CommandPanel({
             className="subtle-button"
             onClick={() => command("CLEAR")}
             disabled={busy || blocked || !session}
-            title="clear сохраняет массив бакетов"
+            title={t("hashmap.CommandPanel.clear_retains_the_bucket_array")}
           >
             <Trash2 size={13} />
             <span>clear</span>
@@ -185,7 +200,7 @@ export function CommandPanel({
             onClick={() => command("RESET")}
             disabled={busy || blocked || !session}
           >
-            <RotateCcw size={13} /> Начать заново
+            <RotateCcw size={13} /> {t("hashmap.CommandPanel.start_over")}
           </button>
         </div>
       </div>

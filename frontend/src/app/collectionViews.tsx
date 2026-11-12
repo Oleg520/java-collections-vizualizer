@@ -1,3 +1,5 @@
+import type { Message } from "../i18n/errors";
+import { russian, type Translator } from "../i18n/locale";
 import { objectId, type NodeSelection } from "../features/hashmap/identity";
 import type { ComponentType, ReactNode } from "react";
 import {
@@ -25,7 +27,7 @@ type CommandsProps = {
   blocked?: boolean;
   session: Session | null;
   onCommand: (operation: Operation) => void;
-  onError: (message: string) => void;
+  onError: (message: Message) => void;
   onCreate: (capacity?: number) => void;
 };
 type DiagramProps = {
@@ -42,15 +44,16 @@ type DiagramProps = {
 interface CollectionView {
   name: string;
   family: string;
-  description: string;
+  description: (t?: Translator) => string;
   sourceUrl: string;
-  algorithm: string[][];
+  algorithm: (t?: Translator) => string[][];
   metrics: (
     snapshot?: CollectionSnapshot,
+    t?: Translator,
   ) => { label: string; value: string | number; caption: string }[] | undefined;
-  resultText: (trace: Trace) => string;
-  resultCaption: (trace: Trace) => string;
-  idleCaption: string;
+  resultText: (trace: Trace, t?: Translator) => string;
+  resultCaption: (trace: Trace, t?: Translator) => string;
+  idleCaption: (t?: Translator) => string;
   Commands: ComponentType<CommandsProps>;
   Diagram: ComponentType<DiagramProps>;
   selectedDetails: (
@@ -58,6 +61,7 @@ interface CollectionView {
     id: NodeSelection | undefined,
     close: () => void,
     onSelect?: (selection: NodeSelection) => void,
+    t?: Translator,
   ) => { title: string; content: ReactNode } | undefined;
 }
 
@@ -65,22 +69,24 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
   HASH_MAP: {
     name: "HashMap",
     family: "Map",
-    description: "Добавляйте ключи. Следите за связями. Исследуйте алгоритм.",
+    description: (t = russian) =>
+      t("collectionViews.add_keys_follow_links_explore_the"),
     sourceUrl:
       "https://github.com/openjdk/jdk21u/blob/3f3a1f534b7f2f5be6d7ded9d9832fa9394e763c/src/java.base/share/classes/java/util/HashMap.java",
     algorithm: hashmap.algorithm,
     // HashMap owns the existing loading placeholders and its untagged wire snapshot.
-    metrics: (snapshot) =>
+    metrics: (snapshot, t = russian) =>
       snapshot === undefined ||
       (!("collection" in snapshot) && "buckets" in snapshot)
-        ? hashmap.metrics(snapshot)
+        ? hashmap.metrics(snapshot, t)
         : undefined,
     resultText: hashmap.resultText,
-    resultCaption: (trace) =>
+    resultCaption: (trace, t = russian) =>
       trace.result.found
-        ? "ключ найден в коллекции"
-        : "операция выполнена Java-движком",
-    idleCaption: "начните с put или сценария",
+        ? t("collectionViews.key_found_in_the_collection")
+        : t("collectionViews.operation_executed_by_the_java_engine"),
+    idleCaption: (t = russian) =>
+      t("collectionViews.start_with_put_or_a_scenario"),
     Commands: CommandPanel,
     Diagram: ({
       snapshot,
@@ -117,16 +123,20 @@ export const collectionViews: Record<CollectionType, CollectionView> = {
   ARRAY_LIST: {
     name: "ArrayList",
     family: "List",
-    description:
-      "Добавляйте элементы. Следите за индексами, сдвигами и ростом массива.",
+    description: (t = russian) =>
+      t("collectionViews.add_elements_explore_indices_shifts_and"),
     sourceUrl:
       "https://github.com/openjdk/jdk21u/blob/jdk-21.0.5%2B11/src/java.base/share/classes/java/util/ArrayList.java",
     algorithm: arraylist.algorithm,
-    metrics: (snapshot) =>
-      snapshot && isArray(snapshot) ? arraylist.metrics(snapshot) : undefined,
+    metrics: (snapshot, t = russian) =>
+      snapshot && isArray(snapshot)
+        ? arraylist.metrics(snapshot, t)
+        : undefined,
     resultText: arraylist.resultText,
-    resultCaption: () => "операция выполнена Java-движком",
-    idleCaption: "начните с add или сценария",
+    resultCaption: (_trace, t = russian) =>
+      t("collectionViews.operation_executed_by_the_java_engine"),
+    idleCaption: (t = russian) =>
+      t("collectionViews.start_with_add_or_a_scenario"),
     Commands: ArrayCommandPanel,
     Diagram: ({ snapshot, step, playing }) =>
       isArray(snapshot) ? (
@@ -149,19 +159,21 @@ export function statePresentation(
   snapshot?: CollectionSnapshot,
   trace?: Trace,
   cursor?: number,
+  t: Translator = russian,
 ) {
   const state = Object.values(collectionViews)
-    .map((view) => ({ view, metrics: view.metrics(snapshot) }))
+    .map((view) => ({ view, metrics: view.metrics(snapshot, t) }))
     .find(({ metrics }) => metrics !== undefined);
-  if (!state || !state.metrics) throw new Error("Неизвестный тип снимка");
+  if (!state || !state.metrics)
+    throw new Error(t("collectionViews.unknown_snapshot_type"));
 
   let result = "—";
-  let resultCaption = state.view.idleCaption;
+  let resultCaption = state.view.idleCaption(t);
   if (trace) {
     const view = Object.entries(collectionViews).find(
       ([id]) => id === trace.collection,
     )?.[1];
-    if (!view) throw new Error("Неизвестная коллекция trace");
+    if (!view) throw new Error(t("collectionViews.unknown_trace_collection"));
     // A scenario may contain earlier OPERATION_COMPLETED/COMMITTED frames.
     // Only the last frame of this trace makes its final Java result visible.
     if (
@@ -169,10 +181,10 @@ export function statePresentation(
       cursor >= 0 &&
       cursor === trace.steps.length - 1
     ) {
-      result = view.resultText(trace);
-      resultCaption = view.resultCaption(trace);
+      result = view.resultText(trace, t);
+      resultCaption = view.resultCaption(trace, t);
     } else {
-      resultCaption = "Результат появится после завершения трассировки.";
+      resultCaption = t("collectionViews.the_result_appears_when_the_trace");
     }
   }
   return { metrics: state.metrics, result, resultCaption };

@@ -17,8 +17,8 @@ it("translates every registered event without reading its message or changing da
     if (!key.includes(".")) {
       const source = step(key);
       const before = JSON.stringify(source);
-      expect(eventExplanation("ru", source)).toBe(pair[0]);
-      expect(eventExplanation("en", source)).toBe(pair[1]);
+      expect(eventExplanation("ru", source)).toContain(pair[0]);
+      expect(eventExplanation("en", source)).toContain(pair[1]);
       expect(JSON.stringify(source)).toBe(before);
     }
   }

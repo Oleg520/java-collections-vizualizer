@@ -1,3 +1,5 @@
+import { scenarioText } from "../i18n/scenarios";
+import { useI18n } from "../i18n/LocaleProvider";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Scenario, Session, Trace } from "../api/types/index";
 export function ScenarioSidebar({
@@ -17,19 +19,27 @@ export function ScenarioSidebar({
   session: Session | null;
   onDemo: (name: string) => void;
 }) {
+  const { t, locale } = useI18n();
   return (
-    <aside className="sidebar" aria-label="Готовые сценарии коллекции">
+    <aside
+      className="sidebar"
+      aria-label={t("ScenarioSidebar.collection_scenarios")}
+    >
       <div className="sidebar-title">
-        <h2>Готовые сценарии</h2>
+        <h2>{t("ScenarioSidebar.ready_made_scenarios")}</h2>
         <button
           className="sidebar-toggle icon-button"
           aria-label={
-            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+            collapsed
+              ? t("ScenarioSidebar.expand_sidebar")
+              : t("ScenarioSidebar.collapse_sidebar")
           }
           aria-expanded={!collapsed}
           aria-controls="sidebar-content"
           title={
-            collapsed ? "Развернуть боковую панель" : "Свернуть боковую панель"
+            collapsed
+              ? t("ScenarioSidebar.expand_sidebar")
+              : t("ScenarioSidebar.collapse_sidebar")
           }
           onClick={onToggle}
         >
@@ -43,34 +53,43 @@ export function ScenarioSidebar({
       <div className="sidebar-content" id="sidebar-content">
         <div className="sidebar-section scenarios">
           <span id="scenario-reset-hint" className="sr-only">
-            Запуск сценария заменяет содержимое коллекции своим начальным
-            состоянием.
+            {t("ScenarioSidebar.running_a_scenario_replaces_the_collection")}
           </span>
           <div
             className="scenario-list"
             role="region"
-            aria-label="Готовые сценарии"
+            aria-label={t("ScenarioSidebar.ready_made_scenarios")}
             tabIndex={0}
           >
-            {scenarios.map((s, i) => (
-              <button
-                key={s.id}
-                className={`scenario-button ${trace?.operation.value === s.id && trace.operation.type === "SCENARIO" ? "selected" : ""}`}
-                onClick={() => demo(s.id)}
-                disabled={busy || !session}
-                title={`${s.description} Запуск заменяет содержимое коллекции.`}
-                aria-describedby="scenario-reset-hint"
-              >
-                <span className="scenario-number">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span>
-                  <strong>{s.title}</strong>
-                  <small>{s.description}</small>
-                </span>
-                <ChevronRight size={14} />
-              </button>
-            ))}
+            {scenarios.map((s, i) => {
+              const text = scenarioText(
+                locale,
+                session?.collection ?? "HASH_MAP",
+                s.id,
+              );
+              return (
+                <button
+                  key={s.id}
+                  className={`scenario-button ${trace?.operation.value === s.id && trace.operation.type === "SCENARIO" ? "selected" : ""}`}
+                  onClick={() => demo(s.id)}
+                  disabled={busy || !session}
+                  title={t(
+                    "ScenarioSidebar.running_replaces_the_collection_contents",
+                    { "0": text.description },
+                  )}
+                  aria-describedby="scenario-reset-hint"
+                >
+                  <span className="scenario-number">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span>
+                    <strong>{text.title}</strong>
+                    <small>{text.description}</small>
+                  </span>
+                  <ChevronRight size={14} />
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="sidebar-bottom">
@@ -78,9 +97,9 @@ export function ScenarioSidebar({
             J<span>21</span>
           </div>
           <p>
-            Java — источник истины.
+            {t("ScenarioSidebar.java_is_the_source_of_truth")}
             <br />
-            <span>React — представление.</span>
+            <span>{t("ScenarioSidebar.react_is_the_presentation")}</span>
           </p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { fieldLabel } from "../i18n/fields";
 import { eventExplanation } from "../i18n/events";
 import { useI18n } from "../i18n/LocaleProvider";
 import type { CSSProperties, ReactNode } from "react";
@@ -52,7 +53,10 @@ export function TraceInspector({
   }, [cursor, historyIndex, tab]);
 
   return (
-    <aside className="inspector panel" aria-label="Алгоритм и события">
+    <aside
+      className="inspector panel"
+      aria-label={t("TraceInspector.algorithm_and_events")}
+    >
       <div className="inspector-tabs">
         <button
           className={tab === "events" ? "active" : ""}
@@ -71,7 +75,9 @@ export function TraceInspector({
       <div className="inspector-history">{history}</div>
       <div className="inspector-title">
         <span className="eyebrow">
-          {tab === "events" ? t("executionTrace") : "СЕМАНТИЧЕСКИЕ ЭТАПЫ"}
+          {tab === "events"
+            ? t("executionTrace")
+            : t("TraceInspector.semantic_stages")}
         </span>
         <span className="live-label">
           {playing ? t("playing") : t("paused")}
@@ -91,7 +97,7 @@ export function TraceInspector({
             id="inspector-events"
             className="event-list"
             role="region"
-            aria-label="События выполнения"
+            aria-label={t("TraceInspector.execution_events")}
             tabIndex={0}
           >
             {trace ? (
@@ -116,9 +122,11 @@ export function TraceInspector({
             ) : (
               <div className="inspector-empty">
                 <Terminal size={25} />
-                <p>Trace ещё пуст</p>
+                <p>{t("TraceInspector.the_trace_is_empty")}</p>
                 <small>
-                  Здесь появятся события реального выполнения операции.
+                  {t(
+                    "TraceInspector.events_from_actual_operation_execution_will",
+                  )}
                 </small>
               </div>
             )}
@@ -128,13 +136,10 @@ export function TraceInspector({
             id="inspector-events"
             className="algorithm-list"
             role="region"
-            aria-label="Этапы алгоритма"
+            aria-label={t("TraceInspector.algorithm_stages")}
             tabIndex={0}
           >
-            <p>
-              Схема этапов, не исполняемый код. Активный этап приходит из Java
-              trace.
-            </p>
+            <p>{t("TraceInspector.a_stage_outline_not_executable_code")}</p>
             {algorithm.map(([stage, code, note]) => (
               <div
                 key={stage}
@@ -145,7 +150,7 @@ export function TraceInspector({
               </div>
             ))}
             <a href={sourceUrl} target="_blank" rel="noreferrer">
-              Исходник OpenJDK <ArrowUpRight size={12} />
+              {t("TraceInspector.openjdk_source")} <ArrowUpRight size={12} />
             </a>
           </div>
         )}
@@ -153,14 +158,17 @@ export function TraceInspector({
           className="inspector-splitter"
           role="separator"
           tabIndex={0}
-          aria-label="Размер областей событий и технических деталей"
+          aria-label={t("TraceInspector.size_of_the_events_and_technical")}
           aria-orientation="horizontal"
           aria-controls="inspector-events inspector-details"
           aria-valuemin={15}
           aria-valuemax={85}
           aria-valuenow={Math.round(eventsShare * 100)}
-          aria-valuetext={`Верхняя область ${Math.round(eventsShare * 100)}%, технические детали ${Math.round((1 - eventsShare) * 100)}%`}
-          title="Перетащите для изменения высоты. Клавиатура: ↑/↓, Home/End."
+          aria-valuetext={t("TraceInspector.upper_pane_technical_details", {
+            "0": Math.round(eventsShare * 100),
+            "1": Math.round((1 - eventsShare) * 100),
+          })}
+          title={t("TraceInspector.drag_to_resize_keyboard_home_end")}
           onKeyDown={(event) => {
             const increment = event.shiftKey ? 0.1 : 0.05;
             const next = {
@@ -216,17 +224,21 @@ export function TraceInspector({
           id="inspector-details"
           className="technical-details"
           role="region"
-          aria-label="Технические детали"
+          aria-label={t("TraceInspector.technical_details")}
           tabIndex={0}
         >
           <span className="eyebrow">
-            {selectedDetails ? selectedDetails.title : "ТЕХНИЧЕСКИЕ ДЕТАЛИ"}
+            {selectedDetails
+              ? selectedDetails.title
+              : t("TraceInspector.technical_details_heading")}
           </span>
           {selectedDetails ? (
             selectedDetails.content
           ) : step ? (
             <>
-              <div className="step-op">{operationLabel(step.operation)}</div>
+              <div className="step-op">
+                {operationLabel(step.operation, locale, trace?.collection)}
+              </div>
               <dl>
                 {Object.entries(step.details).map(([k, v]) => (
                   <div
@@ -237,19 +249,31 @@ export function TraceInspector({
                         : undefined
                     }
                   >
-                    <dt>{k}</dt>
+                    <dt>{fieldLabel(t, k)}</dt>
                     <dd>
-                      <DetailValue value={v} />
+                      <DetailValue
+                        value={v}
+                        model={
+                          k === "result" || k === "element" || k === "key"
+                            ? k
+                            : undefined
+                        }
+                        label={(key) => fieldLabel(t, key)}
+                      />
                     </dd>
                   </div>
                 ))}
               </dl>
               {Object.keys(step.details).length === 0 && (
-                <p>Этап: {step.stage}</p>
+                <p>
+                  {t("TraceInspector.stage")} {step.stage}
+                </p>
               )}
             </>
           ) : (
-            <p>Формулы, сравнения и ссылки узлов появятся вместе с trace.</p>
+            <p>
+              {t("TraceInspector.formulas_comparisons_and_node_links_will")}
+            </p>
           )}
         </div>
       </div>

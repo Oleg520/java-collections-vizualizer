@@ -1,4 +1,5 @@
-import { LanguageSelect, useI18n } from "../i18n/LocaleProvider";
+import { errorText } from "../i18n/errors";
+import { LanguageSwitch, useI18n } from "../i18n/LocaleProvider";
 import type { LocalSplits } from "../dev/splitScenarios";
 import type { NodeSelection } from "../features/hashmap/identity";
 import {
@@ -82,11 +83,12 @@ export default function App({
     selectedNodeId,
     () => setSelectedNodeId(undefined),
     setSelectedNodeId,
+    t,
   );
   return (
     <div className="app-shell">
       <a className="skip-playback" href="#playback">
-        К управлению воспроизведением
+        {t("App.skip_to_playback_controls")}
       </a>
       <header className="app-header">
         <div className="header-left">
@@ -121,7 +123,7 @@ export default function App({
             />
             <select
               className="collection-select"
-              aria-label="Коллекция"
+              aria-label={t("App.collection")}
               aria-describedby="collection-switch-hint"
               value={collection}
               onChange={(event) =>
@@ -137,30 +139,20 @@ export default function App({
           </nav>
         </div>
         <div className="header-right">
-          <LanguageSelect />
-          <span className={`connection ${session ? "online" : ""}`}>
-            <i />
-            {busy
-              ? "Java выполняет…"
-              : error
-                ? "Ошибка запроса"
-                : session
-                  ? t("connected")
-                  : "Подключение к Java"}
-          </span>
+          <LanguageSwitch />
           <a
             className="repo-link"
             href="https://github.com/Oleg520/java-collections-vizualizer"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Исходный код проекта на GitHub"
-            title="Исходный код проекта на GitHub"
+            aria-label={t("App.project_source_on_github")}
+            title={t("App.project_source_on_github")}
           >
             <Github size={15} />
             <span>GitHub</span>
             <ArrowUpRight size={14} />
           </a>
-          <CollectionHelp description={view.description} />
+          <CollectionHelp description={view.description(t)} />
         </div>
       </header>
       <div
@@ -175,26 +167,26 @@ export default function App({
           session={session}
           onDemo={demo}
         />
-        <main>
-          <h1 className="sr-only">Лаборатория {view.name}</h1>
+        <main aria-busy={busy}>
+          <h1 className="sr-only">{t("diagramLab", { name: view.name })}</h1>
           <div className="control-area">
             {error && (
               <div className="error-banner" role="alert">
                 <Info size={18} />
                 <span>
-                  {error}
+                  {errorText(t, error)}
                   {retrySeconds > 0 &&
-                    ` Повторный запрос через ${retrySeconds} сек.`}
+                    t("App.retry_in_seconds", { "0": retrySeconds })}
                 </span>
                 <button
                   onClick={() => void recoverSession()}
                   disabled={busy || retrySeconds > 0}
                 >
-                  {recoveryLabel}
+                  {t(recoveryLabel)}
                 </button>
                 <button
                   className="icon-button"
-                  aria-label="Закрыть ошибку"
+                  aria-label={t("App.dismiss_error")}
                   disabled={blocked || !session}
                   onClick={() => setError(null)}
                 >
@@ -204,8 +196,8 @@ export default function App({
             )}
             {slow && (
               <div className="loading-banner" role="status">
-                <LoaderCircle size={16} className="spin" /> Ожидаем Java-сервис.
-                После ошибки можно безопасно обновить состояние.
+                <LoaderCircle size={16} className="spin" />{" "}
+                {t("App.waiting_for_the_java_service_after")}
               </div>
             )}
             <view.Commands
@@ -215,6 +207,7 @@ export default function App({
                     snapshot,
                     trace,
                     busy ? undefined : cursor,
+                    t,
                   )}
                 />
               }
@@ -247,10 +240,10 @@ export default function App({
                   <LoaderCircle className={busy ? "spin" : ""} />
                   <h2>
                     {busy
-                      ? "Подключаем Java-движок"
-                      : "Нет соединения с Java-движком"}
+                      ? t("App.connecting_to_the_java_engine")
+                      : t("App.no_connection_to_the_java_engine")}
                   </h2>
-                  <p>Состояние коллекции появится после создания сессии.</p>
+                  <p>{t("App.collection_state_will_appear_after_a")}</p>
                 </div>
               )}
               <PlaybackPanel
@@ -269,7 +262,7 @@ export default function App({
                     disabled={busy}
                     onClick={() => navigate(localSplits.problemFrame)}
                   >
-                    {localSplits.jumpLabel}
+                    {t("localJump")}
                   </button>
                 )}
             </div>
@@ -283,7 +276,7 @@ export default function App({
                   }}
                 />
               }
-              algorithm={view.algorithm}
+              algorithm={view.algorithm(t)}
               sourceUrl={view.sourceUrl}
               trace={trace}
               step={step}

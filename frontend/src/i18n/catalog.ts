@@ -1,5 +1,42 @@
+import { fieldRu, fieldEn } from "./fields";
+import { errorRu, errorEn } from "./errorCatalog";
+import { uiRu, uiEn } from "./ui";
 /** UI text only. Java identifiers and user values never pass through this catalog. */
 export const ru = {
+  ...uiRu,
+  emptySlot: "пусто",
+  entryCount: "{count} записей",
+  "entryCount.one": "{count} запись",
+  "entryCount.few": "{count} записи",
+  "entryCount.many": "{count} записей",
+  "entryCount.other": "{count} записи",
+  scenarioDone: "{count} записей · готово",
+  "scenarioDone.one": "{count} запись · готово",
+  "scenarioDone.few": "{count} записи · готово",
+  "scenarioDone.many": "{count} записей · готово",
+  "scenarioDone.other": "{count} записи · готово",
+
+  memoryView: "ПАМЯТЬ",
+  rbTree: "КЧ-ДЕРЕВО",
+  physicalObjects: "ФИЗИЧЕСКИЕ ОБЪЕКТЫ",
+  linkedList: "СВЯЗНЫЙ СПИСОК",
+  splitLabel: "РАЗДЕЛЕНИЕ",
+  bucketLabel: "бакет",
+  diagramLab: "Лаборатория {name}",
+
+  ...fieldRu,
+  listNode: "список",
+  redNode: "красный",
+  blackNode: "чёрный",
+  outsideChainSuffix: ", вне цепочки",
+  outsideFocusSuffix: ", вне фокуса",
+  emptyBucket: "пустой",
+  rangeSourceSuffix: "; источник диапазона",
+  rangeTargetSuffix: "; приёмник диапазона",
+  localJump: "К проблемному кадру 11 (шаг 12)",
+
+  ...errorRu,
+  nodeTitle: "УЗЕЛ",
   language: "Язык интерфейса",
   pause: "Пауза",
   play: "Воспроизвести",
@@ -8,7 +45,6 @@ export const ru = {
   executionTrace: "ТРАССИРОВКА ВЫПОЛНЕНИЯ",
   playing: "ВОСПРОИЗВЕДЕНИЕ",
   paused: "ПАУЗА",
-  connected: "Java-движок подключён",
   title: "Java Collections Visualizer — лаборатория коллекций",
   description:
     "Интерактивная лаборатория Java HashMap и ArrayList: коллизии, деревья, рост массива и перемещение ссылок шаг за шагом.",
@@ -16,6 +52,40 @@ export const ru = {
 export type MessageKey = keyof typeof ru;
 export type Catalog = { [K in MessageKey]: string };
 export const en: Catalog = {
+  ...uiEn,
+  emptySlot: "empty",
+  entryCount: "{count} entries",
+  "entryCount.one": "{count} entry",
+  "entryCount.few": "{count} entries",
+  "entryCount.many": "{count} entries",
+  "entryCount.other": "{count} entries",
+  scenarioDone: "{count} entries \u00b7 done",
+  "scenarioDone.one": "{count} entry \u00b7 done",
+  "scenarioDone.few": "{count} entries \u00b7 done",
+  "scenarioDone.many": "{count} entries \u00b7 done",
+  "scenarioDone.other": "{count} entries \u00b7 done",
+
+  memoryView: "MEMORY VIEW",
+  rbTree: "RB TREE",
+  physicalObjects: "PHYSICAL OBJECTS",
+  linkedList: "LINKED LIST",
+  splitLabel: "SPLIT",
+  bucketLabel: "bucket",
+  diagramLab: "{name} Lab",
+
+  ...fieldEn,
+  listNode: "list",
+  redNode: "red",
+  blackNode: "black",
+  outsideChainSuffix: ", outside chain",
+  outsideFocusSuffix: ", outside focus",
+  emptyBucket: "empty",
+  rangeSourceSuffix: "; source range",
+  rangeTargetSuffix: "; destination range",
+  localJump: "Go to problem frame 11 (step 12)",
+
+  ...errorEn,
+  nodeTitle: "NODE",
   language: "Interface language",
   pause: "Pause",
   play: "Play",
@@ -24,7 +94,6 @@ export const en: Catalog = {
   executionTrace: "EXECUTION TRACE",
   playing: "PLAYING",
   paused: "PAUSED",
-  connected: "Java engine connected",
   title: "Java Collections Visualizer — Collections Lab",
   description:
     "An interactive Java HashMap and ArrayList lab: collisions, trees, array growth and reference movement, step by step.",
