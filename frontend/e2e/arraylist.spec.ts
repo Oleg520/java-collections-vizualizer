@@ -42,7 +42,7 @@ test("ArrayList commands, typed null, rewind and constructor configuration", asy
     page.getByRole("button", { name: "Ячейка 1: null", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Ячейка 2: empty", exact: true }),
+    page.getByRole("button", { name: "Ячейка 2: пусто", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Операция", { exact: true }).selectOption("GET_AT");
   await page.getByLabel("Индекс", { exact: true }).fill("1");
@@ -203,7 +203,7 @@ test("all nine Java scenarios, growth buffers, 320px and reduced motion; HashMap
   await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
   await finish(page);
   await expect(page.getByTestId("metric-size")).toHaveText("9");
-  await expect(page.getByText("RB TREE", { exact: true })).toBeVisible();
+  await expect(page.getByText("КЧ-ДЕРЕВО", { exact: true })).toBeVisible();
 });
 test("lost ArrayList response and revision conflict recover without retry; old response cannot replace switched collection", async ({
   page,

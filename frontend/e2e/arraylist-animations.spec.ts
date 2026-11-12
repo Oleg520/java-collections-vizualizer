@@ -51,7 +51,7 @@ test("physical slots survive writes, block shifts, clears, backward seek and buf
             capacity: b.capacity,
             labels: b.cellRefs.map((r, i) => {
               const e = r === null ? null : encoded.cellPool[r].element;
-              return `Ячейка ${i}: ${!e ? "empty" : e.type === "NULL" ? "null" : e.type === "STRING" ? JSON.stringify(e.value) : e.value}`;
+              return `Ячейка ${i}: ${!e ? "пусто" : e.type === "NULL" ? "null" : e.type === "STRING" ? JSON.stringify(e.value) : e.value}`;
             }),
           };
         }),

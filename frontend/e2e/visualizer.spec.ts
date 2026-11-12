@@ -124,16 +124,16 @@ test("collision, resize, tree, deferred tree and rapid history navigation", asyn
     .first();
   await split.click();
   await expect(page.locator(".split-explanation")).toBeVisible();
-  await expect(page.locator(".split-explanation")).toContainText("bucket [1]");
+  await expect(page.locator(".split-explanation")).toContainText("бакет [1]");
   await page.getByRole("button", { name: /05 Красно-чёрное дерево/ }).click();
   await expectServerSize(page, 9);
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("64");
-  await expect(page.getByText("RB TREE", { exact: true })).toBeVisible();
+  await expect(page.getByText("КЧ-ДЕРЕВО", { exact: true })).toBeVisible();
   await expect(page.locator(".svg-edge-label")).toHaveCount(8);
   expect(await page.locator(".red-node").count()).toBeGreaterThan(0);
   expect(await page.locator(".black-node").count()).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Algorithm", exact: true }).click();
+  await page.getByRole("button", { name: "Алгоритм", exact: true }).click();
   await expect(page.locator(".algorithm-list")).toContainText("h ^ (h >>> 16)");
   if (testInfo.project.name === "mobile")
     await page.getByTitle("Бакет 42: TREE", { exact: true }).click();
@@ -310,7 +310,7 @@ test("large tree split, conflict recovery and offline history", async ({
   await expectServerSize(page, 97);
   await finish(page);
   await expect(page.getByTestId("metric-capacity")).toHaveText("256");
-  await expect(page.getByText("RB TREE", { exact: true })).toHaveCount(2);
+  await expect(page.getByText("КЧ-ДЕРЕВО", { exact: true })).toHaveCount(2);
   const zoomLabel = page.locator(".zoom-controls > span");
   const fitZoom = Number.parseInt((await zoomLabel.textContent())!);
   await page

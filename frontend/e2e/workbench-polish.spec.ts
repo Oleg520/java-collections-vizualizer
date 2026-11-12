@@ -23,7 +23,7 @@ function field(details: Locator, name: string) {
   return details
     .locator("dl > div")
     .filter({
-      has: details.page().locator("dt", { hasText: new RegExp(`^${name}$`) }),
+      has: details.page().locator("dt", { hasText: new RegExp(` · ${name}$`) }),
     })
     .last()
     .locator(":scope > dd");
@@ -86,7 +86,7 @@ test("compact breadcrumbs, scenario-only sidebar and contextual OpenJDK link", a
       expect((await page.locator(target).boundingBox())!.y).toBeLessThan(450);
     }
   }
-  await page.getByRole("button", { name: /Algorithm/ }).click();
+  await page.getByRole("button", { name: /Алгоритм/ }).click();
   const source = page.getByRole("link", { name: "Исходник OpenJDK" });
   await expect(source).toHaveAttribute("href", /\/HashMap\.java$/);
   await expect(source).toHaveAttribute("target", "_blank");
