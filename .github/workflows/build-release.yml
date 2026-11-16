@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - name: Require main dispatch
         env:
@@ -95,10 +95,22 @@ jobs:
         env:
           VITE_API_URL: ${{ inputs.api_origin }}
         run: python3 scripts/package-release.py
+      - name: Package and verify the exact tested JAR as a Java image
+        timeout-minutes: 8
+        run: |
+          python3 scripts/package-image.py --jar release-bundle/backend.jar \
+            --revision "$GITHUB_SHA" --manifest release-bundle/release.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ github.sha }}
           path: release-bundle/*
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backend-image-${{ github.sha }}
+          path: image-bundle/*
           if-no-files-found: error
           retention-days: 90
           compression-level: 0

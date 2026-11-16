@@ -32,6 +32,12 @@ The packager normalizes tar timestamps/ownership and the Maven workflow fixes
 outputTimestamp to the source commit timestamp. Do not assume independently
 rebuilt bytes are interchangeable: preserve the original verified bundle.
 
+The same release run also packages that exact tested JAR into a separately
+verifiable `backend-image-<full SHA>` artifact. The three-entry release ZIP and
+schema above remain unchanged. Image format, digest/run binding, runtime checks
+and release-identity constraints are specified in [the Java image contract](../docker/README.md).
+No image is published to a registry and neither artifact deploys on build/merge.
+
 ## Consumer trust boundary
 
 A delivery consumer must validate the GitHub repository and workflow identity,
