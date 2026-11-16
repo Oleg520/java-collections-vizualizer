@@ -8,7 +8,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,3 +87,8 @@ jobs:
             backend/target/surefire-reports
             frontend/playwright-report
             frontend/test-results
+      - name: Verify exact tested JAR in the bounded Java container
+        timeout-minutes: 8
+        run: |
+          python3 scripts/package-image.py --jar "$(sh scripts/backend-jar.sh)" \
+            --revision "$GITHUB_SHA"
